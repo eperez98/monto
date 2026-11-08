@@ -24,7 +24,9 @@ const generated = () => tr('Generado por Monto el {v0}', { v0: new Date().toLoca
 const BOM = String.fromCharCode(0xfeff);
 
 function csvCell(v: unknown): string {
-  const s = v == null ? '' : String(v);
+  let s = v == null ? '' : String(v);
+  // Text another member typed (e.g. "=HYPERLINK(...)") must not run as a formula in Excel; numbers stay numbers.
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) s = `'${s}`;
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

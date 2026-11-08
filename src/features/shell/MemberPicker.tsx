@@ -6,12 +6,27 @@ import { ROLE_LABEL } from '../../domain/permissions';
 import type { Member } from '../../db/types';
 import { tr } from '../../lib/i18n';
 
+// Failed PIN attempts per member. Module-level so it survives the picker remounting on each lock.
+// shortcut: resets when Monto restarts; persist it in the database if that ever matters.
+const attempts = new Map<string, { fails: number; until: number }>();
+const MAX_TRIES = 5;
+const LOCK_MS = 30_000;
+
 export function MemberPicker({ members, onPick, verify }: { members: Member[]; onPick: (m: Member) => void; verify: (m: Member, pin: string) => Promise<boolean> }) {
   const [sel, setSel] = useState<Member | null>(null);
   const [pin, setPin] = useState('');
   const [err, setErr] = useState('');
   const choose = (m: Member) => { if (m.hasPin) { setSel(m); setPin(''); setErr(''); } else onPick(m); };
-  const submit = async (e: React.FormEvent) => { e.preventDefault(); if (sel && (await verify(sel, pin))) onPick(sel); else setErr('PIN incorrecto'); };
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sel) return;
+    const wait = Math.ceil(((attempts.get(sel.id)?.until ?? 0) - Date.now()) / 1000);
+    if (wait > 0) return setErr(tr('Demasiados intentos. Espera {s} s.', { s: wait }));
+    if (await verify(sel, pin)) { attempts.delete(sel.id); return onPick(sel); }
+    const fails = (attempts.get(sel.id)?.fails ?? 0) + 1;
+    attempts.set(sel.id, { fails, until: fails % MAX_TRIES === 0 ? Date.now() + LOCK_MS : 0 });
+    setErr(fails % MAX_TRIES === 0 ? tr('Demasiados intentos. Espera {s} s.', { s: LOCK_MS / 1000 }) : tr('PIN incorrecto'));
+  };
   return (
     <motion.div key="picker" className="fixed inset-0 grid place-items-center bg-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <div className="text-center">

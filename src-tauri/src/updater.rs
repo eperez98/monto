@@ -167,11 +167,19 @@ pub async fn check_update(app: AppHandle, include_prerelease: bool) -> Result<Op
     .map_err(|e| e.to_string())?
 }
 
+/// `info` comes from the WebView, so it is not trusted: only accept the release
+/// zip of this repository for the announced version (no other repo or file).
+pub fn is_official_package(info: &UpdateInfo) -> bool {
+    let Ok(v) = Version::parse(&info.version) else { return false };
+    let name = format!("Monto_{v}_x64.zip");
+    info.installer_name == name && info.installer_url == format!("https://github.com/{REPO}/releases/download/v{v}/{name}")
+}
+
 #[tauri::command]
 pub async fn install_update(app: AppHandle, info: UpdateInfo) -> Result<(), String> {
     let handle = app.clone();
     let path = tauri::async_runtime::spawn_blocking(move || -> Result<std::path::PathBuf, String> {
-        if !info.installer_url.starts_with("https://github.com/") && !info.installer_url.starts_with("https://objects.githubusercontent.com/") {
+        if !is_official_package(&info) {
             return Err("Origen de descarga no permitido".into());
         }
         let expected = info.sha256.clone().filter(|h| h.len() == 64).ok_or("GitHub no informó la suma SHA-256 del paquete; no se puede verificar la descarga")?;
@@ -244,6 +252,20 @@ mod tests {
         let u = pick_update(&rs, "0.4.8-beta.2", false).unwrap();
         assert_eq!(u.sha256.as_deref(), Some("a".repeat(64).as_str()));
         assert_eq!(u.installer_name, "Monto_0.5.0_x64.zip");
+    }
+
+    #[test]
+    fn only_accepts_this_repos_release_zip() {
+        let ok = |url: &str, name: &str, version: &str| is_official_package(&UpdateInfo {
+            version: version.into(), current: "0.5.3-beta.6".into(), name: String::new(), notes: String::new(), date: None, prerelease: true,
+            html_url: String::new(), installer_name: name.into(), installer_url: url.into(), installer_size: 1, sha256: None,
+        });
+        let good = format!("https://github.com/{REPO}/releases/download/v0.5.4-beta.7/Monto_0.5.4-beta.7_x64.zip");
+        assert!(ok(&good, "Monto_0.5.4-beta.7_x64.zip", "0.5.4-beta.7"));
+        assert!(!ok("https://github.com/attacker/repo/releases/download/v0.5.4-beta.7/Monto_0.5.4-beta.7_x64.zip", "Monto_0.5.4-beta.7_x64.zip", "0.5.4-beta.7"));
+        assert!(!ok(&good, "Monto_0.5.4-beta.7_x64.zip", "0.9.0"));
+        assert!(!ok(&good.replace(".zip", "-setup.exe"), "Monto_0.5.4-beta.7_x64.zip", "0.5.4-beta.7"));
+        assert!(!ok(&format!("{good}?x=1"), "Monto_0.5.4-beta.7_x64.zip", "0.5.4-beta.7"));
     }
 
     #[test]

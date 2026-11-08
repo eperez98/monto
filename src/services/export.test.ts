@@ -23,4 +23,11 @@ describe('exports', () => {
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv).toContain('Super | 99,1234.56');
   });
+
+  it('neutralizes spreadsheet formulas in CSV text but keeps negative amounts numeric', () => {
+    const csv = toCSV({ name: 'x', columns: [{ key: 'd', label: 'D' }, { key: 'a', label: 'A', money: true }], rows: [{ d: '=HYPERLINK("http://x","y")', a: -500 }, { d: '@SUM(A1)', a: 100 }, { d: '-12', a: 1 }] });
+    expect(csv).toContain(`"'=HYPERLINK(""http://x"",""y"")",-5.00`);
+    expect(csv).toContain("'@SUM(A1),1.00");
+    expect(csv).toContain('\r\n-12,0.01');
+  });
 });

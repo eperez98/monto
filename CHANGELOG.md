@@ -10,6 +10,12 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Seguridad
+- El actualizador solo acepta el paquete oficial de este repositorio (`Monto_<versión>_x64.zip` publicado en `eperez98/monto`) aunque la interfaz le pida otra dirección.
+- Las exportaciones a CSV neutralizan los textos que Excel interpretaría como fórmulas (`=`, `+`, `-`, `@`), sin afectar a los importes.
+- Tras 5 PIN incorrectos al elegir integrante hay que esperar 30 segundos antes de volver a intentarlo.
+- Las acciones de GitHub Actions están fijadas a un commit exacto y `vitest` pasa a la versión 5 (corrige dos avisos críticos que solo afectaban al entorno de desarrollo).
+
 ## [0.5.4-beta.7] - 2026-11-07
 
 ### Nuevas funcionalidades
