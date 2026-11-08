@@ -24,6 +24,7 @@ interface AppState {
   toasts: Toast[];
   txEditor: TxEditor;
   notificationsOpen: boolean;
+  tourOpen: boolean;
   reducedMotion: boolean;
   dark: boolean;
   setEngine: (e: Engine | null) => void;
@@ -38,6 +39,7 @@ interface AppState {
   openTx: (type?: TxType, tx?: Transaction | null) => void;
   closeTx: () => void;
   setNotificationsOpen: (o: boolean) => void;
+  setTourOpen: (o: boolean) => void;
   setVisual: (v: { reducedMotion?: boolean; dark?: boolean }) => void;
 }
 
@@ -57,6 +59,7 @@ export const useApp = create<AppState>((set) => ({
   toasts: [],
   txEditor: { open: false },
   notificationsOpen: false,
+  tourOpen: false,
   reducedMotion: false,
   dark: false,
   setEngine: (engine) => set({ engine, revision: engine?.revision ?? 0 }),
@@ -75,5 +78,6 @@ export const useApp = create<AppState>((set) => ({
   openTx: (type, tx = null) => set({ txEditor: { open: true, type, tx } }),
   closeTx: () => set({ txEditor: { open: false } }),
   setNotificationsOpen: (notificationsOpen) => set({ notificationsOpen }),
+  setTourOpen: (tourOpen) => set({ tourOpen }),
   setVisual: (v) => set(v),
 }));

@@ -143,7 +143,7 @@ export default function Reports() {
         <Button icon="download" loading={busy === 'pdf'} onClick={() => run('pdf')}>{tr('PDF')}</Button>
       </>} />
       <div className="flex flex-wrap gap-2 mb-5">
-        {KINDS.map((k) => <button key={k.k} onClick={() => setKind(k.k)} className={clsx('group inline-flex items-center gap-2 h-9 px-4 rounded-full text-[12.5px] font-medium border transition', kind === k.k ? 'bg-brand text-brand-ink border-brand dark:bg-emerald dark:text-[#06140D]' : 'bg-surface border-line text-ink-2 hover:bg-surface-2')}><Icon name={k.icon} size={15} active={kind === k.k} />{k.label}</button>)}
+        {KINDS.map((k) => <button key={k.k} onClick={() => setKind(k.k)} className={clsx('group inline-flex items-center gap-2 h-9 px-4 rounded-full text-[12.5px] font-medium border transition', kind === k.k ? 'bg-brand text-brand-ink border-brand' : 'bg-surface border-line text-ink-2 hover:bg-surface-2')}><Icon name={k.icon} size={15} active={kind === k.k} />{k.label}</button>)}
       </div>
       <div className="grid grid-cols-4 gap-5 mb-5">{report.summary?.slice(0, 4).map((s, i) => <Card key={s.label} delay={i * 0.04} className="p-5"><Stat label={s.label} value={s.value} /></Card>)}</div>
       <div className="grid grid-cols-12 gap-5 mb-5">

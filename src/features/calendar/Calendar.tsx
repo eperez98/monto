@@ -89,7 +89,7 @@ export default function Calendar() {
               if (!d) return <div key={i} />;
               const evs = events.filter((e) => e.date === d);
               return (
-                <button key={d} onClick={() => setSelected(d)} className={clsx('min-h-[86px] flex flex-col items-stretch justify-start rounded-[14px] p-1.5 text-left border transition', d === selected ? 'border-emerald bg-emerald-soft/40' : 'border-line/60 hover:bg-surface-2', d === today() && 'ring-2 ring-brand-2/30')}>
+                <button key={d} onClick={() => setSelected(d)} className={clsx('min-h-[86px] flex flex-col items-stretch justify-start rounded-[14px] p-1.5 text-left border transition', d === selected ? 'border-brand bg-brand-soft/50' : 'border-line/60 hover:bg-surface-2', d === today() && 'ring-2 ring-brand-2/30')}>
                   <span className={clsx('inline-grid place-items-center size-6 rounded-full text-[12px] font-semibold num', d === today() && 'bg-brand text-brand-ink')}>{Number(d.slice(8))}</span>
                   <div className="space-y-0.5 mt-0.5">
                     {evs.slice(0, 3).map((e, j) => <div key={j} className={clsx('truncate rounded-[6px] px-1 py-px text-[10px] font-medium', KIND_STYLE[e.kind], e.done && 'opacity-50 line-through')}>{e.title}</div>)}

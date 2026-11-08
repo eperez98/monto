@@ -25,7 +25,7 @@ export function Card({ children, className, delay = 0, hover = true, as = 'secti
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: ok ? delay : 0, ease }}
       whileHover={hover && ok ? { y: -2 } : undefined}
-      className={clsx('rounded-[22px] bg-surface border border-line/70 shadow-card transition-shadow duration-300', hover && 'hover:shadow-pop/20', onClick && 'cursor-pointer text-left', className)}
+      className={clsx('rounded-[26px] bg-surface border border-line/70 shadow-card transition-shadow duration-300', hover && 'hover:shadow-pop/20', onClick && 'cursor-pointer text-left', className)}
     >
       {children}
     </C>
@@ -47,7 +47,7 @@ export function CardHeader({ title, subtitle, action, className }: { title: Reac
 // ------------------------------------------------------------------ Buttons
 type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'emerald';
 const BTN: Record<BtnVariant, string> = {
-  primary: 'bg-brand text-brand-ink hover:bg-brand-2 dark:bg-emerald dark:text-[#06140D] dark:hover:brightness-110 shadow-[0_6px_16px_-8px_rgb(18_41_31/0.6)]',
+  primary: 'bg-brand text-brand-ink hover:bg-brand-2 shadow-[0_8px_20px_-10px_color-mix(in_srgb,var(--brand)_75%,transparent)]',
   secondary: 'bg-surface border border-line text-ink hover:bg-surface-2',
   ghost: 'text-ink-2 hover:bg-surface-3 hover:text-ink',
   danger: 'bg-coral text-white hover:brightness-105',
@@ -103,7 +103,7 @@ export function Field({ label, error, hint, children, className }: { label?: str
     </label>
   );
 }
-const inputCls = 'w-full h-10 rounded-[12px] bg-surface-2 border border-line px-3 text-[13.5px] text-ink placeholder:text-muted outline-none transition focus:border-emerald focus:bg-surface focus:ring-4 focus:ring-emerald/15 aria-[invalid=true]:border-coral';
+const inputCls = 'w-full h-10 rounded-[14px] bg-surface-2 border border-line px-3.5 text-[13.5px] text-ink placeholder:text-muted outline-none transition focus:border-brand focus:bg-surface focus:ring-4 focus:ring-brand/15 aria-[invalid=true]:border-coral';
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean; prefix?: string }>(function Input({ className, invalid, prefix, ...rest }, ref) {
   if (prefix) return (
     <div className="relative">
@@ -134,7 +134,7 @@ export function Toggle({ checked, onChange, label, description, disabled }: { ch
           {description && <span className="block text-[12px] text-muted mt-0.5">{description}</span>}
         </span>
       )}
-      <span className={clsx('relative inline-flex h-6 w-10.5 shrink-0 rounded-full transition-colors duration-300', checked ? 'bg-emerald' : 'bg-surface-3 border border-line')}>
+      <span className={clsx('relative inline-flex h-6 w-10.5 shrink-0 rounded-full transition-colors duration-300', checked ? 'bg-brand' : 'bg-surface-3 border border-line')}>
         <motion.span layout transition={{ type: 'spring', stiffness: 600, damping: 35 }} className={clsx('absolute top-0.5 size-5 rounded-full bg-white shadow', checked ? 'right-0.5' : 'left-0.5')} />
       </span>
     </button>
@@ -168,12 +168,12 @@ export function ChoiceCard({ selected, onClick, icon, title, description, classN
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.97 }}
-      className={clsx('group relative text-left rounded-[18px] border p-4 transition-all duration-200', selected ? 'border-emerald bg-emerald-soft/60 ring-4 ring-emerald/12' : 'border-line bg-surface hover:border-ink-2/30 hover:bg-surface-2', className)}
+      className={clsx('group relative text-left rounded-[18px] border p-4 transition-all duration-200', selected ? 'border-brand bg-brand-soft/60 ring-4 ring-brand/12' : 'border-line bg-surface hover:border-ink-2/30 hover:bg-surface-2', className)}
     >
-      {icon && <span className={clsx('inline-grid place-items-center size-10 rounded-[12px] mb-3 transition-colors', selected ? 'bg-emerald text-white' : 'bg-surface-3 text-ink-2')}><Icon name={icon} size={20} active={selected} /></span>}
+      {icon && <span className={clsx('inline-grid place-items-center size-10 rounded-[12px] mb-3 transition-colors', selected ? 'bg-brand text-brand-ink' : 'bg-surface-3 text-ink-2')}><Icon name={icon} size={20} active={selected} /></span>}
       <span className="block text-[14px] font-semibold text-ink">{title}</span>
       {description && <span className="block text-[12px] text-muted mt-1 leading-snug">{description}</span>}
-      {selected && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-3 right-3 size-5 rounded-full bg-emerald text-white grid place-items-center"><Icon name="check" size={12} strokeWidth={2.6} /></motion.span>}
+      {selected && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-3 right-3 size-5 rounded-full bg-brand text-brand-ink grid place-items-center"><Icon name="check" size={12} strokeWidth={2.6} /></motion.span>}
     </motion.button>
   );
 }
@@ -231,7 +231,7 @@ export function EmptyState({ icon, title, body, action, className }: { icon: str
     <div className={clsx('flex flex-col items-center justify-center text-center px-6 py-10', className)}>
       <motion.div initial={ok ? { scale: 0.8, opacity: 0 } : false} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.5, ease }} className="relative mb-4">
         <span className="absolute inset-0 -m-3 rounded-full bg-emerald/10 blur-xl" />
-        <span className="relative grid place-items-center size-16 rounded-[20px] bg-gradient-to-br from-surface-2 to-surface-3 border border-line text-brand-2 dark:text-emerald">
+        <span className="relative grid place-items-center size-16 rounded-[20px] bg-gradient-to-br from-surface-2 to-surface-3 border border-line text-brand">
           <Icon name={icon} size={28} active />
         </span>
       </motion.div>

@@ -52,7 +52,7 @@ function AccountForm({ open, onClose, account }: { open: boolean; onClose: () =>
         )}
         <div className="col-span-2">
           <p className="text-[12px] font-medium text-ink-2 mb-1.5">{tr('Color')}</p>
-          <div className="flex gap-2">{COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={clsx('size-8 rounded-full transition', color === c && 'ring-4 ring-emerald/30 scale-110')} style={{ background: c }} aria-label={c} />)}</div>
+          <div className="flex gap-2">{COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={clsx('size-8 rounded-full transition', color === c && 'ring-4 ring-brand/30 scale-110')} style={{ background: c }} aria-label={c} />)}</div>
         </div>
       </div>
     </Modal>

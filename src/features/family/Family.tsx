@@ -142,7 +142,7 @@ export default function Family() {
           <Field label={tr('Nombre')}><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} /></Field>
           <Field label={tr('Rol')}><Select value={role} disabled={form.m?.isOwner} onChange={(e) => setRole(e.target.value as Role)}>{ALL_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</Select></Field>
           <p className="text-[12px] text-muted -mt-1">{ROLE_DESCRIPTION[role]}</p>
-          <div><p className="text-[12px] font-medium text-ink-2 mb-1.5">{tr('Avatar')}</p><div className="flex gap-1.5">{EMOJIS.map((em) => <button key={em || 'none'} type="button" onClick={() => setEmoji(em)} className={`grid place-items-center size-9 rounded-full border text-[16px] ${emoji === em ? 'border-emerald ring-4 ring-emerald/15' : 'border-line'}`}>{em || <Icon name="user" size={14} />}</button>)}</div></div>
+          <div><p className="text-[12px] font-medium text-ink-2 mb-1.5">{tr('Avatar')}</p><div className="flex gap-1.5">{EMOJIS.map((em) => <button key={em || 'none'} type="button" onClick={() => setEmoji(em)} className={`grid place-items-center size-9 rounded-full border text-[16px] ${emoji === em ? 'border-brand ring-4 ring-brand/15' : 'border-line'}`}>{em || <Icon name="user" size={14} />}</button>)}</div></div>
           <Field label={tr('PIN de acceso (opcional, 4-6 dígitos)')} hint={tr('Protege el cambio de integrante en este equipo.')}><Input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} /></Field>
         </div>
       </Modal>

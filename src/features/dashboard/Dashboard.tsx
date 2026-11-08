@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
-import { useActor, useProfile, useQuery, useScope, useMutate } from '../../hooks/useDb';
+import { useActor, useCan, useProfile, useQuery, useScope, useMutate } from '../../hooks/useDb';
 import { useRange } from '../../hooks/useRange';
 import { alerts, balances, dismissAlert, expensesByCategory, monthlySeries, totals, upcoming } from '../../db/repo/analytics';
 import { listTransactions, listCategories, listAccounts } from '../../db/repo/finance';
@@ -27,6 +27,14 @@ function Delta({ cur, prev, inverse }: { cur: number; prev: number; inverse?: bo
   );
 }
 
+function QuickAction({ icon, label, onClick }: { icon: string; label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="inline-flex items-center gap-2.5 h-11 pl-1.5 pr-4 rounded-full bg-surface border border-line/70 shadow-card text-[13px] font-medium text-ink hover:border-brand/40 hover:bg-brand-soft/40 transition active:scale-[0.97]">
+      <span className="grid place-items-center size-8 rounded-full bg-brand-soft text-brand"><Icon name={icon} size={16} strokeWidth={2} /></span>{label}
+    </button>
+  );
+}
+
 export default function Dashboard() {
   const profile = useProfile();
   const actor = useActor();
@@ -35,6 +43,7 @@ export default function Dashboard() {
   const go = useApp((s) => s.go);
   const openTx = useApp((s) => s.openTx);
   const mutate = useMutate();
+  const canCreate = useCan('tx.create');
   const ok = useMotionOK();
   const cur = profile.primaryCurrency;
   const visibleTo = profile.mode === 'individual' ? undefined : sf.scope === 'personal' ? actor.id : undefined;
@@ -67,32 +76,35 @@ export default function Dashboard() {
     <div className="space-y-5">
       {/* Row 1 */}
       <div className="grid grid-cols-12 gap-5">
-        <motion.section initial={ok ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-          className="col-span-12 xl:col-span-6 relative overflow-hidden rounded-[24px] hero-surface text-[#F5F3EE] p-6 shadow-pop min-h-[210px]">
-          <div className="absolute -right-16 -top-16 size-64 rounded-full border border-white/10" />
-          <div className="absolute -right-4 -top-4 size-40 rounded-full border border-white/10" />
-          <div className="relative flex items-start justify-between">
-            <div>
-              <p className="text-[12px] text-white/60">{tr('Saldo disponible')}{sf.scope === 'family' ? ' · Hogar' : ''}</p>
-              <Money animated cents={available} currency={cur} className="block text-[44px] font-semibold tracking-[-0.05em] leading-tight mt-1" />
+        <div className="col-span-12 xl:col-span-6 space-y-4">
+          <motion.section data-tour="hero" initial={ok ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
+            className="relative overflow-hidden rounded-[28px] hero-surface text-white p-6 shadow-pop min-h-[210px]">
+            <div className="relative flex items-center justify-between">
+              <span className="text-[20px] font-extrabold tracking-[-0.05em] text-white/90">monto</span>
+              <span className="text-[12px] text-white/75">{tr('Saldo disponible')}{sf.scope === 'family' ? tr(' · Hogar') : ''}</span>
             </div>
-            <span className={clsx('inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11.5px] font-semibold backdrop-blur', t.net >= 0 ? 'bg-[#5BE0A8]/20 text-[#7DF0BF]' : 'bg-[#F07A64]/20 text-[#FFB3A5]')}>
-              <Icon name={t.net >= 0 ? 'arrowUpRight' : 'arrowDownLeft'} size={13} strokeWidth={2.2} />{rate.toFixed(0)}{' '}{tr('% ahorro')}
-            </span>
-          </div>
-          <div className="relative flex gap-6 mt-3 text-[12px] text-white/70">
-            <span>{tr('PAB')}{' '}<Money cents={bal.available.PAB} currency="PAB" className="text-white font-semibold" /></span>
-            <span>{tr('USD')}{' '}<Money cents={bal.available.USD} currency="USD" className="text-white font-semibold" /></span>
-            {(bal.cardDebt.PAB + bal.cardDebt.USD) > 0 && <span>{tr('Deuda en tarjetas')}{' '}<Money cents={combined(bal.cardDebt, cur)} currency={cur} className="text-[#FFB3A5] font-semibold" /></span>}
-          </div>
-          <div className="relative mt-6">
-            <div className="flex items-center justify-between text-[11.5px] text-white/60 mb-2">
-              <span>{tr('Balance de')}{' '}{lang === 'es' ? label.toLowerCase() : label} · <Money cents={t.net} currency={cur} sign className="text-white font-semibold" /></span>
-              <span>{t.income ? tr('{pct} % gastado', { pct: Math.min(100, pct(t.expense, t.income)).toFixed(0) }) : tr('Sin ingresos registrados')}</span>
+            <Money animated cents={available} currency={cur} className="relative block text-[44px] font-semibold tracking-[-0.05em] leading-tight mt-4" />
+            <div className="relative flex flex-wrap gap-x-6 gap-y-1 mt-1 text-[12px] text-white/75">
+              <span>{tr('PAB')}{' '}<Money cents={bal.available.PAB} currency="PAB" className="text-white font-semibold" /></span>
+              <span>{tr('USD')}{' '}<Money cents={bal.available.USD} currency="USD" className="text-white font-semibold" /></span>
+              {(bal.cardDebt.PAB + bal.cardDebt.USD) > 0 && <span>{tr('Deuda en tarjetas')}{' '}<Money cents={combined(bal.cardDebt, cur)} currency={cur} className="text-[#FFC2CC] font-semibold" /></span>}
             </div>
-            <Progress value={t.income ? 100 - pct(t.expense, t.income) : 0} color="linear-gradient(90deg,#2FBF85,#7DF0BF)" track="rgb(255 255 255 / 0.12)" height={6} delay={0.3} />
-          </div>
-        </motion.section>
+            <div className="relative mt-6 -mx-6 -mb-6 px-6 py-3.5 bg-black/20 backdrop-blur flex items-center justify-between gap-3 text-[12px]">
+              <span className="text-white/80 truncate">{tr('Balance de')}{' '}{lang === 'es' ? label.toLowerCase() : label} · <Money cents={t.net} currency={cur} sign className="text-white font-semibold" /></span>
+              <span className={clsx('inline-flex items-center gap-1 h-7 px-2.5 rounded-full font-semibold shrink-0', t.net >= 0 ? 'bg-white/15 text-white' : 'bg-[#FF6F86]/25 text-[#FFC2CC]')}>
+                <Icon name={t.net >= 0 ? 'arrowUpRight' : 'arrowDownLeft'} size={13} strokeWidth={2.2} />{rate.toFixed(0)}{' '}{tr('% ahorro')}
+              </span>
+            </div>
+          </motion.section>
+          {canCreate && (
+            <div className="flex flex-wrap gap-2" data-tour="quick">
+              <QuickAction icon="arrowDownLeft" label={tr('Gasto')} onClick={() => openTx('expense')} />
+              <QuickAction icon="arrowUpRight" label={tr('Ingreso')} onClick={() => openTx('income')} />
+              <QuickAction icon="transfer" label={tr('Transferir')} onClick={() => openTx('transfer')} />
+              <QuickAction icon="savings" label={tr('Plan mensual')} onClick={() => go('plan')} />
+            </div>
+          )}
+        </div>
 
         <Card delay={0.06} className="col-span-6 xl:col-span-3 p-5 flex flex-col">
           <div className="flex items-start justify-between"><p className="text-[12.5px] text-muted">{tr('Ingresos')}</p><span className="grid place-items-center size-8 rounded-full bg-emerald-soft text-emerald"><Icon name="arrowUpRight" size={15} strokeWidth={2.2} /></span></div>
@@ -112,14 +124,14 @@ export default function Dashboard() {
       {/* Row 2 */}
       <div className="grid grid-cols-12 gap-5">
         <Card delay={0.15} className="col-span-12 xl:col-span-7">
-          <CardHeader title={tr('Ingresos y gastos')} subtitle={tr('Últimos 6 meses')} action={<div className="flex gap-3 text-[11px] text-muted"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-brand-2" />{tr('Ingresos')}</span><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-sage" />{tr('Gastos')}</span></div>} />
+          <CardHeader title={tr('Ingresos y gastos')} subtitle={tr('Últimos 6 meses')} action={<div className="flex gap-3 text-[11px] text-muted"><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-brand" />{tr('Ingresos')}</span><span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-sage" />{tr('Gastos')}</span></div>} />
           <div className="px-3 pb-3">{series.some((s) => s.income || s.expense) ? <IncomeExpenseBars data={series} currency={cur} /> : <EmptyState icon="reports" title={tr('Aún no hay datos')} body={tr('Registra ingresos y gastos para ver tu evolución.')} />}</div>
         </Card>
-        <Card delay={0.2} className="col-span-12 xl:col-span-5">
+        <Card delay={0.2} className="col-span-12 xl:col-span-5" >
           <CardHeader title={tr('Distribución de gastos')} subtitle={label} action={<IconButton icon="chevronRight" label={tr('Ver informes')} onClick={() => go('reports')} size={30} />} />
           {cats.length ? (
             <div className="flex items-center gap-5 p-5 pt-3">
-              <CategoryDonut data={cats.slice(0, 7)} currency={cur} size={170} />
+              <CategoryDonut data={cats.slice(0, 7)} currency={cur} size={190} />
               <ul className="flex-1 space-y-2 min-w-0">
                 {cats.slice(0, 6).map((c) => (
                   <li key={c.categoryId} className="flex items-center gap-2 text-[12.5px]">
@@ -146,13 +158,12 @@ export default function Dashboard() {
         </Card>
 
         <div className="col-span-12 xl:col-span-4 space-y-5">
-          <motion.div initial={ok ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28, duration: 0.5 }} className="rounded-[22px] bg-brand text-brand-ink p-5 shadow-card relative overflow-hidden">
-            <div className="absolute right-0 bottom-0 size-32 rounded-full bg-emerald/20 blur-2xl" />
-            {nextPay ? (
+          <motion.div initial={ok ? { opacity: 0, y: 14 } : false} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28, duration: 0.5 }} className="rounded-[26px] hero-surface text-white p-5 shadow-card relative overflow-hidden">
+                        {nextPay ? (
               <>
                 <p className="text-[11.5px] text-white/60 flex items-center gap-2">{tr('Próximo cobro')}{' '}<EstimateTag /></p>
                 <p className="text-[26px] font-semibold tracking-[-0.04em] mt-2">{formatDate(nextPay.date, 'long').replace(/ de \d{4}$/, '')}</p>
-                <p className="text-[12.5px] text-white/70 mt-1">{nextPay.label} · <Money cents={nextPay.net} currency={cur} className="text-[#7DF0BF] font-semibold" />{' '}{tr('· en')}{' '}{Math.max(0, diffDays(nextPay.date, today()))}{' '}{tr('días')}</p>
+                <p className="text-[12.5px] text-white/70 mt-1">{nextPay.label} · <Money cents={nextPay.net} currency={cur} className="text-[#E4E0FF] font-semibold" />{' '}{tr('· en')}{' '}{Math.max(0, diffDays(nextPay.date, today()))}{' '}{tr('días')}</p>
               </>
             ) : next[0] ? (
               <>

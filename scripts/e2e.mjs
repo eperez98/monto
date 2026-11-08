@@ -78,8 +78,22 @@ try {
   step('Dashboard after onboarding');
   await page.getByText('Saldo disponible').waitFor({ timeout: 10000 });
   await page.waitForTimeout(1500);
-  const hero = await page.getByText('Saldo disponible').locator('..').innerText();
+  const hero = await page.locator('[data-tour="hero"]').innerText();
   assert(hero.includes('2,500.00'), 'saldo disponible inicial 2,500');
+
+  step('Guided start tour');
+  await page.getByText(/^Paso 1 de \d+$/).waitFor({ timeout: 5000 });
+  assert(true, 'la guía de inicio se abre sola en el primer arranque');
+  await shot('03a-tour');
+  for (let n = 0; n < 20 && !(await page.getByRole('button', { name: 'Empezar', exact: true }).isVisible()); n++) await click('Siguiente', { exact: true });
+  await click('Empezar', { exact: true });
+  await page.getByRole('dialog').waitFor({ state: 'detached' });
+  assert(await page.evaluate(() => localStorage.getItem('monto:tour-done') === '1'), 'la guía queda marcada como vista');
+  await click('Guía de inicio');
+  await page.getByText(/^Paso 1 de \d+$/).waitFor();
+  await click('Saltar guía');
+  await page.getByRole('dialog').waitFor({ state: 'detached' });
+  assert(true, 'la guía se puede repetir y saltar');
 
   step('Monthly plan module');
   await click('Plan mensual');
@@ -98,7 +112,7 @@ try {
   await dclick('Registrar');
   await page.getByText('Gasto registrado').waitFor();
   await page.waitForTimeout(1500);
-  const hero2 = await page.getByText('Saldo disponible').locator('..').innerText();
+  const hero2 = await page.locator('[data-tour="hero"]').innerText();
   assert(hero2.includes('2,454.80'), 'saldo tras gasto 2,454.80');
 
   step('Duplicate warning');
@@ -198,8 +212,8 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.6.0').waitFor();
-  assert(true, 'versión 0.6.0 visible en Actualizaciones');
+  await page.getByText('Monto 0.7.0 Beta 1').waitFor();
+  assert(true, 'versión 0.7.0 Beta 1 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
@@ -209,6 +223,11 @@ try {
   await click('Oscuro', { exact: true });
   await page.waitForTimeout(400);
   assert(await page.evaluate(() => document.documentElement.classList.contains('dark')), 'modo oscuro activo');
+  await click('Clásico');
+  await page.waitForFunction(() => document.documentElement.classList.contains('theme-classic'));
+  await click('Violeta');
+  await page.waitForFunction(() => !document.documentElement.classList.contains('theme-classic'));
+  assert(true, 'tema de color clásico y violeta seleccionables');
   await click('Resumen', { exact: true });
   await page.waitForTimeout(1600);
   await shot('17-dashboard-dark');
@@ -221,7 +240,7 @@ try {
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await page.getByText('Saldo disponible').waitFor();
   await page.waitForTimeout(1500);
-  const hero3 = await page.getByText('Saldo disponible').locator('..').innerText();
+  const hero3 = await page.locator('[data-tour="hero"]').innerText();
   assert(hero3.includes('2,450.00'), 'datos persistidos tras reiniciar (2,450.00)');
   assert(await page.evaluate(() => document.documentElement.classList.contains('dark')), 'preferencia de tema persistida');
 

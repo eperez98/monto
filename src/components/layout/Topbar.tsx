@@ -7,6 +7,7 @@ import { formatMonth, greeting, monthKey, today, type PeriodKind } from '../../l
 import { Icon } from '../../icons';
 import { tr } from '../../lib/i18n';
 import { QuickPrefs } from './QuickPrefs';
+import { NAV_ITEMS } from './nav';
 
 export const PERIODS: Array<{ value: PeriodKind; label: string }> = [
   { value: 'day', label: tr('Día') }, { value: 'week', label: tr('Semana') }, { value: 'month', label: tr('Mes') }, { value: 'quarter', label: tr('Trimestre') }, { value: 'year', label: tr('Año') }, { value: 'custom', label: tr('Rango') },
@@ -29,23 +30,30 @@ export function Topbar() {
   const [rangeOpen, setRangeOpen] = useState(false);
   const [from, setFrom] = useState(customRange?.from ?? `${monthKey(today())}-01`);
   const [to, setTo] = useState(customRange?.to ?? today());
+  const page = NAV_ITEMS.find((n) => n.key === route);
   const showPeriod = route === 'dashboard' || route === 'transactions' || route === 'reports';
 
   return (
     <header className="flex items-center gap-4 px-8 pt-6 pb-4">
       <div className="flex-1 min-w-0">
-        <p className="text-[11.5px] text-muted">{formatMonth(monthKey(today()))}{profile.householdName && scope === 'family' ? ` · ${profile.householdName}` : ''}</p>
-        <h2 className="text-[21px] font-semibold tracking-[-0.035em] text-ink truncate">{greeting()}, <span>{me?.name.split(' ')[0]}</span></h2>
+        <p className={route === 'dashboard' ? 'text-[11.5px] text-muted' : 'hidden'}>{formatMonth(monthKey(today()))}{profile.householdName && scope === 'family' ? ` · ${profile.householdName}` : ''}</p>
+        {page && route !== 'dashboard' ? (
+          <p className="inline-flex max-w-full items-center gap-2 h-9 pl-2 pr-3.5 rounded-full bg-brand-soft/70 text-[12.5px] text-ink-2" title={page.hint}>
+            <Icon name="info" size={16} className="shrink-0 text-brand" /><span className="truncate">{page.hint}</span>
+          </p>
+        ) : (
+          <h2 className="text-[22px] font-semibold tracking-[-0.035em] text-ink truncate">{greeting()}, <span>{me?.name.split(' ')[0]}</span></h2>
+        )}
       </div>
       {profile.mode !== 'individual' && (
-        <Segmented size="sm" layoutId="scope" value={scope} onChange={setScope} options={[{ value: 'personal', label: <><Icon name="user" size={13} />{tr('Personal')}</> }, { value: 'family', label: <><Icon name="family" size={13} />{tr('Hogar')}</> }]} />
+        <div data-tour="scope"><Segmented size="sm" layoutId="scope" value={scope} onChange={setScope} options={[{ value: 'personal', label: <><Icon name="user" size={13} />{tr('Personal')}</> }, { value: 'family', label: <><Icon name="family" size={13} />{tr('Hogar')}</> }]} /></div>
       )}
       {showPeriod && (
-        <Segmented size="sm" layoutId="period" value={period} onChange={(v) => (v === 'custom' ? setRangeOpen(true) : setPeriod(v))} options={PERIODS} />
+        <div data-tour="period"><Segmented size="sm" layoutId="period" value={period} onChange={(v) => (v === 'custom' ? setRangeOpen(true) : setPeriod(v))} options={PERIODS} /></div>
       )}
-      <QuickPrefs />
+      <div data-tour="prefs"><QuickPrefs /></div>
       <IconButton icon="bell" label={tr('Notificaciones')} badge={count} onClick={() => setNotif(true)} />
-      {canCreate && <Button icon="plus" onClick={() => openTx()}>{tr('Movimiento')}</Button>}
+      {canCreate && <Button data-tour="new-tx" icon="plus" onClick={() => openTx()}>{tr('Movimiento')}</Button>}
       <Modal open={rangeOpen} onClose={() => setRangeOpen(false)} title={tr('Rango personalizado')} width={420} icon="calendar"
         footer={<><Button variant="ghost" onClick={() => setRangeOpen(false)}>{tr('Cancelar')}</Button><Button disabled={!from || !to || from > to} onClick={() => { setPeriod('custom', { from, to }); setRangeOpen(false); }}>{tr('Aplicar')}</Button></>}>
         <div className="grid grid-cols-2 gap-3">

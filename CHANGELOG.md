@@ -10,6 +10,21 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.7.0-beta.1] - 2026-11-07
+
+Rediseño completo con estilo violeta, mejor organización y una guía de inicio.
+
+### Añadido
+- **Guía de inicio**: recorrido de 10 pasos que se abre solo la primera vez y resalta cada parte del panel (saldo, acciones rápidas, periodo, Personal/Hogar, secciones, plan mensual, idioma y tema). Se puede repetir desde «Guía de inicio» en el menú lateral, saltar, y navegar con las flechas y Esc.
+- **Temas de color** en *Configuración → Apariencia*: **Violeta** (nuevo) o **Clásico** (el verde original), cada uno en modo claro y oscuro.
+- **Ayuda en cada sección**: una línea arriba explica para qué sirve la página.
+- **Acciones rápidas** en el resumen: Gasto, Ingreso, Transferir y Plan mensual.
+
+### Cambiado
+- Nuevo diseño: paleta violeta, tarjetas más redondeadas y botones en píldora; el modo oscuro usa fondos casi negros con tarjetas grafito.
+- El saldo disponible se muestra como una tarjeta de débito con degradado; la distribución de gastos es un anillo con el total en el centro.
+- Menú lateral agrupado por tarea: *Día a día*, *Planificar* y *Hogar y análisis*.
+
 ## [0.6.0] - 2026-11-07 · Security Revision
 
 Versión centrada en seguridad. Primera versión estable (sin «Beta») de Monto.
@@ -121,7 +136,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.6.0...HEAD
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.1...HEAD
+[0.7.0-beta.1]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.1
 [0.6.0]: https://github.com/eperez98/monto/releases/tag/v0.6.0
 [0.5.4-beta.7]: https://github.com/eperez98/monto/releases/tag/v0.5.4-beta.7
 [0.5.3-beta.6]: https://github.com/eperez98/monto/releases/tag/v0.5.3-beta.6

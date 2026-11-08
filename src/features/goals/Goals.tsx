@@ -133,7 +133,7 @@ export default function Goals() {
           <Field label={tr('Meta')}><MoneyInput autoFocus currency={currency} value={target} onChange={setTarget} aria-label={tr('Meta')} /></Field>
           <Field label={tr('Moneda')}><Select value={currency} onChange={(ev) => setCurrency(ev.target.value as Currency)}><option value="PAB">{tr('PAB')}</option><option value="USD">{tr('USD')}</option></Select></Field>
           <Field label={tr('Fecha objetivo')} className="col-span-2"><Input type="date" value={date} onChange={(ev) => setDate(ev.target.value)} /></Field>
-          <div className="col-span-2 flex gap-2">{COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={`size-8 rounded-full ${color === c ? 'ring-4 ring-emerald/30 scale-110' : ''}`} style={{ background: c }} aria-label={c} />)}</div>
+          <div className="col-span-2 flex gap-2">{COLORS.map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={`size-8 rounded-full ${color === c ? 'ring-4 ring-brand/30 scale-110' : ''}`} style={{ background: c }} aria-label={c} />)}</div>
         </div>
       </Modal>
       <Modal open={!!contrib} onClose={() => setContrib(null)} title={contrib ? `${withdraw ? tr('Retirar de') : tr('Aportar a')} ${contrib.name}` : ''} icon="savings" width={420}

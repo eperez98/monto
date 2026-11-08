@@ -81,10 +81,26 @@ function AppearanceTab() {
   return (
     <Card hover={false} className="p-6 space-y-6">
       <div>
-        <p className="text-[13.5px] font-semibold mb-1">{tr('Tema')}</p>
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Modo claro u oscuro')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('“Sistema” sigue automáticamente el modo claro u oscuro de Windows.')}</p>
         <div className="grid grid-cols-3 gap-3">
           {([['system', 'monitor', tr('Sistema')], ['light', 'sun', tr('Claro')], ['dark', 'moon', tr('Oscuro')]] as const).map(([v, i, l]) => <ChoiceCard key={v} selected={prefs.theme === v} onClick={() => mutate((e) => setPrefs(e, { theme: v }))} icon={i} title={l} />)}
+        </div>
+      </div>
+      <div>
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Tema de color')}</p>
+        <p className="text-[12px] text-muted mb-3">{tr('Elige el estilo de color. Funciona tanto en modo claro como oscuro.')}</p>
+        <div className="grid grid-cols-2 gap-3">
+          {([['violet', tr('Violeta'), tr('El diseño nuevo'), 'linear-gradient(135deg,#7B5CFF,#5B3FE0 45%,#2E1D86)'], ['classic', tr('Clásico'), tr('El verde original de Monto'), 'linear-gradient(145deg,#1D4636,#0F241B 55%,#0B1A14)']] as const).map(([v, l, d, bg]) => {
+            const sel = (prefs.palette ?? 'violet') === v;
+            return (
+              <button key={v} type="button" aria-pressed={sel} onClick={() => mutate((e) => setPrefs(e, { palette: v }))}
+                className={clsx('flex items-center gap-3 rounded-[18px] border p-3 text-left transition', sel ? 'border-brand ring-4 ring-brand/12 bg-brand-soft/40' : 'border-line bg-surface hover:bg-surface-2')}>
+                <span className="h-12 w-20 shrink-0 rounded-[12px]" style={{ background: bg }} />
+                <span className="min-w-0"><span className="block text-[13px] font-semibold text-ink">{l}</span><span className="block text-[11.5px] text-muted">{d}</span></span>
+              </button>
+            );
+          })}
         </div>
       </div>
       <div>
@@ -296,7 +312,7 @@ function CategoriesTab() {
             <p className="text-[12px] font-medium text-ink-2 mt-4 mb-2">{tr('Icono')}</p>
             <div className="grid grid-cols-10 gap-1.5">{ICON_NAMES.slice(0, 40).map((n) => <button key={n} type="button" onClick={() => setIcon(n)} className={clsx('group grid place-items-center size-9 rounded-[10px] border', icon === n ? 'border-emerald bg-emerald-soft text-emerald' : 'border-line text-ink-2 hover:bg-surface-2')}><Icon name={n} size={17} active={icon === n} /></button>)}</div>
             <p className="text-[12px] font-medium text-ink-2 mt-4 mb-2">{tr('Color')}</p>
-            <div className="flex gap-2">{['#1F6B4F', '#C2643E', '#3C6E9E', '#B88A2B', '#2F8A84', '#D0574B', '#5A6FB0', '#8A5CA8', '#A8743F', '#A84B6B', '#6B7A72'].map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={clsx('size-8 rounded-full', color === c && 'ring-4 ring-emerald/30 scale-110')} style={{ background: c }} aria-label={c} />)}</div>
+            <div className="flex gap-2">{['#1F6B4F', '#C2643E', '#3C6E9E', '#B88A2B', '#2F8A84', '#D0574B', '#5A6FB0', '#8A5CA8', '#A8743F', '#A84B6B', '#6B7A72'].map((c) => <button key={c} type="button" onClick={() => setColor(c)} className={clsx('size-8 rounded-full', color === c && 'ring-4 ring-brand/30 scale-110')} style={{ background: c }} aria-label={c} />)}</div>
           </>
         )}
       </Modal>

@@ -31,7 +31,7 @@ export function Splash({ status }: { status: string }) {
           {tr('tus finanzas, en orden')}
         </motion.p>
         <div className="mt-10 h-[3px] w-40 rounded-full bg-white/10 overflow-hidden">
-          <motion.div className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-[#5BE0A8] to-transparent" animate={ok ? { x: ['-100%', '300%'] } : undefined} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }} />
+          <motion.div className="h-full w-1/3 rounded-full bg-gradient-to-r from-transparent via-[#C9C2FF] to-transparent" animate={ok ? { x: ['-100%', '300%'] } : undefined} transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }} />
         </div>
         <motion.p className="text-[11.5px] text-white/45 mt-3 h-4" key={status} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>{status}</motion.p>
       </div>

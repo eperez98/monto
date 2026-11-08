@@ -18,6 +18,7 @@ import { Onboarding } from './features/onboarding/Onboarding';
 import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
 import { NotificationsPanel } from './components/layout/Notifications';
+import { GuideTour } from './components/layout/GuideTour';
 import { TxEditor } from './features/transactions/TxEditor';
 import { Toaster, Button, useMotionOK, ease } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -58,12 +59,13 @@ export default function App() {
 
   // ------------------------------------------------------------ theme & motion
   const applyVisual = useCallback((e: Engine | null) => {
-    const prefs = e ? getPrefs(e) : { theme: 'system', reducedMotion: 'system' };
+    const prefs = e ? getPrefs(e) : { theme: 'system', reducedMotion: 'system', palette: 'violet' };
     const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const dark = prefs.theme === 'dark' || (prefs.theme === 'system' && sysDark);
     const sysReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const reduce = prefs.reducedMotion === 'on' || (prefs.reducedMotion === 'system' && sysReduce);
     document.documentElement.classList.toggle('dark', dark);
+    document.documentElement.classList.toggle('theme-classic', prefs.palette === 'classic');
     document.documentElement.classList.toggle('reduce-motion', reduce);
     useApp.getState().setVisual({ dark, reducedMotion: reduce });
   }, []);
@@ -244,6 +246,7 @@ export default function App() {
             </div>
             <TxEditor />
             <NotificationsPanel />
+            <GuideTour />
           </motion.div>
         )}
       </AnimatePresence>

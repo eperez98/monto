@@ -20,6 +20,7 @@ for (const lang of ['es', 'en']) {
   const out = `assets/screenshots/${lang}`;
   mkdirSync(out, { recursive: true });
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: lang === 'es' ? 'es-PA' : 'en-US' });
+  await ctx.addInitScript(() => localStorage.setItem('monto:tour-done', '1'));
   const page = await ctx.newPage();
   const shot = async (name, wait = 1200) => { await page.waitForTimeout(wait); await page.screenshot({ path: `${out}/${name}.png` }); };
   const btn = (name) => page.getByRole('button', { name, exact: true }).first().click();

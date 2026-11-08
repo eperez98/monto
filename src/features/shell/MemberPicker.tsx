@@ -36,7 +36,7 @@ export function MemberPicker({ members, onPick, verify }: { members: Member[]; o
         <div className="flex flex-wrap justify-center gap-5 mt-10">
           {members.map((m, i) => (
             <motion.button key={m.id} onClick={() => choose(m)} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 * i }} whileHover={{ y: -4 }}
-              className={`w-36 rounded-[22px] border p-5 bg-surface shadow-card transition ${sel?.id === m.id ? 'border-emerald ring-4 ring-emerald/15' : 'border-line'}`}>
+              className={`w-36 rounded-[22px] border p-5 bg-surface shadow-card transition ${sel?.id === m.id ? 'border-brand ring-4 ring-brand/15' : 'border-line'}`}>
               <Avatar name={m.name} color={m.color} emoji={m.emoji} size={64} className="mx-auto" />
               <p className="text-[14px] font-semibold mt-3 truncate">{m.name}</p>
               <p className="text-[11.5px] text-muted">{ROLE_LABEL[m.role]}{m.hasPin ? ' · PIN' : ''}</p>

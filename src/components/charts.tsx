@@ -60,14 +60,14 @@ export function CategoryDonut({ data, currency, size = 180 }: { data: CategorySl
     <div className="relative" style={{ width: size, height: size }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
-          <Pie data={data} dataKey="amount" nameKey="name" innerRadius="68%" outerRadius="100%" paddingAngle={data.length > 1 ? 2 : 0} cornerRadius={6} stroke="none" isAnimationActive={ok} animationDuration={1100}>
+          <Pie data={data} dataKey="amount" nameKey="name" innerRadius="80%" outerRadius="100%" paddingAngle={data.length > 1 ? 4 : 0} cornerRadius={20} stroke="none" isAnimationActive={ok} animationDuration={1100}>
             {data.map((d) => <Cell key={d.categoryId} fill={d.color} />)}
           </Pie>
           <Tooltip content={<TipBox currency={currency} />} />
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 grid place-items-center pointer-events-none text-center">
-        <div><p className="text-[10.5px] text-muted">{tr('Total')}</p><p className="text-[15px] font-semibold num">{formatMoney(total, currency, { compact: true })}</p></div>
+        <div><p className="text-[10.5px] text-muted">{tr('Total')}</p><p className="text-[20px] font-semibold tracking-[-0.03em] num">{formatMoney(total, currency, { compact: true })}</p></div>
       </div>
     </div>
   );

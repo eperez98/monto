@@ -160,7 +160,7 @@ export function TxEditor() {
       <fieldset disabled={!editable} className="space-y-4">
         <div className="flex flex-wrap gap-1.5">
           {TYPES.map(({ t, icon }) => (
-            <button key={t} type="button" onClick={() => { setType(t); setCategoryId(''); }} className={clsx('group inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium border transition', type === t ? 'bg-brand text-brand-ink border-brand dark:bg-emerald dark:text-[#06140D] dark:border-emerald' : 'border-line text-ink-2 hover:bg-surface-2')}>
+            <button key={t} type="button" onClick={() => { setType(t); setCategoryId(''); }} className={clsx('group inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium border transition', type === t ? 'bg-brand text-brand-ink border-brand dark:border-emerald' : 'border-line text-ink-2 hover:bg-surface-2')}>
               <Icon name={icon} size={14} active={type === t} />{TX_TYPE_LABEL[t]}
             </button>
           ))}
