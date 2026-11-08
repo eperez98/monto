@@ -1,12 +1,13 @@
 // Prints release notes for a tag from CHANGELOG.md plus update instructions.
-// Usage: node scripts/release-notes.mjs v0.5.4-beta.7
+// Usage: node scripts/release-notes.mjs v0.6.0
 import { readFileSync } from 'node:fs';
 const tag = process.argv[2] ?? '';
 const version = tag.replace(/^v/, '');
 const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
 const re = new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\][^\\n]*\\n([\\s\\S]*?)(?=^## \\[|^\\[[^\\]]+\\]:|$(?![\\s\\S]))`, 'm');
 const section = changelog.match(re)?.[1]?.trim() ?? '_Consulta CHANGELOG.md para el detalle de cambios._';
-console.log(`# Monto ${tag}
+const codename = changelog.match(new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\][^\\n]*·\\s*(.+)$`, 'm'))?.[1]?.trim();
+console.log(`# Monto ${tag}${codename ? ` — ${codename}` : ''}
 
 ${section}
 

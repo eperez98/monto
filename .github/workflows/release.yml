@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag a publicar (por ejemplo v0.5.4-beta.7)'
+        description: 'Tag a publicar (por ejemplo v0.6.0)'
         required: true
 
 permissions:
@@ -49,6 +49,7 @@ jobs:
           $installer = Get-ChildItem src-tauri/target/release/bundle/nsis/*.exe | Select-Object -First 1
           ./scripts/windows-smoke-test.ps1 -Installer $installer.FullName
       - name: Preparar el paquete (zip con el instalador)
+        id: pkg
         shell: pwsh
         run: |
           $v = $env:TAG.TrimStart('v')
@@ -59,11 +60,13 @@ jobs:
           Get-ChildItem $pkg -Filter *.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Out-File -Encoding ascii "$pkg/SHA256SUMS.txt"
           Compress-Archive -Path "$pkg/*" -DestinationPath "$pkg.zip"
           node scripts/release-notes.mjs $env:TAG > release/NOTAS.md
+          # Release title = first line of the notes (includes the codename from CHANGELOG, if any).
+          "title=$((Get-Content release/NOTAS.md -TotalCount 1).TrimStart('# '))" >> $env:GITHUB_OUTPUT
       - name: Crear GitHub Release
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           tag_name: ${{ env.TAG }}
-          name: Monto ${{ env.TAG }}
+          name: ${{ steps.pkg.outputs.title }}
           body_path: release/NOTAS.md
           draft: false
           prerelease: ${{ contains(env.TAG, '-') }}

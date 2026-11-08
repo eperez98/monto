@@ -198,8 +198,8 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.5.4 Beta 7').waitFor();
-  assert(true, 'versión 0.5.4 Beta 7 visible en Actualizaciones');
+  await page.getByText('Monto 0.6.0').waitFor();
+  assert(true, 'versión 0.6.0 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 

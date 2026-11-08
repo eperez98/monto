@@ -10,6 +10,10 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.6.0] - 2026-11-07 · Security Revision
+
+Versión centrada en seguridad. Primera versión estable (sin «Beta») de Monto.
+
 ### Seguridad
 - El actualizador solo acepta el paquete oficial de este repositorio (`Monto_<versión>_x64.zip` publicado en `eperez98/monto`) aunque la interfaz le pida otra dirección.
 - Las exportaciones a CSV neutralizan los textos que Excel interpretaría como fórmulas (`=`, `+`, `-`, `@`), sin afectar a los importes.
@@ -117,7 +121,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.5.4-beta.7...HEAD
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/eperez98/monto/releases/tag/v0.6.0
 [0.5.4-beta.7]: https://github.com/eperez98/monto/releases/tag/v0.5.4-beta.7
 [0.5.3-beta.6]: https://github.com/eperez98/monto/releases/tag/v0.5.3-beta.6
 [0.5.2-beta.5]: https://github.com/eperez98/monto/releases/tag/v0.5.2-beta.5
