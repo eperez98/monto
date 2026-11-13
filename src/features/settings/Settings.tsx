@@ -17,6 +17,7 @@ import { lang, locale, setLang, tr } from '../../lib/i18n';
 import { activeProfileId, listProfiles, type ProfileEntry } from '../../db/adapters';
 import { createProfile, deleteCurrentProfile, switchProfile } from '../../services/profiles';
 import { profileLabel } from '../shell/ProfileSwitcher';
+import { StylePicker } from '../dashboard/StylePicker';
 
 type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'categories' | 'updates' | 'about';
 const TABS: Array<{ k: Tab; label: string; icon: string }> = [
@@ -156,6 +157,11 @@ function AppearanceTab() {
             );
           })}
         </div>
+      </div>
+      <div>
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Estilo del resumen')}</p>
+        <p className="text-[12px] text-muted mb-3">{tr('Elige cuánta información ves al abrir Monto.')}</p>
+        <StylePicker value={prefs.dashboardStyle ?? 'calm'} onChange={(v) => mutate((e) => setPrefs(e, { dashboardStyle: v }))} />
       </div>
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Animaciones')}</p>

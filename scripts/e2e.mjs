@@ -212,8 +212,8 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.7.0 Beta 2').waitFor();
-  assert(true, 'versión 0.7.0 Beta 2 visible en Actualizaciones');
+  await page.getByText('Monto 0.7.5 Beta 1').waitFor();
+  assert(true, 'versión 0.7.5 Beta 1 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
@@ -228,6 +228,28 @@ try {
   await click('Violeta');
   await page.waitForFunction(() => !document.documentElement.classList.contains('theme-classic'));
   assert(true, 'tema de color clásico y violeta seleccionables');
+
+  step('Summary styles');
+  await click(/^Hoy/);
+  await click('Resumen', { exact: true });
+  await page.getByText('Puedes gastar hoy').waitFor();
+  assert((await page.locator('[data-tour="hero"]').innerText()).includes('Saldo disponible'), 'estilo Hoy: cuánto puedes gastar hoy');
+  await click('Ver detalle');
+  await page.getByText('Pendientes', { exact: true }).waitFor();
+  await page.waitForTimeout(800);
+  await shot('17a-style-today');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Apariencia');
+  await click(/^Historias/);
+  await click('Resumen', { exact: true });
+  const stories = page.getByRole('list', { name: 'Lo importante de hoy' }).getByRole('listitem');
+  await stories.first().waitFor();
+  assert((await stories.count()) >= 1, 'estilo Historias: mensajes con acción');
+  await page.waitForTimeout(800);
+  await shot('17b-style-stories');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Apariencia');
+  await click(/^Capas tranquilas/);
   await click('Resumen', { exact: true });
   await page.waitForTimeout(1600);
   await shot('17-dashboard-dark');

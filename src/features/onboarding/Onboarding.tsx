@@ -14,6 +14,8 @@ import { createAccount } from '../../db/repo/finance';
 import { createMember, getPrefs, seedCategories, setPrefs, setProfile } from '../../db/repo/core';
 import { QuickPrefs } from '../../components/layout/QuickPrefs';
 import { ProfileSwitcher } from '../shell/ProfileSwitcher';
+import { StylePicker } from '../dashboard/StylePicker';
+import type { DashboardStyle } from '../dashboard/Dashboard';
 import { parseMoney, type Currency } from '../../lib/money';
 import { today } from '../../lib/dates';
 import type { Engine } from '../../db/engine';
@@ -46,6 +48,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
   const [pw2, setPw2] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dashStyle, setDashStyle] = useState<DashboardStyle>('calm');
 
   const next = () => { setErr(null); setDir(1); setStep((s) => s + 1); };
   const back = () => { setErr(null); setDir(-1); setStep((s) => s - 1); };
@@ -76,7 +79,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
         const acc = createAccount(engine, actor, { name: accName.trim() || tr('Cuenta principal'), type: accType, currency, initialBalance: parseMoney(accBalance || '0'), institution: BANKS.includes(accName) ? accName : null, ownerMemberId: mode === 'individual' ? null : owner.id });
         if (plan.length) saveExpensePlan(engine, actor, plan);
         if (!skipIncome) createIncomeSource(engine, actor, { name: employer.trim() || tr('Salario'), config: draftToConfig(income), currency, accountId: acc.id, startDate: today() });
-        setPrefs(engine, { theme: getPrefs(engine).theme, reducedMotion: 'system', autoLockMinutes: usePw ? 5 : 0, showBothCurrencies: true });
+        setPrefs(engine, { theme: getPrefs(engine).theme, reducedMotion: 'system', autoLockMinutes: usePw ? 5 : 0, showBothCurrencies: true, dashboardStyle: dashStyle });
         setProfile(engine, { name: name.trim(), mode, primaryCurrency: currency, onboarded: true, householdName: household.trim() || undefined });
       });
       if (usePw) await engine.setPassword(pw);
@@ -215,10 +218,15 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                 </div>
               )}
               {step === 7 && (
-                <div className="pt-10 text-center">
+                <div className="pt-4 text-center">
                   <motion.div initial={ok ? { scale: 0 } : false} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 15 }} className="mx-auto grid place-items-center size-20 rounded-full bg-emerald text-white"><Icon name="check" size={38} strokeWidth={2.4} /></motion.div>
                   <h2 className="text-[34px] font-semibold tracking-[-0.04em] mt-6">{tr('¡Todo listo,')}{' '}{name.split(' ')[0]}!</h2>
                   <p className="serif text-[19px] text-ink-2 mt-1">{tr('Tu panel financiero está preparado.')}</p>
+                  <div className="mt-8 text-left">
+                    <p className="text-[14px] font-semibold text-ink">{tr('¿Cómo quieres ver tu resumen?')}</p>
+                    <p className="text-[12.5px] text-muted mt-0.5 mb-3">{tr('Puedes cambiarlo cuando quieras en Configuración → Apariencia.')}</p>
+                    <StylePicker value={dashStyle} onChange={setDashStyle} />
+                  </div>
                 </div>
               )}
             </motion.div>
