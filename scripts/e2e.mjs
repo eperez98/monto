@@ -215,8 +215,8 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.7.0 Beta 4').waitFor();
-  assert(true, 'versión 0.7.0 Beta 4 visible en Actualizaciones');
+  await page.getByText('Monto 0.7.0 Beta 5').waitFor();
+  assert(true, 'versión 0.7.0 Beta 5 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
