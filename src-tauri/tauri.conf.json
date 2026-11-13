@@ -49,7 +49,7 @@
         "installerIcon": "icons/icon.ico",
         "startMenuFolder": "Monto"
       },
-      "wix": { "language": ["es-ES", "en-US"], "version": "0.7.0.5" }
+      "wix": { "language": ["es-ES", "en-US"], "version": "0.7.0.6" }
     }
   }
 }

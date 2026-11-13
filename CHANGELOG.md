@@ -10,6 +10,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.7.0-beta.6] - 2026-11-13
+
 ### Corregido
 - Monto abre la ventana maximizada en lugar de una ventana centrada de 1440 × 900.
 - Al actualizar desde la ventana de aviso, Monto se vuelve a abrir solo cuando termina el instalador.
@@ -173,7 +175,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.5...HEAD
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.6...HEAD
+[0.7.0-beta.6]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.6
 [0.7.0-beta.5]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.5
 [0.7.0-beta.4]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.4
 [0.7.0-beta.2]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.2
