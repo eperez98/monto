@@ -10,6 +10,10 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Corregido
+- Monto abre la ventana maximizada en lugar de una ventana centrada de 1440 × 900.
+- Al actualizar desde la ventana de aviso, Monto se vuelve a abrir solo cuando termina el instalador.
+
 ## [0.7.0-beta.5] - 2026-11-13
 
 ### Corregido

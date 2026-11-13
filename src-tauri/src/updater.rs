@@ -219,8 +219,9 @@ pub async fn install_update(app: AppHandle, info: UpdateInfo) -> Result<(), Stri
     .await
     .map_err(|e| e.to_string())??;
 
-    // Passive mode: progress bar without questions; data in %APPDATA% is kept.
-    std::process::Command::new(&path).arg("/P").spawn().map_err(|e| format!("No se pudo iniciar el instalador: {e}"))?;
+    // /P: passive install (progress bar, no questions; data in %APPDATA% is kept). /UPDATE: in-place update.
+    // /R: the NSIS installer reopens Monto when it finishes.
+    std::process::Command::new(&path).args(["/P", "/UPDATE", "/R"]).spawn().map_err(|e| format!("No se pudo iniciar el instalador: {e}"))?;
     if let Some(w) = app.get_webview_window("main") { let _ = w.hide(); }
     app.exit(0);
     Ok(())
