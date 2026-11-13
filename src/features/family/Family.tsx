@@ -67,7 +67,7 @@ export default function Family() {
   return (
     <div>
       <PageHeader title={profile.householdName || tr('Mi hogar')} subtitle={tr('Finanzas compartidas, responsabilidades claras')} actions={canManage && <Button icon="plus" onClick={() => openForm()}>{tr('Añadir integrante')}</Button>} />
-      <div className="grid grid-cols-4 gap-5 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-5">
         <Card className="p-5"><Stat label={tr('Ingresos del hogar (mes)')} value={<Money animated cents={t.income} currency={cur} className="text-emerald" />} /></Card>
         <Card className="p-5" delay={0.04}><Stat label={tr('Gastos compartidos (mes)')} value={<Money animated cents={t.expense} currency={cur} />} /></Card>
         <Card className="p-5" delay={0.08}><Stat label={tr('Balance del hogar')} value={<Money animated cents={t.net} currency={cur} sign />} /></Card>

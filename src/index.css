@@ -157,6 +157,9 @@ input, textarea, select, [contenteditable] { user-select: text; }
     linear-gradient(145deg, #183A2D 0%, #0D1F17 60%, #09150F 100%);
 }
 
+/* Inside the phone preview frame: leave room for the simulated home indicator. */
+.phone-preview { --safe-bottom: 22px; }
+
 /* Guided tour spotlight */
 .tour-hole { box-shadow: 0 0 0 9999px rgb(12 10 24 / 0.62); border-radius: 18px; transition: all .35s cubic-bezier(.22,1,.36,1); }
 .reduce-motion .tour-hole { transition: none; }

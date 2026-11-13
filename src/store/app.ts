@@ -25,6 +25,7 @@ interface AppState {
   txEditor: TxEditor;
   notificationsOpen: boolean;
   tourOpen: boolean;
+  phonePreview: boolean;
   reducedMotion: boolean;
   dark: boolean;
   setEngine: (e: Engine | null) => void;
@@ -40,6 +41,7 @@ interface AppState {
   closeTx: () => void;
   setNotificationsOpen: (o: boolean) => void;
   setTourOpen: (o: boolean) => void;
+  setPhonePreview: (o: boolean) => void;
   setVisual: (v: { reducedMotion?: boolean; dark?: boolean }) => void;
 }
 
@@ -60,6 +62,7 @@ export const useApp = create<AppState>((set) => ({
   txEditor: { open: false },
   notificationsOpen: false,
   tourOpen: false,
+  phonePreview: false,
   reducedMotion: false,
   dark: false,
   setEngine: (engine) => set({ engine, revision: engine?.revision ?? 0 }),
@@ -79,5 +82,6 @@ export const useApp = create<AppState>((set) => ({
   closeTx: () => set({ txEditor: { open: false } }),
   setNotificationsOpen: (notificationsOpen) => set({ notificationsOpen }),
   setTourOpen: (tourOpen) => set({ tourOpen }),
+  setPhonePreview: (phonePreview) => set({ phonePreview }),
   setVisual: (v) => set(v),
 }));

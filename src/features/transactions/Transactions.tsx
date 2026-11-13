@@ -78,7 +78,7 @@ export default function Transactions() {
         {canExport && <><Button variant="secondary" icon="download" onClick={() => doExport('csv')}>{tr('CSV')}</Button><Button variant="secondary" icon="download" onClick={() => doExport('xlsx')}>{tr('Excel')}</Button></>}
         {canCreate && <Button icon="plus" onClick={() => openTx()}>{tr('Nuevo')}</Button>}
       </>} />
-      <div className="grid grid-cols-3 gap-5 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-5">
         <Card className="p-5"><Stat label={tr('Ingresos del periodo')} value={<Money animated cents={t.income} currency={cur} className="text-emerald" />} /></Card>
         <Card className="p-5" delay={0.05}><Stat label={tr('Gastos del periodo')} value={<Money animated cents={t.expense} currency={cur} />} /></Card>
         <Card className="p-5" delay={0.1}><Stat label={tr('Balance')} value={<Money animated cents={t.net} currency={cur} sign className={t.net < 0 ? 'text-coral' : ''} />} /></Card>

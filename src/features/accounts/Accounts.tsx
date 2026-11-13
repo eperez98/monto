@@ -105,14 +105,14 @@ export default function Accounts() {
   return (
     <div>
       <PageHeader title={tr('Cuentas y tarjetas')} subtitle={tr('Saldos por moneda, siempre al día')} actions={canManage && <Button icon="plus" onClick={() => { setEditing(null); setFormOpen(true); }}>{tr('Nueva cuenta')}</Button>} />
-      <div className="grid grid-cols-4 gap-5 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6">
         <Card className="p-5"><Stat label={tr('Disponible (PAB)')} value={<Money animated cents={bal.available.PAB} currency="PAB" />} /></Card>
         <Card className="p-5" delay={0.04}><Stat label={tr('Disponible (USD)')} value={<Money animated cents={bal.available.USD} currency="USD" />} /></Card>
         <Card className="p-5" delay={0.08}><Stat label={tr('Deuda en tarjetas')} value={<Money animated cents={combined(bal.cardDebt, cur)} currency={cur} className="text-coral" />} /></Card>
         <Card className="p-5" delay={0.12}><Stat label={tr('Patrimonio neto')} value={<Money animated cents={combined(bal.netWorth, cur)} currency={cur} />} sub={tr('Paridad PAB:USD 1:1')} /></Card>
       </div>
       {accounts.length ? (
-        <div className="grid grid-cols-3 gap-5" style={{ perspective: 1000 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5" style={{ perspective: 1000 }}>
           {accounts.map((a, i) => <AccountCard key={a.id} a={a} index={i} onClick={() => setSelected(a.id)} />)}
           {canManage && (
             <motion.button whileHover={{ y: -4 }} onClick={() => { setEditing(null); setFormOpen(true); }} className="rounded-[22px] h-[172px] border-2 border-dashed border-line text-muted hover:text-ink hover:border-ink-2/30 grid place-items-center">

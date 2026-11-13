@@ -357,6 +357,22 @@ try {
   assert((await page.getByText('Después de pagar todo te quedan').innerText()).includes('985.00'), 'orden de pagos: quedan 985 para ahorrar');
   await shot('20-payment-order');
 
+  step('Bills paid this month');
+  const housing = page.locator('ol li').first();
+  await housing.getByRole('checkbox', { name: 'Pagado' }).check();
+  await page.getByText('Marcado como pagado').waitFor();
+  assert((await page.getByText(/^Pagados 1 de 3/).innerText()).includes('115.00'), 'pagado sin descontar: pendiente 115 (luz + Netflix)');
+  await housing.getByRole('switch', { name: 'Descontar del saldo actual' }).check();
+  await page.getByText('Pago registrado y descontado del saldo').waitFor();
+  await click('Resumen', { exact: true });
+  await page.getByText('Saldo disponible').first().waitFor();
+  assert((await page.locator('[data-tour="hero"]').innerText()).includes('400.00'), 'descontar del saldo: 500 − 900 = −400');
+  await click('Plan mensual');
+  await page.locator('ol li').first().getByRole('switch', { name: 'Descontar del saldo actual' }).uncheck();
+  await page.getByText('Marcado como pagado').last().waitFor();
+  await click('Resumen', { exact: true });
+  assert((await page.locator('[data-tour="hero"]').innerText()).includes('500.00'), 'quitar el descuento devuelve el saldo (500)');
+
   step('Separate couple profile (copy)');
   const partnerWizard = async (name) => {
     await page.getByPlaceholder('Ej. Ana').fill(name);
@@ -405,6 +421,24 @@ try {
   await page.getByText('Saldo disponible').waitFor();
   const keys = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('monto', 1); r.onsuccess = () => { const g = r.result.transaction('files').objectStore('files').getAllKeys(); g.onsuccess = () => res(g.result.map(String)); }; }));
   assert(keys.filter((k) => /^monto-.+\.db$/.test(k)).length === 1 && keys.some((k) => k.startsWith('backup-')), 'perfil borrado con copia previa; los demás perfiles siguen intactos');
+
+  step('Phone view (iOS)');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Apariencia');
+  await click('Abrir vista de celular');
+  const phone = page.frameLocator('iframe[title="Monto en vista de celular"]');
+  await phone.getByText('Saldo disponible').first().waitFor({ timeout: 15000 });
+  assert(await phone.getByRole('button', { name: 'Más', exact: true }).isVisible(), 'vista de celular: barra inferior de pestañas');
+  assert(!(await phone.getByRole('button', { name: 'Presupuestos' }).isVisible()), 'vista de celular: sin menú lateral');
+  await page.waitForTimeout(1200);
+  await shot('21-phone-view');
+  await phone.getByRole('button', { name: 'Más', exact: true }).click();
+  await phone.getByRole('button', { name: 'Presupuestos' }).click();
+  await phone.getByText('Nuevo presupuesto').first().waitFor();
+  await page.waitForTimeout(700);
+  await shot('22-phone-budgets');
+  await click('Salir de la vista de celular');
+  assert(!(await page.locator('iframe').count()), 'salir de la vista de celular');
 
   console.log('\nE2E OK');
 } catch (e) {

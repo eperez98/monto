@@ -34,7 +34,7 @@ export function Topbar() {
   const showPeriod = route === 'dashboard' || route === 'transactions' || route === 'reports';
 
   return (
-    <header className="flex items-center gap-4 px-8 pt-6 pb-4">
+    <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 md:px-8 pt-4 md:pt-6 pb-3 md:pb-4">
       <div className="flex-1 min-w-0">
         <p className={route === 'dashboard' ? 'text-[11.5px] text-muted' : 'hidden'}>{formatMonth(monthKey(today()))}{profile.householdName && scope === 'family' ? ` · ${profile.householdName}` : ''}</p>
         {page && route !== 'dashboard' ? (
@@ -45,15 +45,17 @@ export function Topbar() {
           <h2 className="text-[22px] font-semibold tracking-[-0.035em] text-ink truncate">{greeting()}, <span>{me?.name.split(' ')[0]}</span></h2>
         )}
       </div>
+      <div className="order-last md:order-none w-full md:w-auto flex items-center gap-2 overflow-x-auto [scrollbar-width:none]">
       {profile.mode !== 'individual' && (
         <div data-tour="scope"><Segmented size="sm" layoutId="scope" value={scope} onChange={setScope} options={[{ value: 'personal', label: <><Icon name="user" size={13} />{tr('Personal')}</> }, { value: 'family', label: <><Icon name="family" size={13} />{tr('Hogar')}</> }]} /></div>
       )}
       {showPeriod && (
         <div data-tour="period"><Segmented size="sm" layoutId="period" value={period} onChange={(v) => (v === 'custom' ? setRangeOpen(true) : setPeriod(v))} options={PERIODS} /></div>
       )}
-      <div data-tour="prefs"><QuickPrefs /></div>
+      </div>
+      <div data-tour="prefs" className="hidden md:block"><QuickPrefs /></div>
       <IconButton icon="bell" label={tr('Notificaciones')} badge={count} onClick={() => setNotif(true)} />
-      {canCreate && <Button data-tour="new-tx" icon="plus" onClick={() => openTx()}>{tr('Movimiento')}</Button>}
+      {canCreate && <span className="hidden md:contents"><Button data-tour="new-tx" icon="plus" onClick={() => openTx()}>{tr('Movimiento')}</Button></span>}
       <Modal open={rangeOpen} onClose={() => setRangeOpen(false)} title={tr('Rango personalizado')} width={420} icon="calendar"
         footer={<><Button variant="ghost" onClick={() => setRangeOpen(false)}>{tr('Cancelar')}</Button><Button disabled={!from || !to || from > to} onClick={() => { setPeriod('custom', { from, to }); setRangeOpen(false); }}>{tr('Aplicar')}</Button></>}>
         <div className="grid grid-cols-2 gap-3">

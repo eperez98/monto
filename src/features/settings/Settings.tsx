@@ -19,6 +19,7 @@ import { copyProfileForCouple, createProfile, deleteCurrentProfile, switchProfil
 import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
+import { IS_PREVIEW } from '../../lib/preview';
 
 type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'categories' | 'updates' | 'about';
 const TABS: Array<{ k: Tab; label: string; icon: string }> = [
@@ -185,6 +186,13 @@ function AppearanceTab() {
         <p className="text-[12px] text-muted mb-3">{tr('Elige cuánta información ves al abrir Monto.')}</p>
         <StylePicker value={prefs.dashboardStyle ?? 'calm'} onChange={(v) => mutate((e) => setPrefs(e, { dashboardStyle: v }))} />
       </div>
+      {!IS_PREVIEW && (
+        <div>
+          <p className="text-[13.5px] font-semibold mb-1">{tr('Vista de celular')}</p>
+          <p className="text-[12px] text-muted mb-3">{tr('Mira cómo se ve Monto en un iPhone (iOS 27, simulado). Usa una copia temporal de tus datos.')}</p>
+          <Button variant="secondary" icon="phone" onClick={() => useApp.getState().setPhonePreview(true)}>{tr('Abrir vista de celular')}</Button>
+        </div>
+      )}
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Animaciones')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('Reduce el movimiento si prefieres una interfaz más estática.')}</p>

@@ -47,14 +47,14 @@ export default function Budgets() {
         </div>
         {canManage && <Button icon="plus" onClick={() => open()}>{tr('Nuevo presupuesto')}</Button>}
       </>} />
-      <div className="grid grid-cols-4 gap-5 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6">
         <Card className="p-5"><Stat label={tr('Asignado')} value={<Money animated cents={assigned} currency={cur} />} /></Card>
         <Card className="p-5" delay={0.04}><Stat label={tr('Utilizado')} value={<Money animated cents={used} currency={cur} />} /></Card>
         <Card className="p-5" delay={0.08}><Stat label={tr('Disponible')} value={<Money animated cents={assigned - used} currency={cur} className={assigned - used < 0 ? 'text-coral' : 'text-emerald'} />} /></Card>
         <Card className="p-5" delay={0.12}><Stat label={tr('Consumido')} value={`${pct(used, assigned).toFixed(0)} %`} sub={<Progress value={pct(used, assigned)} height={5} className="mt-2" color={pct(used, assigned) >= 90 ? 'var(--coral)' : 'var(--emerald)'} />} /></Card>
       </div>
       {budgets.length ? (
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
           {budgets.map((b, i) => (
             <Card key={b.id} delay={i * 0.04} className={clsx('p-5', b.status.level === 'exceeded' && 'border-coral/40')} onClick={canManage ? () => open(b) : undefined} as={canManage ? 'button' : 'section'}>
               <div className="flex items-center gap-3">

@@ -30,7 +30,7 @@ function SourceForm({ open, onClose, source }: { open: boolean; onClose: () => v
   return (
     <Modal open={open} onClose={onClose} title={source ? tr('Editar fuente de ingreso') : tr('Nueva fuente de ingreso')} icon="salary" width={720}
       footer={<><Button variant="ghost" onClick={onClose}>{tr('Cancelar')}</Button><Button onClick={save}>{tr('Guardar')}</Button></>}>
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <Field label={tr('Nombre o empresa')} className="col-span-2"><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={tr('Ej. Empresa Ejemplo, S.A.')} /></Field>
         <Field label={tr('Moneda')}><Select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}><option value="PAB">{tr('PAB')}</option><option value="USD">{tr('USD')}</option></Select></Field>
         <Field label={tr('Desde')}><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></Field>
@@ -165,7 +165,7 @@ export default function Income() {
     <div>
       <PageHeader title={tr('Ingresos y salario')} subtitle={tr('Lo estimado y lo realmente recibido, siempre por separado')} actions={canManage && <Button icon="plus" onClick={() => setForm({ open: true, source: null })}>{tr('Nueva fuente')}</Button>} />
       {sources.length > 1 && (
-        <div className="grid grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-6">
           <Card className="p-5"><Stat label={<span className="flex gap-1.5 items-center">{tr('Mensual estimado (todas)')}{' '}<EstimateTag /></span>} value={<Money animated cents={totalMonthly} currency={cur} />} /></Card>
           <Card className="p-5"><Stat label={<span className="flex gap-1.5 items-center">{tr('Anual estimado')}{' '}<EstimateTag /></span>} value={<Money animated cents={totalAnnual} currency={cur} />} /></Card>
           <Card className="p-5"><Stat label={<span className="flex gap-1.5 items-center">{tr('Recibido en el año')}{' '}<EstimateTag estimated={false} /></span>} value={<Money animated cents={totalYear} currency={cur} className="text-emerald" />} /></Card>

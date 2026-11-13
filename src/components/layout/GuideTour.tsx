@@ -35,7 +35,8 @@ export function GuideTour() {
   const nextRef = useRef<HTMLButtonElement>(null);
 
   // Steps whose element isn't on screen (e.g. "Personal / Hogar" in individual mode) are skipped.
-  const steps = open ? STEPS.filter((s) => !s.target || document.querySelector(`[data-tour="${s.target}"]`)) : [];
+  // Hidden targets (e.g. the sidebar on a phone-width screen) are skipped too.
+  const steps = open ? STEPS.filter((s) => !s.target || !!document.querySelector(`[data-tour="${s.target}"]`)?.getClientRects().length) : [];
   const step = steps[Math.min(i, steps.length - 1)];
 
   // First run: open once the dashboard has rendered.
@@ -84,7 +85,7 @@ export function GuideTour() {
   const vw = window.innerWidth, vh = window.innerHeight;
   let pos: { top: number; left: number };
   if (!rect) pos = { top: vh / 2 - 110, left: vw / 2 - CARD_W / 2 };
-  else if (rect.right < 300) pos = { top: Math.min(Math.max(16, rect.top), vh - 260), left: rect.right + PAD + 16 };
+  else if (rect.right < 300 && vw > 700) pos = { top: Math.min(Math.max(16, rect.top), vh - 260), left: rect.right + PAD + 16 };
   else if (vh - rect.bottom > 250) pos = { top: rect.bottom + PAD + 12, left: Math.min(Math.max(16, rect.left + rect.width / 2 - CARD_W / 2), vw - CARD_W - 16) };
   else pos = { top: Math.max(16, rect.top - PAD - 240), left: Math.min(Math.max(16, rect.left + rect.width / 2 - CARD_W / 2), vw - CARD_W - 16) };
 

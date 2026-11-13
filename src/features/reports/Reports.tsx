@@ -145,7 +145,7 @@ export default function Reports() {
       <div className="flex flex-wrap gap-2 mb-5">
         {KINDS.map((k) => <button key={k.k} onClick={() => setKind(k.k)} className={clsx('group inline-flex items-center gap-2 h-9 px-4 rounded-full text-[12.5px] font-medium border transition', kind === k.k ? 'bg-brand text-brand-ink border-brand' : 'bg-surface border-line text-ink-2 hover:bg-surface-2')}><Icon name={k.icon} size={15} active={kind === k.k} />{k.label}</button>)}
       </div>
-      <div className="grid grid-cols-4 gap-5 mb-5">{report.summary?.slice(0, 4).map((s, i) => <Card key={s.label} delay={i * 0.04} className="p-5"><Stat label={s.label} value={s.value} /></Card>)}</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-5">{report.summary?.slice(0, 4).map((s, i) => <Card key={s.label} delay={i * 0.04} className="p-5"><Stat label={s.label} value={s.value} /></Card>)}</div>
       <div className="grid grid-cols-12 gap-5 mb-5">
         <Card className="col-span-8">
           <CardHeader title={kind === 'annual' ? tr('Gastos: año anterior vs actual') : kind === 'savings' || kind === 'cashflow' ? tr('Ahorro neto mensual') : tr('Ingresos y gastos')} subtitle={tr('Últimos 12 meses')} />

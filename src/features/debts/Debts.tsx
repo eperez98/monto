@@ -82,13 +82,13 @@ export default function Debts() {
   return (
     <div>
       <PageHeader title={tr('Préstamos y deudas')} subtitle={tr('Saldo pendiente, cuotas, intereses y amortización')} actions={canManage && <Button icon="plus" onClick={() => setForm({ open: true, d: null })}>{tr('Nueva deuda')}</Button>} />
-      <div className="grid grid-cols-3 gap-5 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-6">
         <Card className="p-5"><Stat label={tr('Saldo pendiente total')} value={<Money animated cents={combined(owed, cur)} currency={cur} className="text-coral" />} sub={`PAB ${formatMoney(owed.PAB, 'PAB')} · USD ${formatMoney(owed.USD, 'USD')}`} /></Card>
         <Card className="p-5" delay={0.04}><Stat label={tr('Cuotas mensuales')} value={<Money animated cents={monthly} currency={cur} />} /></Card>
         <Card className="p-5" delay={0.08}><Stat label={tr('Intereses pagados')} value={<Money animated cents={debts.reduce((a, d) => a + d.status.paidInterest, 0)} currency={cur} />} /></Card>
       </div>
       {debts.length ? (
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {debts.map((d, i) => {
             const cuota = monthlyPayment(d.principal, d.annualRate, d.termMonths);
             return (

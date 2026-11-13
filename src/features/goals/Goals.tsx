@@ -83,14 +83,14 @@ export default function Goals() {
     <div>
       <PageHeader title={tr('Objetivos de ahorro')} subtitle={tr('Metas claras, progreso visible')} actions={canManage && <Button icon="plus" onClick={() => openForm()}>{tr('Nuevo objetivo')}</Button>} />
       {goals.length > 0 && (
-        <div className="grid grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-6">
           <Card className="p-5"><Stat label={tr('Ahorrado en objetivos')} value={<Money animated cents={totalSaved} currency={profile.primaryCurrency} className="text-emerald" />} /></Card>
           <Card className="p-5" delay={0.04}><Stat label={tr('Meta total')} value={<Money animated cents={totalTarget} currency={profile.primaryCurrency} />} /></Card>
           <Card className="p-5" delay={0.08}><Stat label={tr('Completados')} value={`${goals.filter((g) => g.completedAt).length} de ${goals.length}`} /></Card>
         </div>
       )}
       {goals.length ? (
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
           {goals.map((g, i) => {
             const p = pct(g.saved, g.target);
             const pace = goalMonthlyPace(e, g.id);

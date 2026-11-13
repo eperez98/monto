@@ -20,6 +20,9 @@ Resumen más minimalista y amable, preguntas de gastos más completas y perfiles
 - **Día de la factura**: para vivienda, luz, agua, gas, internet, préstamos, tarjetas, salud y educación se pregunta qué día llega la factura. Esas fechas alimentan el orden de pagos.
 - **Convertir en perfil de pareja** (*Configuración → Perfil*): pide los datos de tu pareja como en la configuración inicial (nombre, ingresos, gastos y cuenta) y la añade al hogar con el rol «Adulto».
 - **Crear perfil de pareja externo**: copia tu perfil en uno nuevo y añade allí a tu pareja, sin cambiar tu perfil original.
+- **Gastos del mes pagados**: en *Plan mensual*, cada gasto tiene una casilla «Pagado» y, al marcarla, un interruptor «Descontar del saldo actual». Sin el interruptor solo queda marcado como pagado (para lo que pagaste antes de indicar tu saldo); con él se registra el gasto y baja tu saldo. La lista se reinicia cada mes y ahora aparece para todos, no solo para quien cobra una vez al mes.
+- **Vista de celular (iOS 27, simulada)**: en *Configuración → Apariencia → Abrir vista de celular* ves Monto dentro de un iPhone, con barra de estado, Dynamic Island y barra inferior de pestañas. Usa una copia temporal de tus datos que no se guarda.
+- **Diseño para pantallas estrechas**: por debajo de 768 px el menú lateral se cambia por una barra inferior (Resumen, Movimientos, +, Plan y Más) y las tarjetas se apilan.
 - **Tres estilos de resumen**, a elegir al terminar la configuración inicial o en *Configuración → Apariencia*:
   - **Hoy**: una sola respuesta grande, cuánto puedes gastar hoy (tu saldo menos los pagos que faltan este mes, repartido entre los días que quedan), con avisos cortos y el detalle plegado.
   - **Historias**: tres o cuatro frases sobre lo importante (un pago que vence pronto, cuánto ahorras, una categoría que subió o bajó, lo que falta para tu objetivo), cada una con su acción.

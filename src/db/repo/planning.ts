@@ -4,7 +4,7 @@ import { camel } from '../map';
 import { assertCan } from '../../domain/permissions';
 import { categoryIdByName, getSetting, log, setSetting } from './core';
 import type { PlanItem } from '../../domain/plan';
-import { createTransaction } from './finance';
+import { createTransaction, deleteTransaction, listAccounts } from './finance';
 import { estimateIncome, nextPayment, payOccurrences, type IncomeConfig, type PayOccurrence } from '../../domain/salary';
 import { applyPayments, type DebtStatus } from '../../domain/amortization';
 import { budgetStatus, type BudgetStatus } from '../../domain/budget';
@@ -403,4 +403,51 @@ export function saveExpensePlan(e: Engine, actor: Actor, items: PlanItem[], memb
 /** Net monthly income the member expects from their income sources. */
 export function memberMonthlyIncome(e: Engine, memberId: string): number {
   return listIncomeSources(e, memberId).reduce((a, s) => a + incomeSummary(e, s).estimate.monthlyNet, 0);
+}
+
+// ------------------------------------------------------------------ monthly plan: paid bills
+/** Which plan bills are paid this month; `txId` is the expense recorded when the user chose to subtract it. */
+export interface PlanPaid { paid: boolean; txId?: string }
+
+const PLAN_CATEGORY: Record<string, string> = {
+  [tr('Vivienda (alquiler o hipoteca)')]: 'Vivienda', [tr('Electricidad')]: 'Servicios básicos', [tr('Agua')]: 'Servicios básicos', [tr('Gas')]: 'Servicios básicos',
+  [tr('Internet y telefonía')]: 'Internet y telefonía', [tr('Alimentación')]: 'Alimentación', [tr('Transporte')]: 'Transporte', [tr('Préstamos')]: 'Préstamos',
+  [tr('Tarjetas de crédito')]: 'Tarjetas de crédito', [tr('Salud y seguros')]: 'Salud', [tr('Educación')]: 'Educación', [tr('Entretenimiento')]: 'Entretenimiento',
+};
+
+export function getPlanPaid(e: Engine, memberId: string, month = monthKey(today())): Record<string, PlanPaid> {
+  return getSetting<Record<string, PlanPaid>>(e, `planPaid:${memberId}:${month}`, {});
+}
+
+/** The account a bill is paid from by default: the member's own (or a shared) non-card account. */
+export function defaultPayAccount(e: Engine, memberId: string) {
+  const mine = listAccounts(e).filter((a) => a.ownerMemberId === memberId || a.ownerMemberId === null);
+  return mine.find((a) => a.type !== 'credit_card') ?? mine[0] ?? null;
+}
+
+/**
+ * Mark a plan bill paid or unpaid for the month. With `deduct`, an expense is recorded so the balance goes down;
+ * without it, the bill only counts as paid (for bills paid before the opening balance was entered).
+ */
+export function setPlanPaid(e: Engine, actor: Actor, item: PlanItem, opts: { paid: boolean; deduct: boolean; month?: string; date?: ISODate }) {
+  assertCan(actor.role, 'income.manage');
+  const month = opts.month ?? monthKey(today());
+  const key = `planPaid:${actor.id}:${month}`;
+  const state = getSetting<Record<string, PlanPaid>>(e, key, {});
+  const cur = state[item.name] ?? { paid: false };
+  e.transaction(() => {
+    let txId = cur.txId;
+    if (txId && (!opts.paid || !opts.deduct)) { deleteTransaction(e, actor, txId); txId = undefined; }
+    if (opts.paid && opts.deduct && !txId) {
+      const acc = defaultPayAccount(e, actor.id);
+      if (!acc) throw new Error(tr('Crea una cuenta para poder descontar el pago.'));
+      txId = createTransaction(e, actor, {
+        type: 'expense', description: item.name, amount: item.amount, currency: acc.currency, date: opts.date ?? today(), accountId: acc.id,
+        categoryId: categoryIdByName(e, PLAN_CATEGORY[item.name] ?? (item.kind === 'subscription' ? 'Entretenimiento' : 'Otros gastos'), 'expense'),
+      }).id;
+    }
+    const next = { ...state };
+    if (opts.paid) next[item.name] = { paid: true, txId }; else delete next[item.name];
+    setSetting(e, key, next);
+  });
 }

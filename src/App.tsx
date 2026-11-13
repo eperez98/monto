@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url';
 import { useApp, type RouteKey } from './store/app';
 import { Engine, LockedError, loadSqlJs } from './db/engine';
-import { defaultAdapter, isTauri, type StorageAdapter } from './db/adapters';
+import { defaultAdapter, isTauri, MemoryAdapter, type StorageAdapter } from './db/adapters';
 import { WrongPasswordError } from './db/crypto';
 import { endSession, getMember, getPrefs, getProfile, listMembers, seedCategories, startSession, verifyMemberPin } from './db/repo/core';
 import { runAutoPost } from './db/repo/planning';
@@ -19,12 +19,15 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
 import { NotificationsPanel } from './components/layout/Notifications';
 import { GuideTour } from './components/layout/GuideTour';
+import { MobileNav } from './components/layout/MobileNav';
+import { PhonePreview, PREVIEW_MSG, PREVIEW_READY } from './components/layout/PhonePreview';
 import { PartnerSetupHost } from './features/family/PartnerWizard';
 import { TxEditor } from './features/transactions/TxEditor';
 import { Toaster, Button, useMotionOK, ease } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import type { Member } from './db/types';
 import { tr } from './lib/i18n';
+import { IS_PREVIEW } from './lib/preview';
 
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard'));
 const Transactions = lazy(() => import('./features/transactions/Transactions'));
@@ -117,6 +120,32 @@ export default function App() {
   }, [enter]);
 
   useEffect(() => {
+    if (!IS_PREVIEW) return;
+    document.documentElement.classList.add('phone-preview');
+    const onMsg = async (ev: MessageEvent) => {
+      if (ev.origin !== location.origin || ev.source !== window.parent || ev.data?.type !== PREVIEW_MSG) return;
+      try {
+        await loadSqlJs(sqlWasmUrl);
+        const mem = new MemoryAdapter();
+        mem.data = ev.data.bytes as Uint8Array;
+        const e = await Engine.open(mem, { wasmUrl: sqlWasmUrl });
+        const m = getMember(e, String(ev.data.actorId));
+        if (!m) throw new Error(tr('Sin sesión activa'));
+        setEngine(e);
+        e.subscribe(() => bump());
+        applyVisual(e);
+        setActor({ id: m.id, role: m.role }, null);
+        useApp.getState().go(ev.data.route as RouteKey);
+        setPhase('app');
+      } catch (err) { setPhase('error', (err as Error).message); }
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: PREVIEW_READY }, location.origin);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  useEffect(() => {
+    if (IS_PREVIEW) return;
     let cancelled = false;
     const minSplash = new Promise((r) => setTimeout(r, ok ? 2100 : 300));
     (async () => {
@@ -191,7 +220,7 @@ export default function App() {
     const h = () => { const e = useApp.getState().engine; if (e) void e.flush(); };
     window.addEventListener('beforeunload', h);
     let unlisten: (() => void) | undefined;
-    if (isTauri()) {
+    if (isTauri() && !IS_PREVIEW) {
       void import('@tauri-apps/api/window').then(({ getCurrentWindow }) => getCurrentWindow().onCloseRequested(async () => {
         const s = useApp.getState();
         if (s.engine) { if (s.sessionId) endSession(s.engine, s.sessionId, 'cierre'); await s.engine.flush(); }
@@ -234,10 +263,10 @@ export default function App() {
         )}
         {phase === 'app' && engine && actor && (
           <motion.div key="app" className="fixed inset-0 flex" initial={ok ? { opacity: 0, scale: 0.985 } : false} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, ease }}>
-            <Sidebar onSwitchMember={() => void lock('cambio de integrante')} />
+            <div className="hidden md:flex"><Sidebar onSwitchMember={() => void lock('cambio de integrante')} /></div>
             <div className="flex-1 min-w-0 flex flex-col">
               <Topbar />
-              <main className="flex-1 overflow-y-auto px-8 pb-10">
+              <main className="flex-1 overflow-y-auto px-4 md:px-8 pb-28 md:pb-10">
                 <AnimatePresence mode="wait">
                   <motion.div key={route} initial={ok ? { opacity: 0, y: 12 } : false} animate={{ opacity: 1, y: 0 }} exit={ok ? { opacity: 0, y: -8 } : { opacity: 0 }} transition={{ duration: 0.28, ease }}>
                     <ErrorBoundary key={route}><Suspense fallback={<PageSkeleton />}><Page /></Suspense></ErrorBoundary>
@@ -245,6 +274,7 @@ export default function App() {
                 </AnimatePresence>
               </main>
             </div>
+            <MobileNav onSwitchMember={() => void lock('cambio de integrante')} />
             <TxEditor />
             <NotificationsPanel />
             <GuideTour />
@@ -253,6 +283,7 @@ export default function App() {
         )}
       </AnimatePresence>
       {update && phase === 'app' && <UpdatePrompt info={update} onClose={() => setUpdate(null)} />}
+      {!IS_PREVIEW && <PhonePreview />}
       <Toaster />
     </>
   );

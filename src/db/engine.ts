@@ -144,6 +144,13 @@ export class Engine {
     return this.key ? encrypt(plain, this.key) : plain;
   }
 
+  /** Unencrypted copy of the database, for the in-app phone preview (never written to disk). */
+  plainBytes(): Uint8Array {
+    const plain = this.db.export();
+    this.db.run('PRAGMA foreign_keys = ON;');
+    return plain;
+  }
+
   /** Persist immediately. */
   async flush(): Promise<void> {
     if (this.saveTimer) { clearTimeout(this.saveTimer); this.saveTimer = null; }

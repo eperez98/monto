@@ -283,7 +283,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
   return (
     <AnimatePresence>
       {open && (
-        <motion.div className="fixed inset-0 z-50 grid place-items-center p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+        <motion.div className="fixed inset-0 z-50 grid place-items-center p-3 sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
           <div className="absolute inset-0 bg-[#07100c]/45 backdrop-blur-[6px]" onClick={onClose} />
           <motion.div
             role="dialog"
