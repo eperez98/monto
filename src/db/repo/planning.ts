@@ -41,6 +41,7 @@ export const incomeConfigSchema = z.object({
   adjustBusinessDay: z.boolean().optional(),
   deductions: z.array(z.object({ name: z.string().min(1), type: z.enum(['percent', 'fixed']), value: z.number().min(0), preset: z.enum(['css', 'se']).optional() })).optional(),
   includeDecimo: z.boolean().optional(),
+  grossMonthly: cents.nonnegative().optional(),
 }).superRefine((c, ctx) => {
   if ((c.frequency === 'semimonthly' || c.frequency === 'weekly' || c.frequency === 'biweekly' || c.frequency === 'monthly') && c.amount1 <= 0)
     ctx.addIssue({ code: 'custom', path: ['amount1'], message: tr('Indica el importe del pago') });
@@ -386,16 +387,17 @@ export function familyBalances(e: Engine) {
 export type { Scope };
 
 // ---------------------------------------------------------------- monthly expense plan
-const planItemsSchema = z.array(z.object({ name: z.string().trim().min(1, tr('Escribe un nombre')).max(60), amount: z.number().int().min(0, tr('Importe no válido')).max(100_000_000_00), dueDay: z.number().int().min(1).max(31).optional() })).max(100);
+const planItemsSchema = z.array(z.object({ name: z.string().trim().min(1, tr('Escribe un nombre')).max(60), amount: z.number().int().min(0, tr('Importe no válido')).max(100_000_000_00), dueDay: z.number().int().min(1).max(31).optional(), kind: z.enum(['subscription']).optional() })).max(100);
 
 /** Each member's own plan, stored in settings (no migration needed). */
 export function getExpensePlan(e: Engine, memberId: string): PlanItem[] {
   return getSetting<{ items: PlanItem[] }>(e, `expensePlan:${memberId}`, { items: [] }).items;
 }
 
-export function saveExpensePlan(e: Engine, actor: Actor, items: PlanItem[]) {
-  assertCan(actor.role, 'income.manage');
-  setSetting(e, `expensePlan:${actor.id}`, { items: planItemsSchema.parse(items.filter((i) => i.amount > 0)) });
+export function saveExpensePlan(e: Engine, actor: Actor, items: PlanItem[], memberId = actor.id) {
+  // Members manage their own plan; setting up someone else's (e.g. a partner) needs member management rights.
+  assertCan(actor.role, memberId === actor.id ? 'income.manage' : 'member.manage');
+  setSetting(e, `expensePlan:${memberId}`, { items: planItemsSchema.parse(items.filter((i) => i.amount > 0)) });
 }
 
 /** Net monthly income the member expects from their income sources. */

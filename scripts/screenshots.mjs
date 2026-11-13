@@ -44,6 +44,8 @@ for (const lang of ['es', 'en']) {
   // Wait for each question's enter animation so the value lands in the right field.
   for (const v of ['85', '30', '7', '55', '520', '140']) { await page.waitForTimeout(450); await page.getByRole('textbox').first().fill(v); await btn(t.next); }
   for (let i = 0; i < 5; i++) { await page.waitForTimeout(450); await btn(t.skip); }
+  await page.waitForTimeout(450);
+  await btn(t.next); // subscriptions: none
   await btn(t.result);
   await shot('onboarding-expenses');
   await btn(t.cont);

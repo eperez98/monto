@@ -19,6 +19,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Topbar } from './components/layout/Topbar';
 import { NotificationsPanel } from './components/layout/Notifications';
 import { GuideTour } from './components/layout/GuideTour';
+import { PartnerSetupHost } from './features/family/PartnerWizard';
 import { TxEditor } from './features/transactions/TxEditor';
 import { Toaster, Button, useMotionOK, ease } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -247,6 +248,7 @@ export default function App() {
             <TxEditor />
             <NotificationsPanel />
             <GuideTour />
+            <PartnerSetupHost />
           </motion.div>
         )}
       </AnimatePresence>

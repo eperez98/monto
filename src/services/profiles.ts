@@ -1,6 +1,6 @@
 /** Several independent profiles (each its own database file): create, switch and delete. */
 import { Engine, uid } from '../db/engine';
-import { activeProfileId, DEFAULT_PROFILE_ID, MemoryAdapter, listProfiles, saveProfiles, setActiveProfileId } from '../db/adapters';
+import { activeProfileId, defaultAdapter, DEFAULT_PROFILE_ID, MemoryAdapter, listProfiles, saveProfiles, setActiveProfileId } from '../db/adapters';
 import { assertCan } from '../domain/permissions';
 import { useApp } from '../store/app';
 import { createBackup } from './backup';
@@ -37,4 +37,17 @@ export async function deleteCurrentProfile(e: Engine, actor: Actor): Promise<voi
   await saveProfiles(rest);
   setActiveProfileId(rest[0]?.id ?? DEFAULT_PROFILE_ID);
   location.reload();
+}
+
+/**
+ * Copy the open profile into a new one for a couple, so the original stays as it is.
+ * Monto reopens on the copy and asks for the partner's data there (see PartnerSetupHost).
+ */
+export async function copyProfileForCouple(e: Engine, name: string, setupKey: string): Promise<void> {
+  const id = uid();
+  await e.flush();
+  await defaultAdapter(id).save(await e.serialize());
+  await saveProfiles([...(await listProfiles()), { id, name: name.trim().slice(0, 60) }]);
+  try { localStorage.setItem(setupKey, id); } catch { /* the wizard can still be opened from Settings */ }
+  await switchProfile(id);
 }

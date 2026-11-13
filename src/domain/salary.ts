@@ -54,6 +54,8 @@ export interface IncomeConfig {
   adjustBusinessDay?: boolean;
   deductions?: Deduction[];
   includeDecimo?: boolean;
+  /** Monthly salary before deductions as stated by the user (amounts above are then take-home). */
+  grossMonthly?: number;
 }
 
 export interface PaymentBreakdown { label: string; gross: number; deductions: number; net: number }
@@ -70,6 +72,8 @@ export interface IncomeEstimate {
   decimoNet: number;
   /** True when the figures come from real history (variable income). */
   basedOnHistory: boolean;
+  /** True when monthlyGross comes from the salary the user typed before deductions. */
+  grossDeclared?: boolean;
 }
 
 export function applyDeductions(gross: number, deductions: Deduction[] = [], forDecimo = false): number {
@@ -156,7 +160,8 @@ export function estimateIncome(c: IncomeConfig, history: number[] = []): IncomeE
   return {
     paymentsPerYear: perYear,
     payments,
-    monthlyGross: Math.round(annualGross / 12),
+    monthlyGross: c.grossMonthly ?? Math.round(annualGross / 12),
+    grossDeclared: !!c.grossMonthly,
     monthlyNet: Math.round(annualNet / 12),
     annualGross: annualGross + decimoGross,
     annualNet: annualNet + decimoNet,

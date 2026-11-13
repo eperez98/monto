@@ -25,8 +25,7 @@ export default function Plan() {
     return c ? c.payDay1 ?? 30 : null;
   }, [actor.id]);
   const store = useCallback((items: PlanItem[], msg: string) => { if (canEdit) mutate((e, a) => saveExpensePlan(e, a, items), msg); }, [canEdit, mutate]);
-  // Re-running the questionnaire keeps the due days already set for each bill.
-  const save = useCallback((items: PlanItem[]) => store(items.map((i) => ({ ...i, dueDay: saved.find((s) => s.name === i.name)?.dueDay })), tr('Plan mensual guardado')), [store, saved]);
+  const save = useCallback((items: PlanItem[]) => store(items, tr('Plan mensual guardado')), [store]);
   const setDue = (name: string, v: string) => store(saved.map((i) => (i.name === name ? { ...i, dueDay: v ? Number(v) : undefined } : i)), tr('Fecha de pago guardada'));
 
   const steps = payDay ? paymentOrder(income, payDay, saved) : [];

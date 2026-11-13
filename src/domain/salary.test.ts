@@ -92,3 +92,12 @@ describe('pay schedule', () => {
     expect(occ.map((o) => o.date)).toEqual(['2026-11-06', '2026-11-20', '2026-12-04', '2026-12-18']);
   });
 });
+
+describe('declared gross salary', () => {
+  it('reports the gross the user typed while net amounts stay as entered', () => {
+    const est = estimateIncome({ frequency: 'monthly', amount1: 200000, payDay1: 30, grossMonthly: 230000 });
+    expect(est.monthlyNet).toBe(200000);
+    expect(est.monthlyGross).toBe(230000);
+    expect(est.grossDeclared).toBe(true);
+  });
+});

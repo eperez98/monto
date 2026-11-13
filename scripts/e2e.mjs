@@ -62,6 +62,8 @@ try {
   await page.getByRole('textbox', { name: 'Electricidad' }).fill('100');
   await click('Siguiente');
   for (let i = 0; i < 10; i++) await click('No tengo este gasto');
+  await page.getByText('¿Cuántas suscripciones tienes?').waitFor();
+  await click('Siguiente');
   await click('Ver resultado');
   const result = await page.getByText('Fondo restante').locator('..').innerText();
   assert(result.includes('2,000.00'), 'ingreso 3,000 − gastos 1,000 → fondo restante 2,000');
@@ -212,8 +214,8 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.7.5 Beta 1').waitFor();
-  assert(true, 'versión 0.7.5 Beta 1 visible en Actualizaciones');
+  await page.getByText('Monto 0.7.0 Beta 4').waitFor();
+  assert(true, 'versión 0.7.0 Beta 4 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
@@ -320,13 +322,24 @@ try {
   await click('Mensual');
   await page.getByPlaceholder('Ej. Empresa Ejemplo, S.A.').fill('Taller Lucía');
   await page.getByRole('textbox', { name: 'Importe' }).fill('2000');
+  await page.getByRole('textbox', { name: 'Salario mensual sin deducciones' }).fill('2300');
+  await page.waitForTimeout(900);
+  assert((await page.getByText('Ingreso mensual bruto').locator('..').innerText()).includes('2,300.00'), 'salario mensual sin deducciones (bruto) informativo');
   await click('Continuar');
   await page.getByRole('textbox', { name: 'Vivienda (alquiler o hipoteca)' }).fill('900');
   await click('Siguiente');
   await page.getByRole('textbox', { name: 'Electricidad' }).fill('100');
+  await page.getByRole('combobox', { name: 'Día de la factura' }).selectOption('5');
   await click('Siguiente');
   for (let i = 0; i < 10; i++) await click('No tengo este gasto');
+  await page.getByRole('spinbutton', { name: 'Número de suscripciones' }).fill('1');
+  await page.getByRole('textbox', { name: 'Nombre de la suscripción 1' }).fill('Netflix');
+  await page.getByRole('textbox', { name: 'Monto de la suscripción 1' }).fill('15');
+  await page.getByRole('combobox', { name: 'Día de cobro de la suscripción 1' }).selectOption('10');
+  await shot('03d-subscriptions');
+  await click('Siguiente');
   await click('Ver resultado');
+  assert((await page.getByText('Fondo restante').locator('..').innerText()).includes('985.00'), 'suscripción incluida en el plan (2,000 − 1,015 = 985)');
   await click('Continuar');
   await page.getByRole('textbox', { name: 'Saldo inicial' }).fill('500');
   await click('Continuar');
@@ -335,17 +348,53 @@ try {
   await page.getByText('Saldo disponible').waitFor({ timeout: 10000 });
   await click('Plan mensual');
   await page.getByText('Cobras una vez al mes, el día 30. Paga en este orden:').waitFor();
-  await page.getByRole('combobox', { name: 'Vence el día' }).last().selectOption('5');
+  let order = await page.locator('ol li').allInnerTexts();
+  assert(order[1].includes('Electricidad') && order[2].includes('Netflix'), 'orden de pagos con las fechas de factura y de cobro de la configuración inicial');
+  await page.getByRole('combobox', { name: 'Vence el día' }).last().selectOption('3');
   await page.getByText('Fecha de pago guardada').waitFor();
-  const order = await page.locator('ol li').allInnerTexts();
-  assert(order[0].includes('Vivienda') && order[1].includes('Electricidad'), 'orden de pagos: lo que vence primero va antes');
-  assert((await page.getByText('Después de pagar todo te quedan').innerText()).includes('1,000.00'), 'orden de pagos: quedan 1,000 para ahorrar');
+  order = await page.locator('ol li').allInnerTexts();
+  assert(order[0].includes('Vivienda') && order[1].includes('Netflix') && order[2].includes('Electricidad'), 'orden de pagos: lo que vence primero va antes');
+  assert((await page.getByText('Después de pagar todo te quedan').innerText()).includes('985.00'), 'orden de pagos: quedan 985 para ahorrar');
   await shot('20-payment-order');
+
+  step('Separate couple profile (copy)');
+  const partnerWizard = async (name) => {
+    await page.getByPlaceholder('Ej. Ana').fill(name);
+    await dclick('Continuar');
+    await page.getByRole('dialog').getByRole('textbox', { name: 'Primera quincena' }).fill('800');
+    await dclick('Continuar');
+    for (let i = 0; i < 12; i++) await page.getByRole('dialog').getByRole('button', { name: 'No tengo este gasto' }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Siguiente' }).first().click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Ver resultado' }).first().click();
+    await dclick('Continuar');
+    await dclick('Crear perfil de pareja');
+    await page.getByText(`${name} ya forma parte de tu perfil de pareja`).waitFor();
+  };
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Perfil', { exact: true });
+  await click('Crear perfil de pareja externo');
+  await dclick('Copiar y continuar');
+  await page.getByText('Ahora añade los datos de tu pareja. Tu perfil original no cambió.').waitFor({ timeout: 15000 });
+  await partnerWizard('Mario');
+  assert(await page.getByRole('tab', { name: 'Hogar' }).isVisible(), 'perfil de pareja externo: copia con la pareja añadida');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Perfil', { exact: true });
+  assert((await page.getByRole('button', { name: 'Abrir', exact: true }).count()) === 2, 'el perfil original sigue aparte (3 perfiles)');
+
+  step('Convert the original profile to a couple');
+  await page.getByRole('button', { name: 'Abrir', exact: true }).last().click();
+  await page.getByText('Saldo disponible').waitFor({ timeout: 15000 });
+  assert(!(await page.getByRole('tab', { name: 'Hogar' }).isVisible()), 'el perfil original sigue siendo individual');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Perfil', { exact: true });
+  await click('Convertir en perfil de pareja');
+  await partnerWizard('Sofía');
+  assert(await page.getByRole('tab', { name: 'Hogar' }).isVisible(), 'perfil convertido a pareja');
 
   step('Delete current profile');
   await page.getByRole('button', { name: 'Configuración' }).click();
   await click('Perfil', { exact: true });
-  assert(await page.getByRole('button', { name: 'Abrir', exact: true }).isVisible(), 'lista de perfiles con opción de abrir el otro');
+  assert(await page.getByRole('button', { name: 'Abrir', exact: true }).first().isVisible(), 'lista de perfiles con opción de abrir los otros');
   await click('Borrar este perfil');
   await dclick('Borrar perfil');
   await page.getByText('Monto está bloqueado').waitFor({ timeout: 15000 });
@@ -355,7 +404,7 @@ try {
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await page.getByText('Saldo disponible').waitFor();
   const keys = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('monto', 1); r.onsuccess = () => { const g = r.result.transaction('files').objectStore('files').getAllKeys(); g.onsuccess = () => res(g.result.map(String)); }; }));
-  assert(!keys.some((k) => /^monto-.+\.db$/.test(k)) && keys.some((k) => k.startsWith('backup-')), 'perfil borrado con copia previa; el perfil original sigue intacto');
+  assert(keys.filter((k) => /^monto-.+\.db$/.test(k)).length === 1 && keys.some((k) => k.startsWith('backup-')), 'perfil borrado con copia previa; los demás perfiles siguen intactos');
 
   console.log('\nE2E OK');
 } catch (e) {

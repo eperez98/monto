@@ -1,5 +1,5 @@
 /** Monthly expense plan: fixed monthly expenses vs. the member's net monthly income (all in cents). */
-export interface PlanItem { name: string; amount: number; /** Day of the month the bill is due (1-31). */ dueDay?: number }
+export interface PlanItem { name: string; amount: number; /** Day of the month the bill is due (1-31). */ dueDay?: number; kind?: 'subscription' }
 
 export interface PlanSummary {
   income: number;

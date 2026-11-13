@@ -9,6 +9,8 @@ import { tr } from '../../lib/i18n';
 export interface IncomeDraft {
   frequency: Frequency; amount1: string; amount2: string; sameAmount: boolean; hourlyRate: string; hoursPerWeek: string; schedule: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly';
   payDay1: number; payDay2: number; weekday: number; anchorDate: string; adjustBusinessDay: boolean; panamaDeductions: boolean; extraDeductionName: string; extraDeduction: string; includeDecimo: boolean;
+  /** Optional: monthly salary before deductions, asked when amounts are entered net. */
+  grossMonthly: string;
 }
 
 export const FREQ_ICON: Record<Frequency, string> = { weekly: 'calendar', biweekly: 'repeat', semimonthly: 'salary', monthly: 'bank', hourly: 'freelance', variable: 'investment', other: 'other' };
@@ -17,7 +19,7 @@ export const FREQ_DESC: Record<Frequency, string> = {
 };
 
 export function emptyDraft(today: string): IncomeDraft {
-  return { frequency: 'semimonthly', amount1: '', amount2: '', sameAmount: true, hourlyRate: '', hoursPerWeek: '40', schedule: 'semimonthly', payDay1: 15, payDay2: 30, weekday: 5, anchorDate: today, adjustBusinessDay: true, panamaDeductions: false, extraDeductionName: '', extraDeduction: '', includeDecimo: false };
+  return { frequency: 'semimonthly', amount1: '', amount2: '', sameAmount: true, hourlyRate: '', hoursPerWeek: '40', schedule: 'semimonthly', payDay1: 15, payDay2: 30, weekday: 5, anchorDate: today, adjustBusinessDay: true, panamaDeductions: false, extraDeductionName: '', extraDeduction: '', includeDecimo: false, grossMonthly: '' };
 }
 
 export function draftFromConfig(c: IncomeConfig, today: string): IncomeDraft {
@@ -28,6 +30,7 @@ export function draftFromConfig(c: IncomeConfig, today: string): IncomeDraft {
     hourlyRate: c.hourlyRate ? centsToInput(c.hourlyRate) : '', hoursPerWeek: String(c.hoursPerWeek ?? 40), schedule: c.schedule ?? 'semimonthly',
     payDay1: c.payDay1 ?? (c.frequency === 'monthly' ? 30 : 15), payDay2: c.payDay2 ?? 30, weekday: c.weekday ?? 5, anchorDate: c.anchorDate ?? today,
     adjustBusinessDay: !!c.adjustBusinessDay, panamaDeductions: !!c.deductions?.some((x) => x.preset), extraDeductionName: custom?.name ?? '', extraDeduction: custom ? centsToInput(custom.value) : '', includeDecimo: !!c.includeDecimo,
+    grossMonthly: c.grossMonthly ? centsToInput(c.grossMonthly) : '',
   };
 }
 
@@ -44,6 +47,7 @@ export function draftToConfig(d: IncomeDraft): IncomeConfig {
     weekday: d.frequency === 'weekly' || (d.frequency === 'hourly' && d.schedule === 'weekly') ? d.weekday : undefined,
     anchorDate: d.frequency === 'biweekly' || (d.frequency === 'hourly' && d.schedule === 'biweekly') ? d.anchorDate : undefined,
     adjustBusinessDay: d.adjustBusinessDay, deductions, includeDecimo: d.includeDecimo,
+    grossMonthly: n(d.grossMonthly) > 0 ? n(d.grossMonthly) : undefined,
   };
 }
 
@@ -99,6 +103,11 @@ export function IncomeConfigForm({ draft, set, currency, compact = false, net = 
           {sched === 'weekly' && <Field label={tr('Día de cobro')}><Select value={draft.weekday} onChange={(e) => set({ weekday: Number(e.target.value) })}>{[1, 2, 3, 4, 5, 6, 0].map((w) => <option key={w} value={w}>{weekdayName(w)}</option>)}</Select></Field>}
           {sched === 'biweekly' && <Field label={tr('Fecha de un pago reciente')}><Input type="date" value={draft.anchorDate} onChange={(e) => set({ anchorDate: e.target.value })} /></Field>}
 
+          {net && f !== 'variable' && f !== 'other' && (
+            <Field label={tr('Salario mensual sin deducciones (bruto, opcional)')} hint={tr('Lo que dice tu contrato antes de CSS, Seguro Educativo y otros descuentos. Solo es informativo.')}>
+              <MoneyInput currency={currency} value={draft.grossMonthly} onChange={(v) => set({ grossMonthly: v })} aria-label={tr('Salario mensual sin deducciones')} />
+            </Field>
+          )}
           {f !== 'variable' && f !== 'other' && (
             <div className="rounded-[18px] border border-line bg-surface-2 p-4 space-y-3.5">
               {sched !== 'weekly' && sched !== 'biweekly' && <Toggle checked={draft.adjustBusinessDay} onChange={(v) => set({ adjustBusinessDay: v })} label={tr('Pago adelantado en fines de semana')} description={tr('Si el día de pago cae sábado o domingo, se espera el viernes anterior.')} />}
@@ -130,7 +139,7 @@ export function IncomeConfigForm({ draft, set, currency, compact = false, net = 
           <div><p className="text-[11px] text-white/55">{tr('Pagos al año')}</p><p className="text-[18px] font-semibold num">{est.paymentsPerYear}</p></div>
         </div>
         <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/10">
-          {net ? <div /> : <div><p className="text-[11px] text-white/55">{tr('Ingreso mensual bruto')}</p><Money animated cents={est.monthlyGross} currency={currency} className="text-[15px] font-semibold" /></div>}
+          {net && !est.grossDeclared ? <div /> : <div><p className="text-[11px] text-white/55">{tr('Ingreso mensual bruto')}</p><Money animated cents={est.monthlyGross} currency={currency} className="text-[15px] font-semibold" /></div>}
           <div><p className="text-[11px] text-white/55">{tr('Ingreso mensual neto')}</p><Money animated cents={est.monthlyNet} currency={currency} className="text-[22px] font-semibold text-[#5BE0A8]" /></div>
           <div><p className="text-[11px] text-white/55">{tr('Ingreso anual')}{' '}{est.decimoGross ? tr('(con décimo)') : ''}</p><Money animated cents={est.annualGross} currency={currency} className="text-[15px] font-semibold" /></div>
         </div>

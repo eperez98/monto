@@ -10,11 +10,16 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-## [0.7.5-beta.1] - 2026-11-13
+## [0.7.0-beta.4] - 2026-11-13 · GUI Update Fix
 
-Resumen más minimalista y amable: menos información de golpe y el detalle solo cuando lo pides.
+Resumen más minimalista y amable, preguntas de gastos más completas y perfiles de pareja.
 
 ### Añadido
+- **Salario mensual sin deducciones (bruto)**: al configurar tus ingresos puedes indicar, de forma opcional, tu salario antes de descuentos además del neto que recibes.
+- **Suscripciones una por una**: el plan mensual pregunta cuántas suscripciones tienes y, para cada una, su nombre, monto y día de cobro.
+- **Día de la factura**: para vivienda, luz, agua, gas, internet, préstamos, tarjetas, salud y educación se pregunta qué día llega la factura. Esas fechas alimentan el orden de pagos.
+- **Convertir en perfil de pareja** (*Configuración → Perfil*): pide los datos de tu pareja como en la configuración inicial (nombre, ingresos, gastos y cuenta) y la añade al hogar con el rol «Adulto».
+- **Crear perfil de pareja externo**: copia tu perfil en uno nuevo y añade allí a tu pareja, sin cambiar tu perfil original.
 - **Tres estilos de resumen**, a elegir al terminar la configuración inicial o en *Configuración → Apariencia*:
   - **Hoy**: una sola respuesta grande, cuánto puedes gastar hoy (tu saldo menos los pagos que faltan este mes, repartido entre los días que quedan), con avisos cortos y el detalle plegado.
   - **Historias**: tres o cuatro frases sobre lo importante (un pago que vence pronto, cuánto ahorras, una categoría que subió o bajó, lo que falta para tu objetivo), cada una con su acción.
@@ -156,8 +161,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.5-beta.1...HEAD
-[0.7.5-beta.1]: https://github.com/eperez98/monto/releases/tag/v0.7.5-beta.1
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.4...HEAD
+[0.7.0-beta.4]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.4
 [0.7.0-beta.2]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.2
 [0.7.0-beta.1]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.1
 [0.6.0]: https://github.com/eperez98/monto/releases/tag/v0.6.0

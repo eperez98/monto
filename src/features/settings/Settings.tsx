@@ -15,7 +15,8 @@ import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/versio
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
 import { lang, locale, setLang, tr } from '../../lib/i18n';
 import { activeProfileId, listProfiles, type ProfileEntry } from '../../db/adapters';
-import { createProfile, deleteCurrentProfile, switchProfile } from '../../services/profiles';
+import { copyProfileForCouple, createProfile, deleteCurrentProfile, switchProfile } from '../../services/profiles';
+import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
 
@@ -56,6 +57,11 @@ function ProfileTab() {
   const mutate = useMutate();
   const [name, setName] = useState(profile.name);
   const [household, setHousehold] = useState(profile.householdName ?? '');
+  const engine = useEngine();
+  const toast = useApp((s) => s.toast);
+  const [partnerOpen, setPartnerOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [copyName, setCopyName] = useState('');
   return (
     <>
     <Card hover={false} className="p-6 space-y-5">
@@ -69,6 +75,22 @@ function ProfileTab() {
           {([['individual', 'user', tr('Individual')], ['couple', 'handshake', tr('En pareja')], ['family', 'family', tr('Familia')]] as Array<[ProfileMode, string, string]>).map(([m, i, l]) => <ChoiceCard key={m} selected={profile.mode === m} onClick={() => canManage && mutate((e) => setProfile(e, { mode: m }), tr('Tipo de perfil actualizado'))} icon={i} title={l} />)}
         </div>
       </div>
+      {canManage && profile.mode === 'individual' && (
+        <div className="rounded-[18px] border border-brand/30 bg-brand-soft/40 p-4">
+          <p className="text-[13.5px] font-semibold">{tr('¿Llevas las finanzas en pareja?')}</p>
+          <p className="text-[12.5px] text-ink-2 mt-0.5">{tr('Monto te pedirá los datos de tu pareja como en la configuración inicial: nombre, ingresos, gastos y cuenta.')}</p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button size="sm" icon="family" onClick={() => setPartnerOpen(true)}>{tr('Convertir en perfil de pareja')}</Button>
+            <Button size="sm" variant="secondary" icon="copy" onClick={() => { setCopyName(tr('Pareja')); setCopyOpen(true); }}>{tr('Crear perfil de pareja externo')}</Button>
+          </div>
+        </div>
+      )}
+      <PartnerWizard key={String(partnerOpen)} open={partnerOpen} onClose={() => setPartnerOpen(false)} />
+      <Modal open={copyOpen} onClose={() => setCopyOpen(false)} title={tr('Crear perfil de pareja externo')} icon="copy" width={460}
+        footer={<><Button variant="ghost" onClick={() => setCopyOpen(false)}>{tr('Cancelar')}</Button><Button disabled={!copyName.trim()} onClick={() => void copyProfileForCouple(engine, copyName, PARTNER_SETUP_KEY).catch((err: Error) => toast({ kind: 'error', title: tr('No se pudo completar'), body: err.message }))}>{tr('Copiar y continuar')}</Button></>}>
+        <p className="text-[13px] text-ink-2 mb-4">{tr('Se copia tu perfil actual (cuentas, movimientos y ajustes) en un perfil nuevo, y ahí se añaden los datos de tu pareja. Tu perfil actual no cambia.')}</p>
+        <Field label={tr('Nombre del nuevo perfil')}><Input autoFocus value={copyName} maxLength={60} onChange={(e) => setCopyName(e.target.value)} /></Field>
+      </Modal>
       <div>
         <p className="text-[12px] font-medium text-ink-2 mb-2">{tr('Moneda principal')}</p>
         <Segmented value={profile.primaryCurrency} onChange={(v) => canManage && mutate((e) => setProfile(e, { primaryCurrency: v }), tr('Moneda principal actualizada'))} options={[{ value: 'PAB', label: 'B/. Balboa (PAB)' }, { value: 'USD', label: tr('$ Dólar (USD)') }]} />
