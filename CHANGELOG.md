@@ -10,6 +10,9 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Corregido
+- Resumen «Capas tranquilas»: la tarjeta «Te queda en…» pasa a llamarse «Balance de… (ingresos − gastos)», porque no mide el dinero de tus cuentas sino los ingresos menos los gastos del periodo. Si aún no hay ingresos registrados en el periodo, ya no aparece en rojo y muestra un aviso con el enlace «Marcar salario recibido».
+
 ## [0.7.0-beta.4] - 2026-11-13 · GUI Update Fix
 
 Resumen más minimalista y amable, preguntas de gastos más completas y perfiles de pareja.

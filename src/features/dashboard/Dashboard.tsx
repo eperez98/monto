@@ -108,15 +108,23 @@ function PendingCard({ d, delay = 0 }: { d: Data; delay?: number }) {
 
 // ------------------------------------------------------------------ Capas tranquilas
 function CalmView({ d }: { d: Data }) {
+  const go = useApp((s) => s.go);
   const left = d.t.income - d.t.expense;
+  // Without income recorded this period the balance is just minus the spending; say so instead of alarming in red.
+  const noIncome = d.t.income === 0;
   const period = lang === 'es' ? d.label.toLowerCase() : d.label;
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" data-tour="hero">
-        {([[tr('Saldo disponible'), d.available, false], [tr('Gastado en {period}', { period }), d.t.expense, false], [tr('Te queda en {period}', { period }), left, true]] as const).map(([l, v, sign], i) => (
+        {([[tr('Saldo disponible'), d.available, false], [tr('Gastado en {period}', { period }), d.t.expense, false], [tr('Balance de {period} (ingresos − gastos)', { period }), left, true]] as const).map(([l, v, sign], i) => (
           <Card key={i} delay={i * 0.05} hover={false} className={clsx('p-5', i === 0 && 'hero-surface text-white border-transparent')}>
             <p className={clsx('text-[12.5px]', i === 0 ? 'text-white/75' : 'text-muted')}>{l}</p>
-            <Money animated cents={v} currency={d.cur} sign={sign} className={clsx('block text-[28px] font-semibold tracking-[-0.045em] mt-2', sign && v < 0 && 'text-coral')} />
+            <Money animated cents={v} currency={d.cur} sign={sign} className={clsx('block text-[28px] font-semibold tracking-[-0.045em] mt-2', sign && v < 0 && !noIncome && 'text-coral')} />
+            {i === 2 && noIncome && (
+              <p className="text-[12px] text-muted mt-1">{tr('Aún no registras ingresos en {period}.', { period })}{' '}
+                <button onClick={() => go('income')} className="text-brand font-medium hover:underline">{tr('Marcar salario recibido')}</button>
+              </p>
+            )}
           </Card>
         ))}
       </div>

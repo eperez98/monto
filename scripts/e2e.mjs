@@ -82,6 +82,7 @@ try {
   await page.waitForTimeout(1500);
   const hero = await page.locator('[data-tour="hero"]').innerText();
   assert(hero.includes('2,500.00'), 'saldo disponible inicial 2,500');
+  assert(hero.includes('ingresos − gastos') && hero.includes('Aún no registras ingresos'), 'balance del mes explicado cuando aún no hay ingresos');
 
   step('Guided start tour');
   await page.getByText(/^Paso 1 de \d+$/).waitFor({ timeout: 5000 });

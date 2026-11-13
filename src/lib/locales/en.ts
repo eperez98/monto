@@ -1315,4 +1315,7 @@ export const EN: Record<string, string> = {
   "y el orden empezará desde tu día de cobro.": "and the order will start from your payday.",
   "Mira cómo se ve Monto en un iPhone (iOS 27, simulado). Usa una copia temporal de tus datos.": "See how Monto looks on an iPhone (iOS 27, simulated). It uses a temporary copy of your data.",
   "Abrir vista de celular": "Open phone view",
+  "Balance de {period} (ingresos − gastos)": "{period} balance (income − expenses)",
+  "Aún no registras ingresos en {period}.": "No income recorded in {period} yet.",
+  "Marcar salario recibido": "Mark salary received",
 };
