@@ -386,7 +386,7 @@ export function familyBalances(e: Engine) {
 export type { Scope };
 
 // ---------------------------------------------------------------- monthly expense plan
-const planItemsSchema = z.array(z.object({ name: z.string().trim().min(1, tr('Escribe un nombre')).max(60), amount: z.number().int().min(0, tr('Importe no válido')).max(100_000_000_00) })).max(100);
+const planItemsSchema = z.array(z.object({ name: z.string().trim().min(1, tr('Escribe un nombre')).max(60), amount: z.number().int().min(0, tr('Importe no válido')).max(100_000_000_00), dueDay: z.number().int().min(1).max(31).optional() })).max(100);
 
 /** Each member's own plan, stored in settings (no migration needed). */
 export function getExpensePlan(e: Engine, memberId: string): PlanItem[] {

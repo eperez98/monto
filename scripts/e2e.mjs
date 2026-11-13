@@ -212,8 +212,8 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.7.0 Beta 1').waitFor();
-  assert(true, 'versión 0.7.0 Beta 1 visible en Actualizaciones');
+  await page.getByText('Monto 0.7.0 Beta 2').waitFor();
+  assert(true, 'versión 0.7.0 Beta 2 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
@@ -282,6 +282,58 @@ try {
   assert(true, 'desbloqueo con contraseña correcta');
   const raw = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('monto', 1); r.onsuccess = () => { const g = r.result.transaction('files').objectStore('files').get('monto.db'); g.onsuccess = () => res(new TextDecoder().decode(g.result.slice(0, 9))); }; }));
   assert(raw === 'MONTOENC1', 'base de datos cifrada en reposo');
+
+  step('Second profile: monthly salary + payment order');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Perfil', { exact: true });
+  await click('Nuevo perfil');
+  await page.getByPlaceholder('Ej. Negocio').fill('Negocio');
+  await dclick('Crear y abrir');
+  await page.getByText('Bienvenido a Monto').waitFor({ timeout: 15000 });
+  assert(await page.getByRole('combobox').filter({ hasText: 'Negocio' }).isVisible(), 'selector de perfil visible en la configuración inicial');
+  await click('Comenzar');
+  await page.getByPlaceholder('Ej. Carlos').fill('Lucía');
+  await click('Continuar');
+  await click('Continuar');
+  await click('Mensual');
+  await page.getByPlaceholder('Ej. Empresa Ejemplo, S.A.').fill('Taller Lucía');
+  await page.getByRole('textbox', { name: 'Importe' }).fill('2000');
+  await click('Continuar');
+  await page.getByRole('textbox', { name: 'Vivienda (alquiler o hipoteca)' }).fill('900');
+  await click('Siguiente');
+  await page.getByRole('textbox', { name: 'Electricidad' }).fill('100');
+  await click('Siguiente');
+  for (let i = 0; i < 10; i++) await click('No tengo este gasto');
+  await click('Ver resultado');
+  await click('Continuar');
+  await page.getByRole('textbox', { name: 'Saldo inicial' }).fill('500');
+  await click('Continuar');
+  await click('Continuar');
+  await click('Ir a mi panel');
+  await page.getByText('Saldo disponible').waitFor({ timeout: 10000 });
+  await click('Plan mensual');
+  await page.getByText('Cobras una vez al mes, el día 30. Paga en este orden:').waitFor();
+  await page.getByRole('combobox', { name: 'Vence el día' }).last().selectOption('5');
+  await page.getByText('Fecha de pago guardada').waitFor();
+  const order = await page.locator('ol li').allInnerTexts();
+  assert(order[0].includes('Vivienda') && order[1].includes('Electricidad'), 'orden de pagos: lo que vence primero va antes');
+  assert((await page.getByText('Después de pagar todo te quedan').innerText()).includes('1,000.00'), 'orden de pagos: quedan 1,000 para ahorrar');
+  await shot('20-payment-order');
+
+  step('Delete current profile');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Perfil', { exact: true });
+  assert(await page.getByRole('button', { name: 'Abrir', exact: true }).isVisible(), 'lista de perfiles con opción de abrir el otro');
+  await click('Borrar este perfil');
+  await dclick('Borrar perfil');
+  await page.getByText('Monto está bloqueado').waitFor({ timeout: 15000 });
+  await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
+  await click('Desbloquear');
+  await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: /Carlos/ }).first().click();
+  await page.getByText('Saldo disponible').waitFor();
+  const keys = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('monto', 1); r.onsuccess = () => { const g = r.result.transaction('files').objectStore('files').getAllKeys(); g.onsuccess = () => res(g.result.map(String)); }; }));
+  assert(!keys.some((k) => /^monto-.+\.db$/.test(k)) && keys.some((k) => k.startsWith('backup-')), 'perfil borrado con copia previa; el perfil original sigue intacto');
 
   console.log('\nE2E OK');
 } catch (e) {

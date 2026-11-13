@@ -6,7 +6,7 @@ import { getPrefs, setPrefs, setProfile, listSessions, setMemberPin } from '../.
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../../db/repo/finance';
 import { createBackup, exportBackupFile, exportJSON, pickBackupFile, restoreFromBytes } from '../../services/backup';
 import { decrypt, isEncrypted } from '../../db/crypto';
-import { Button, Card, CardHeader, ChoiceCard, Field, Input, Modal, PageHeader, Segmented, Select, Toggle, Badge, useConfirm } from '../../components/ui';
+import { Button, Card, CardHeader, ChoiceCard, Field, Input, Modal, PageHeader, Segmented, Select, Toggle, Badge, Confirm, useConfirm } from '../../components/ui';
 import { Icon, IconTile, ICON_NAMES } from '../../icons';
 import { LogoMark } from '../../brand/Logo';
 import { formatDate } from '../../lib/dates';
@@ -14,6 +14,9 @@ import type { ProfileMode } from '../../db/types';
 import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/version';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
 import { lang, locale, setLang, tr } from '../../lib/i18n';
+import { activeProfileId, listProfiles, type ProfileEntry } from '../../db/adapters';
+import { createProfile, deleteCurrentProfile, switchProfile } from '../../services/profiles';
+import { profileLabel } from '../shell/ProfileSwitcher';
 
 type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'categories' | 'updates' | 'about';
 const TABS: Array<{ k: Tab; label: string; icon: string }> = [
@@ -53,6 +56,7 @@ function ProfileTab() {
   const [name, setName] = useState(profile.name);
   const [household, setHousehold] = useState(profile.householdName ?? '');
   return (
+    <>
     <Card hover={false} className="p-6 space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Field label={tr('Nombre del perfil')}><Input value={name} onChange={(e) => setName(e.target.value)} disabled={!canManage} /></Field>
@@ -69,7 +73,57 @@ function ProfileTab() {
         <Segmented value={profile.primaryCurrency} onChange={(v) => canManage && mutate((e) => setProfile(e, { primaryCurrency: v }), tr('Moneda principal actualizada'))} options={[{ value: 'PAB', label: 'B/. Balboa (PAB)' }, { value: 'USD', label: tr('$ Dólar (USD)') }]} />
         <p className="text-[11.5px] text-muted mt-2">{tr('Paridad fija PAB:USD 1:1. Las cuentas conservan su propia moneda.')}</p>
       </div>
-      {canManage && <div className="flex justify-end"><Button onClick={() => mutate((e) => setProfile(e, { name: name.trim() || profile.name, householdName: household.trim() || undefined }), tr('Perfil guardado'))}>{tr('Guardar')}</Button></div>}
+      {canManage && <div className="flex justify-end"><Button onClick={() => { mutate((e) => setProfile(e, { name: name.trim() || profile.name, householdName: household.trim() || undefined }), tr('Perfil guardado')); }}>{tr('Guardar')}</Button></div>}
+    </Card>
+    <ProfilesCard currentName={profile.name} />
+    </>
+  );
+}
+
+function ProfilesCard({ currentName }: { currentName: string }) {
+  const engine = useEngine();
+  const actor = useActor();
+  const canDelete = useCan('security.manage');
+  const toast = useApp((s) => s.toast);
+  const [list, setList] = useState<ProfileEntry[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const current = activeProfileId();
+  useEffect(() => { void listProfiles().then(setList).catch(() => undefined); }, []);
+  const fail = (err: unknown) => toast({ kind: 'error', title: tr('No se pudo completar'), body: (err as Error).message });
+  return (
+    <Card hover={false} className="p-6 mt-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13.5px] font-semibold">{tr('Perfiles')}</p>
+          <p className="text-[12px] text-muted mt-0.5">{tr('Cada perfil guarda sus propios datos por separado, por ejemplo uno personal y otro para un negocio.')}</p>
+        </div>
+        <Button size="sm" icon="plus" onClick={() => { setNewName(''); setCreating(true); }}>{tr('Nuevo perfil')}</Button>
+      </div>
+      <ul className="mt-4 space-y-1.5">
+        {list.map((p, i) => (
+          <li key={p.id} className="flex items-center gap-3 rounded-[16px] border border-line/70 px-4 py-2.5">
+            <Icon name="user" size={16} className="text-muted" />
+            <span className="flex-1 text-[13px] font-medium truncate">{p.id === current ? (p.name || currentName) : profileLabel(p, i)}</span>
+            {p.id === current ? <Badge tone="green">{tr('Abierto')}</Badge> : <Button size="sm" variant="secondary" onClick={() => void switchProfile(p.id).catch(fail)}>{tr('Abrir')}</Button>}
+          </li>
+        ))}
+      </ul>
+      {canDelete && (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-[16px] bg-coral-soft/60 px-4 py-3">
+          <p className="text-[12.5px] text-ink-2">{tr('Borra todos los datos de este perfil. Antes se guarda una copia de seguridad.')}</p>
+          <Button size="sm" variant="danger" icon="trash" onClick={() => setConfirmDelete(true)}>{tr('Borrar este perfil')}</Button>
+        </div>
+      )}
+      <Modal open={creating} onClose={() => setCreating(false)} title={tr('Nuevo perfil')} icon="user" width={420}
+        footer={<><Button variant="ghost" onClick={() => setCreating(false)}>{tr('Cancelar')}</Button><Button disabled={!newName.trim()} onClick={() => void createProfile(newName).catch(fail)}>{tr('Crear y abrir')}</Button></>}>
+        <Field label={tr('Nombre del perfil')} hint={tr('Monto se reiniciará en el nuevo perfil para configurarlo.')}><Input autoFocus value={newName} maxLength={60} onChange={(e) => setNewName(e.target.value)} placeholder={tr('Ej. Negocio')} /></Field>
+      </Modal>
+      <Confirm open={confirmDelete} onClose={() => setConfirmDelete(false)} confirmLabel={tr('Borrar perfil')}
+        title={tr('¿Borrar el perfil «{name}»?', { name: currentName })}
+        body={tr('Se eliminarán todos sus movimientos, cuentas, integrantes y ajustes. Se guarda una copia de seguridad en la carpeta de copias por si te equivocas. Después se abrirá otro perfil o la configuración inicial.')}
+        onConfirm={() => { setConfirmDelete(false); void deleteCurrentProfile(engine, actor).catch(fail); }} />
     </Card>
   );
 }

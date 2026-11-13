@@ -6,7 +6,7 @@
 
 <br />
 
-[![Descargar para Windows](https://img.shields.io/badge/Descargar%20para%20Windows-0.7.0%20Beta%201-6C5CE7?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/eperez98/monto/releases)
+[![Descargar para Windows](https://img.shields.io/badge/Descargar%20para%20Windows-0.7.0%20Beta%202-6C5CE7?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/eperez98/monto/releases)
 
 [![CI](https://github.com/eperez98/monto/actions/workflows/ci.yml/badge.svg)](https://github.com/eperez98/monto/actions/workflows/ci.yml)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-14304D)

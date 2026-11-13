@@ -5,6 +5,7 @@ import { LogoMark } from '../../brand/Logo';
 import { ROLE_LABEL } from '../../domain/permissions';
 import type { Member } from '../../db/types';
 import { tr } from '../../lib/i18n';
+import { ProfileSwitcher } from './ProfileSwitcher';
 
 // Failed PIN attempts per member. Module-level so it survives the picker remounting on each lock.
 // shortcut: resets when Monto restarts; persist it in the database if that ever matters.
@@ -52,6 +53,7 @@ export function MemberPicker({ members, onPick, verify }: { members: Member[]; o
             <Button type="submit">{tr('Entrar')}</Button>
           </motion.form>
         )}
+        <ProfileSwitcher className="mt-10" />
       </div>
     </motion.div>
   );

@@ -13,6 +13,7 @@ import type { PlanItem } from '../../domain/plan';
 import { createAccount } from '../../db/repo/finance';
 import { createMember, getPrefs, seedCategories, setPrefs, setProfile } from '../../db/repo/core';
 import { QuickPrefs } from '../../components/layout/QuickPrefs';
+import { ProfileSwitcher } from '../shell/ProfileSwitcher';
 import { parseMoney, type Currency } from '../../lib/money';
 import { today } from '../../lib/dates';
 import type { Engine } from '../../db/engine';
@@ -116,7 +117,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
 
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-[680px] mx-auto px-10 py-12 min-h-full flex flex-col">
-          <div className="flex justify-end -mt-4 mb-6"><QuickPrefs /></div>
+          <div className="flex items-center justify-end gap-4 -mt-4 mb-6"><ProfileSwitcher /><QuickPrefs /></div>
           <div className="h-1 rounded-full bg-surface-3 overflow-hidden mb-10"><motion.div className="h-full bg-brand rounded-full" animate={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} transition={{ duration: 0.5, ease }} /></div>
           <AnimatePresence mode="wait" custom={dir}>
             <motion.div key={step} custom={dir} initial={ok ? { opacity: 0, x: 40 * dir } : false} animate={{ opacity: 1, x: 0 }} exit={ok ? { opacity: 0, x: -40 * dir } : { opacity: 0 }} transition={{ duration: 0.35, ease }} className="flex-1">

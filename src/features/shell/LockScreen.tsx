@@ -4,6 +4,7 @@ import { LogoMark } from '../../brand/Logo';
 import { Button, Input } from '../../components/ui';
 import { Icon } from '../../icons';
 import { tr } from '../../lib/i18n';
+import { ProfileSwitcher } from './ProfileSwitcher';
 
 export function LockScreen({ onUnlock, title = tr('Monto está bloqueado'), subtitle = tr('Introduce tu contraseña para descifrar tus datos.') }: { onUnlock: (password: string) => Promise<string | null>; title?: string; subtitle?: string }) {
   const [pw, setPw] = useState('');
@@ -33,6 +34,7 @@ export function LockScreen({ onUnlock, title = tr('Monto está bloqueado'), subt
         {err && <p className="text-[12px] text-coral mt-2">{err}</p>}
         <Button type="submit" size="lg" className="w-full mt-5" loading={busy} icon="lock">{tr('Desbloquear')}</Button>
         <p className="text-[11px] text-muted mt-5 leading-relaxed">{tr('Tus datos están cifrados con AES-256 en este equipo. Si olvidas la contraseña no podrán recuperarse.')}</p>
+        <ProfileSwitcher className="mt-4" />
       </motion.form>
     </motion.div>
   );

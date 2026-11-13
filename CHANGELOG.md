@@ -10,6 +10,13 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.7.0-beta.2] - 2026-11-13
+
+### Añadido
+- **Varios perfiles**: en *Configuración → Perfil → Perfiles* puedes crear perfiles nuevos (por ejemplo, uno personal y otro para un negocio), cada uno con sus propios datos, integrantes y contraseña, y abrir cualquiera de ellos. También se puede cambiar de perfil desde la pantalla de bloqueo, la de integrantes y la configuración inicial.
+- **Borrar el perfil actual**: el administrador puede borrar todos los datos del perfil abierto. Antes se guarda una copia de seguridad, y después se abre otro perfil o la configuración inicial para crear uno nuevo.
+- **Orden de pagos para quien cobra una vez al mes**: en *Plan mensual*, si tu salario es mensual, Monto ordena tus gastos según el día en que vence cada uno a partir de tu día de cobro y muestra cuánto te queda después de cada pago, avisando si el salario no alcanza.
+
 ## [0.7.0-beta.1] - 2026-11-07
 
 Rediseño completo con estilo violeta, mejor organización y una guía de inicio.
@@ -136,7 +143,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.1...HEAD
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.2...HEAD
+[0.7.0-beta.2]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.2
 [0.7.0-beta.1]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.1
 [0.6.0]: https://github.com/eperez98/monto/releases/tag/v0.6.0
 [0.5.4-beta.7]: https://github.com/eperez98/monto/releases/tag/v0.5.4-beta.7
