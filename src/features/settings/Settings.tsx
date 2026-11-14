@@ -9,7 +9,6 @@ import { decrypt, isEncrypted } from '../../db/crypto';
 import { Button, Card, CardHeader, ChoiceCard, Field, Input, Modal, PageHeader, Segmented, Select, Toggle, Badge, Confirm, useConfirm } from '../../components/ui';
 import { Icon, IconTile, ICON_NAMES } from '../../icons';
 import { LogoMark } from '../../brand/Logo';
-import { formatDate } from '../../lib/dates';
 import type { ProfileMode } from '../../db/types';
 import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/version';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
@@ -412,15 +411,11 @@ function CategoriesTab() {
 }
 
 function AboutTab() {
-  const e = useEngine();
+  const go = useApp((s) => s.go);
   return (
-    <Card hover={false} className="p-8 text-center">
-      <div className="mx-auto grid place-items-center size-20 rounded-[24px] hero-surface"><LogoMark size={44} tone="light" /></div>
-      <h2 className="text-[26px] font-bold tracking-[-0.05em] mt-4">monto</h2>
-      <p className="serif text-[17px] text-ink-2">{tr('tus finanzas, en orden')}</p>
-      <p className="text-[13px] text-muted mt-3">{tr('Versión')}{' '}{APP_VERSION_LABEL}{' '}{tr('· Base de datos v')}{Number(e.scalar('PRAGMA user_version'))} · {e.adapter.kind === 'tauri' ? tr('Aplicación de escritorio') : tr('Modo navegador')}</p>
-      <p className="text-[12.5px] text-ink-2 mt-6 max-w-md mx-auto leading-relaxed">{tr('Finanzas personales y familiares para Panamá, con soporte de Balboa (PAB) y Dólar (USD). Funciona sin conexión y guarda tus datos solo en este equipo.')}</p>
-      <p className="text-[11.5px] text-muted mt-6">{tr('Último guardado:')}{' '}{e.lastSavedAt ? e.lastSavedAt.toLocaleTimeString(locale) : '—'} · {formatDate(new Date().toISOString().slice(0, 10), 'long')}</p>
+    <Card hover={false} className="p-6 flex flex-wrap items-center justify-between gap-4">
+      <div><p className="text-[14px] font-semibold">{tr('Acerca de Monto')}</p><p className="text-[12.5px] text-muted mt-0.5">{tr('Qué es Monto, cómo apoyar el proyecto y lo que viene.')}</p></div>
+      <Button icon="info" onClick={() => go('about')}>{tr('Abrir Acerca de')}</Button>
     </Card>
   );
 }

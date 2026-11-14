@@ -2036,7 +2036,7 @@ dependencies = [
 
 [[package]]
 name = "monto"
-version = "0.7.0-beta.6"
+version = "0.7.1-beta.1"
 dependencies = [
  "semver",
  "serde",

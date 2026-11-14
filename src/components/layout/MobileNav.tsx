@@ -60,6 +60,7 @@ export function MobileNav({ onSwitchMember }: { onSwitchMember: () => void }) {
                 </div>
               ))}
               <button onClick={() => pick('settings')} className="mt-4 w-full flex items-center gap-3 rounded-[18px] border border-line/70 p-3 text-[13px] text-ink"><Icon name="settings" size={18} />{tr('Configuración')}</button>
+              <button onClick={() => pick('about')} className="mt-2 w-full flex items-center gap-3 rounded-[18px] border border-line/70 p-3 text-[13px] text-ink"><Icon name="info" size={18} />{tr('Acerca de Monto')}</button>
             </motion.div>
           </motion.div>
         )}

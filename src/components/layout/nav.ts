@@ -28,4 +28,5 @@ export const NAV_GROUPS: Array<{ title: string; items: NavItem[] }> = [
 export const NAV_ITEMS: NavItem[] = [
   ...NAV_GROUPS.flatMap((g) => g.items),
   { key: 'settings', label: tr('Configuración'), icon: 'settings', hint: tr('Tema, idioma, seguridad, copias de seguridad y actualizaciones.') },
+  { key: 'about', label: tr('Acerca de Monto'), icon: 'info', hint: tr('Qué es Monto, cómo apoyar el proyecto y lo que viene.') },
 ];

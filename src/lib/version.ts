@@ -13,3 +13,5 @@ export function versionLabel(v: string): string {
 export const APP_VERSION: string = pkg.version;
 export const APP_VERSION_LABEL = versionLabel(APP_VERSION);
 export const IS_PRERELEASE = APP_VERSION.includes('-');
+/** Release name shown next to the version (matches the CHANGELOG heading). Update it with each named release. */
+export const APP_CODENAME = 'Design Update';

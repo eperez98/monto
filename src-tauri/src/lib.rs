@@ -10,6 +10,23 @@ mod updater;
 
 use tauri::Manager;
 
+/// Opens one of Monto's GitHub pages in the default browser. Only these fixed addresses, never a URL sent by the UI.
+#[tauri::command]
+fn open_project_page(page: String) -> Result<(), String> {
+    let path = match page.as_str() {
+        "repo" => "",
+        "issues" => "/issues",
+        "releases" => "/releases",
+        _ => return Err("Página desconocida".into()),
+    };
+    let url = format!("https://github.com/{}{path}", updater::REPO);
+    #[cfg(windows)]
+    let opener = "explorer";
+    #[cfg(not(windows))]
+    let opener = "xdg-open";
+    std::process::Command::new(opener).arg(url).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default();
@@ -28,7 +45,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update])
+        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page])
         .setup(|app| {
             // Make sure the data folder exists before the UI asks for it.
             if let Ok(dir) = app.path().app_data_dir() {

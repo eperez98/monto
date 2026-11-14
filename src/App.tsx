@@ -42,8 +42,9 @@ const Calendar = lazy(() => import('./features/calendar/Calendar'));
 const Reports = lazy(() => import('./features/reports/Reports'));
 const Insights = lazy(() => import('./features/insights/Insights'));
 const Settings = lazy(() => import('./features/settings/Settings'));
+const About = lazy(() => import('./features/about/About'));
 
-const PAGES: Record<RouteKey, React.ComponentType> = { dashboard: Dashboard, transactions: Transactions, accounts: Accounts, income: Income, plan: Plan, budgets: Budgets, goals: Goals, debts: Debts, family: Family, calendar: Calendar, reports: Reports, insights: Insights, settings: Settings };
+const PAGES: Record<RouteKey, React.ComponentType> = { dashboard: Dashboard, transactions: Transactions, accounts: Accounts, income: Income, plan: Plan, budgets: Budgets, goals: Goals, debts: Debts, family: Family, calendar: Calendar, reports: Reports, insights: Insights, settings: Settings, about: About };
 
 function PageSkeleton() {
   return (

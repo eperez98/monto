@@ -79,6 +79,9 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
               <span className="block text-[11px] text-muted truncate">{me ? ROLE_LABEL[me.role] : ''}</span>
             </span>
           </button>
+          <button onClick={() => go('about')} className={clsx('group grid place-items-center size-9 rounded-full hover:bg-surface-3', route === 'about' ? 'text-ink bg-surface-3' : 'text-muted')} aria-label={tr('Acerca de Monto')} title={tr('Acerca de Monto')}>
+            <Icon name="info" size={18} active={route === 'about'} />
+          </button>
           <button onClick={() => go('settings')} className={clsx('group grid place-items-center size-9 rounded-full hover:bg-surface-3', route === 'settings' ? 'text-ink bg-surface-3' : 'text-muted')} aria-label={tr('Configuración')} title={tr('Configuración')}>
             <Icon name="settings" size={18} active={route === 'settings'} />
           </button>

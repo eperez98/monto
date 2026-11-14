@@ -10,7 +10,12 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.7.1-beta.1] - 2026-11-14 · Design Update
+
+Actualización de diseño: inicio minimalista, tema Windows 11, página «Acerca de Monto» y mejoras al registrar el salario.
+
 ### Añadido
+- **Página «Acerca de Monto»** (botón ⓘ junto a Configuración y en «Más» en el celular): qué es Monto, la versión, una sección para apoyar el desarrollo con enlaces al repositorio, a sugerencias y a las versiones, y dos versiones futuras con ideas (0.8 «Smart Money» y 0.9 «Calm Design»).
 - **Tema de color «Windows 11»** en *Configuración → Apariencia*: superficies acrílicas y Mica, el azul de acento de Windows, la fuente Segoe UI Variable y esquinas de 8 px, en modo claro y oscuro.
 - **Inicio minimalista con carga en esqueleto**: mientras Monto abre se ve la silueta de la app con un indicador pequeño, y la pantalla para pedir la contraseña usa el mismo diseño. El inicio dura menos.
 - **«Agregar a tu balance actual»** al confirmar un salario recibido (*Ingresos y salario*). Viene activado; si lo apagas, el pago solo se marca como recibido y tu saldo no cambia. Sirve para el dinero que ya estaba incluido en el saldo que indicaste al crear el perfil.
@@ -184,7 +189,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.0-beta.6...HEAD
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.1-beta.1...HEAD
+[0.7.1-beta.1]: https://github.com/eperez98/monto/releases/tag/v0.7.1-beta.1
 [0.7.0-beta.6]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.6
 [0.7.0-beta.5]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.5
 [0.7.0-beta.4]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.4

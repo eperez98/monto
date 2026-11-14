@@ -216,10 +216,21 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.7.0 Beta 6').waitFor();
-  assert(true, 'versión 0.7.0 Beta 6 visible en Actualizaciones');
+  await page.getByText('Monto 0.7.1 Beta 1').waitFor();
+  assert(true, 'versión 0.7.1 Beta 1 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
+
+  step('About page');
+  await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
+  await page.getByText('Apoya el desarrollo').waitFor();
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('0.7.1 Beta 1 · Design Update'), 'acerca de: versión con nombre Design Update');
+  assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
+  assert(await page.getByText('0.8 · Smart Money').isVisible() && await page.getByText('0.9 · Calm Design').isVisible(), 'acerca de: dos versiones futuras con ideas');
+  await page.waitForTimeout(700);
+  await shot('19b-about');
+  await click('Resumen', { exact: true });
+  await page.getByText('Apoya el desarrollo').waitFor({ state: 'detached' });
 
   step('Settings → dark mode');
   await page.getByRole('button', { name: 'Configuración' }).click();
