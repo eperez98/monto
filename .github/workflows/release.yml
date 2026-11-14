@@ -69,5 +69,8 @@ jobs:
           name: ${{ steps.pkg.outputs.title }}
           body_path: release/NOTAS.md
           draft: false
-          prerelease: ${{ contains(env.TAG, '-') }}
+          # Every release (betas too) is published as the newest one on GitHub. Monto's own updater
+          # still tells betas apart by the version number (-beta.N), so the beta channel keeps working.
+          prerelease: false
+          make_latest: 'true'
           files: release/*.zip

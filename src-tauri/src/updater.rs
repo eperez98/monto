@@ -90,8 +90,10 @@ pub fn pick_update(releases: &[GhRelease], current: &str, include_prerelease: bo
     let cur = Version::parse(current).ok()?;
     releases
         .iter()
-        .filter(|r| !r.draft && (include_prerelease || !r.prerelease))
+        .filter(|r| !r.draft)
         .filter_map(|r| parse_tag(&r.tag_name).map(|v| (v, r)))
+        // A beta is recognised by its version (-beta.N), not only by GitHub's flag: releases are all marked Latest.
+        .filter(|(v, r)| include_prerelease || (!r.prerelease && v.pre.is_empty()))
         .filter(|(v, _)| *v > cur)
         .filter_map(|(v, r)| {
             let inst = r.assets.iter().find(|a| is_package(&a.name))?;
@@ -253,6 +255,13 @@ mod tests {
         let u = pick_update(&rs, "0.4.8-beta.2", false).unwrap();
         assert_eq!(u.sha256.as_deref(), Some("a".repeat(64).as_str()));
         assert_eq!(u.installer_name, "Monto_0.5.0_x64.zip");
+    }
+
+    #[test]
+    fn betas_marked_latest_on_github_stay_in_the_beta_channel() {
+        let rs = vec![rel("v0.6.0", false, &["Monto_0.6.0_x64.zip"]), rel("v0.7.1-beta.1", false, &["Monto_0.7.1-beta.1_x64.zip"])];
+        assert!(pick_update(&rs, "0.6.0", false).is_none());
+        assert_eq!(pick_update(&rs, "0.6.0", true).unwrap().version, "0.7.1-beta.1");
     }
 
     #[test]
