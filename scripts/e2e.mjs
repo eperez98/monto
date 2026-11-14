@@ -213,6 +213,9 @@ try {
   await click('Verificar', { exact: true });
   await page.getByText(/integrity_check: ok/).waitFor();
   assert(true, 'copia de seguridad e integridad OK');
+  await click('Borrar copias de más de 30 días');
+  await page.getByText('No hay copias de más de 30 días').waitFor();
+  assert(true, 'borrar copias antiguas: sin copias de más de 30 días que borrar');
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });

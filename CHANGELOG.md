@@ -10,6 +10,16 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Añadido
+- **Borrar copias de más de 30 días** en *Configuración → Datos*: elimina las copias de seguridad antiguas de este equipo tras confirmar. La copia más reciente siempre se conserva.
+
+### Cambiado
+- **Base de datos v2**: índices nuevos para movimientos, ingresos, actividad y sesiones, para que las consultas sigan siendo rápidas con más datos. La actualización es automática y no modifica tus datos. Las copias hechas con la v2 no se pueden restaurar en versiones anteriores de Monto.
+
+### Seguridad
+- Revisión de conexiones: la interfaz no se conecta a nada fuera de la app (la política de seguridad solo permite el propio origen). Las únicas salidas a Internet son buscar actualizaciones en GitHub (opcional) y abrir el repositorio en tu navegador cuando pulsas los botones de «Acerca de Monto».
+- Los nombres de las copias de seguridad se validan antes de leerlas o borrarlas, para que no puedan apuntar fuera de la carpeta de copias.
+
 ## [0.7.1-beta.1] - 2026-11-14 · Design Update
 
 Actualización de diseño: inicio minimalista, tema Windows 11, página «Acerca de Monto» y mejoras al registrar el salario.

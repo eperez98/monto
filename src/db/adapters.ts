@@ -15,8 +15,16 @@ export interface StorageAdapter {
   listBackups(): Promise<Array<{ name: string; size?: number; date?: string }>>;
   readBackup(name: string): Promise<Uint8Array>;
   location(): Promise<string>;
+  /** Delete one backup by the name listBackups returned. */
+  deleteBackup(name: string): Promise<void>;
   /** Delete this profile's database file (its backups are kept). */
   remove(): Promise<void>;
+}
+
+/** A backup file name, never a path: blocks `..\` or `/` from reaching the file system. */
+export function safeBackupName(name: string): string {
+  if (!/^[\w.-]+\.monto$/.test(name) || name.includes('..')) throw new Error(tr('Nombre de copia no válido.'));
+  return name;
 }
 
 export const isTauri = (): boolean => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
@@ -32,6 +40,7 @@ export class MemoryAdapter implements StorageAdapter {
   async readBackup(name: string) { const b = this.backups.get(name); if (!b) throw new Error(tr('Copia no encontrada')); return b; }
   async location() { return 'memoria'; }
   async remove() { this.data = null; }
+  async deleteBackup(name: string) { this.backups.delete(safeBackupName(name)); }
 }
 
 const IDB_NAME = 'monto';
@@ -61,6 +70,7 @@ export class BrowserAdapter implements StorageAdapter {
   async load() { return ((await idbOp('readonly', (s) => s.get(this.file))) as Uint8Array | undefined) ?? null; }
   async save(b: Uint8Array) { await idbOp('readwrite', (s) => s.put(b, this.file)); }
   async remove() { await idbOp('readwrite', (s) => s.delete(this.file)); }
+  async deleteBackup(name: string) { await idbOp('readwrite', (s) => s.delete(`${this.bk}${safeBackupName(name)}`)); }
   async backup(b: Uint8Array, name: string) { await idbOp('readwrite', (s) => s.put(b, `${this.bk}${name}`)); return name; }
   async listBackups() {
     const keys = (await idbOp('readonly', (s) => s.getAllKeys())) as string[];
@@ -127,9 +137,14 @@ export class TauriAdapter implements StorageAdapter {
   async readBackup(name: string) {
     const { readFile } = await this.fs();
     const { backups, join } = await this.dir();
-    return readFile(await join(backups, name));
+    return readFile(await join(backups, safeBackupName(name)));
   }
   async location() { return (await this.dir()).base; }
+  async deleteBackup(name: string) {
+    const { remove } = await this.fs();
+    const { backups, join } = await this.dir();
+    await remove(await join(backups, safeBackupName(name)));
+  }
   async remove() {
     const { exists, remove } = await this.fs();
     const { base, join } = await this.dir();

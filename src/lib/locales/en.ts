@@ -1368,4 +1368,12 @@ export const EN: Record<string, string> = {
   "Lo que viene": "What's next",
   "Ideas para las próximas versiones. No tienen fecha y pueden cambiar.": "Ideas for upcoming releases. No dates yet, and they may change.",
   "Abrir Acerca de": "Open About",
+  "Nombre de copia no válido.": "Invalid backup name.",
+  "No hay copias de más de 30 días": "No backups older than 30 days",
+  "¿Borrar {n} copia(s) de más de 30 días?": "Delete {n} backup(s) older than 30 days?",
+  "Se eliminan de este equipo y no se pueden recuperar. La copia más reciente siempre se conserva.": "They're removed from this computer and can't be recovered. The most recent backup is always kept.",
+  "{n} copia(s) eliminada(s)": "{n} backup(s) deleted",
+  "Copias antiguas borradas": "Old backups deleted",
+  "Borrar copias de más de 30 días": "Delete backups older than 30 days",
+  "Monto no envía tus datos a ningún servidor; solo consulta GitHub para buscar actualizaciones si lo tienes activado. Base de datos SQLite local en:": "Monto doesn't send your data to any server; it only checks GitHub for updates if you have that turned on. Local SQLite database at:",
 };

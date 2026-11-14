@@ -4,7 +4,7 @@ import { useApp } from '../../store/app';
 import { useActor, useCan, useEngine, useMutate, useProfile, useQuery, errorMessage } from '../../hooks/useDb';
 import { getPrefs, setPrefs, setProfile, listSessions, setMemberPin } from '../../db/repo/core';
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../../db/repo/finance';
-import { createBackup, exportBackupFile, exportJSON, pickBackupFile, restoreFromBytes } from '../../services/backup';
+import { createBackup, deleteOldBackups, exportBackupFile, exportJSON, oldBackups, pickBackupFile, restoreFromBytes } from '../../services/backup';
 import { decrypt, isEncrypted } from '../../db/crypto';
 import { Button, Card, CardHeader, ChoiceCard, Field, Input, Modal, PageHeader, Segmented, Select, Toggle, Badge, Confirm, useConfirm } from '../../components/ui';
 import { Icon, IconTile, ICON_NAMES } from '../../icons';
@@ -310,11 +310,18 @@ function DataTab() {
       <Card hover={false} className="p-6">
         <div className="flex items-start gap-4">
           <IconTile name="shield" color="var(--emerald)" size={44} />
-          <div><p className="text-[14px] font-semibold">{tr('Tus datos permanecen en este equipo')}</p><p className="text-[12.5px] text-muted mt-1">{tr('Monto no envía información a ningún servidor. Base de datos SQLite local en:')}</p><code className="block text-[11.5px] mt-2 bg-surface-2 rounded-[10px] px-3 py-2 break-all">{location}</code></div>
+          <div><p className="text-[14px] font-semibold">{tr('Tus datos permanecen en este equipo')}</p><p className="text-[12.5px] text-muted mt-1">{tr('Monto no envía tus datos a ningún servidor; solo consulta GitHub para buscar actualizaciones si lo tienes activado. Base de datos SQLite local en:')}</p><code className="block text-[11.5px] mt-2 bg-surface-2 rounded-[10px] px-3 py-2 break-all">{location}</code></div>
         </div>
       </Card>
       <Card hover={false}>
-        <CardHeader title={tr('Copias de seguridad')} subtitle={tr('Se crea una copia automática cada día al abrir Monto')} action={canBackup && <Button size="sm" icon="database" onClick={() => void run(() => createBackup(e), tr('Copia creada'))}>{tr('Crear copia ahora')}</Button>} />
+        <CardHeader title={tr('Copias de seguridad')} subtitle={tr('Se crea una copia automática cada día al abrir Monto')} action={canBackup && <div className="flex flex-wrap justify-end gap-2">
+          <Button size="sm" variant="secondary" icon="trash" onClick={() => {
+            const n = oldBackups(backups).length;
+            if (!n) return toast({ kind: 'info', title: tr('No hay copias de más de 30 días') });
+            confirm.ask({ title: tr('¿Borrar {n} copia(s) de más de 30 días?', { n }), body: tr('Se eliminan de este equipo y no se pueden recuperar. La copia más reciente siempre se conserva.'), confirmLabel: tr('Borrar'), onConfirm: () => void run(async () => tr('{n} copia(s) eliminada(s)', { n: await deleteOldBackups(e) }), tr('Copias antiguas borradas')) });
+          }}>{tr('Borrar copias de más de 30 días')}</Button>
+          <Button size="sm" icon="database" onClick={() => void run(() => createBackup(e), tr('Copia creada'))}>{tr('Crear copia ahora')}</Button>
+        </div>} />
         <ul className="p-3 max-h-[260px] overflow-y-auto">
           {backups.map((b) => (
             <li key={b.name} className="flex items-center gap-3 px-3 py-2 rounded-[12px] hover:bg-surface-2 text-[12.5px]">

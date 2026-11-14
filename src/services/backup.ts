@@ -14,6 +14,26 @@ export async function createBackup(e: Engine, label = 'manual'): Promise<string>
   return path;
 }
 
+/** When a backup was made, read from its name (monto-YYYYMMDD-HHMMSS-label.monto); null if the name has no date. */
+export function backupDate(name: string): Date | null {
+  const m = /^monto-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})/.exec(name);
+  return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) : null;
+}
+
+/** Backups older than `days`, oldest first. The newest backup is never included, so one copy always remains. */
+export function oldBackups(list: Array<{ name: string; date?: string }>, days = 30, now = new Date()): string[] {
+  const dated = list.map((b) => ({ name: b.name, at: backupDate(b.name) ?? (b.date ? new Date(b.date) : null) })).filter((b): b is { name: string; at: Date } => !!b.at);
+  const newest = dated.reduce<{ name: string; at: Date } | null>((a, b) => (!a || b.at > a.at ? b : a), null);
+  const cutoff = now.getTime() - days * 86_400_000;
+  return dated.filter((b) => b.at.getTime() < cutoff && b.name !== newest?.name).sort((a, b) => a.at.getTime() - b.at.getTime()).map((b) => b.name);
+}
+
+export async function deleteOldBackups(e: Engine, days = 30): Promise<number> {
+  const names = oldBackups(await e.adapter.listBackups(), days);
+  for (const n of names) await e.adapter.deleteBackup(n);
+  return names.length;
+}
+
 /** One automatic backup per day, keeping data safe before updates. */
 export async function autoBackup(e: Engine): Promise<string | null> {
   const day = new Date().toISOString().slice(0, 10);

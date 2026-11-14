@@ -218,6 +218,13 @@ export const MIGRATIONS: string[] = [
 
   CREATE TABLE dismissed_alerts (key TEXT PRIMARY KEY, created_at TEXT NOT NULL);
   `,
+  // v2 (0.7.1): indexes for the queries that grew with profiles, income tracking and the activity log. No data changes.
+  `
+  CREATE INDEX IF NOT EXISTS ix_tx_member_scope ON transactions(member_id, scope, date);
+  CREATE INDEX IF NOT EXISTS ix_tx_income_source ON transactions(income_source_id) WHERE income_source_id IS NOT NULL;
+  CREATE INDEX IF NOT EXISTS ix_activity_created ON activity_log(created_at);
+  CREATE INDEX IF NOT EXISTS ix_sessions_member ON sessions(member_id);
+  `,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;
