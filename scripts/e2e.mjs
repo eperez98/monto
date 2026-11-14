@@ -65,6 +65,7 @@ try {
   await page.getByText('¿Cuántas suscripciones tienes?').waitFor();
   await click('Siguiente');
   await click('Ver resultado');
+  await page.waitForTimeout(1500); // the amounts count up when the result appears
   const result = await page.getByText('Fondo restante').locator('..').innerText();
   assert(result.includes('2,000.00'), 'ingreso 3,000 − gastos 1,000 → fondo restante 2,000');
   assert(await page.getByText('Sí puedes ahorrar').isVisible(), 'indica que puede ahorrar');
@@ -340,6 +341,7 @@ try {
   await shot('03d-subscriptions');
   await click('Siguiente');
   await click('Ver resultado');
+  await page.waitForTimeout(1500);
   assert((await page.getByText('Fondo restante').locator('..').innerText()).includes('985.00'), 'suscripción incluida en el plan (2,000 − 1,015 = 985)');
   await click('Continuar');
   await page.getByRole('textbox', { name: 'Saldo inicial' }).fill('500');
@@ -373,6 +375,27 @@ try {
   await page.getByText('Marcado como pagado').last().waitFor();
   await click('Resumen', { exact: true });
   assert((await page.locator('[data-tour="hero"]').innerText()).includes('500.00'), 'quitar el descuento devuelve el saldo (500)');
+
+  step('Salary received without adding to the balance');
+  await click('Ingresos y salario');
+  await page.getByRole('button', { name: 'Editar', exact: true }).first().click();
+  await page.getByRole('dialog').locator('input[type=date]').first().fill('2026-10-01');
+  await dclick('Guardar');
+  await page.getByText('Pagos por confirmar').waitFor();
+  await page.getByText('Pagos por confirmar').locator('xpath=ancestor::section[1]').getByRole('button').first().click();
+  await page.getByRole('dialog').getByRole('switch', { name: 'Agregar a tu balance actual' }).click();
+  await dclick('Marcar como recibido');
+  await page.getByText('Marcado como recibido, sin sumar al saldo').waitFor();
+  assert(await page.getByText('Sin sumar al saldo', { exact: true }).isVisible(), 'cobro registrado sin sumar al saldo');
+  assert(!(await page.getByText('Pagos por confirmar').isVisible()), 'el pago ya no queda por confirmar');
+  await shot('23-salary-received');
+  await page.getByRole('button', { name: 'Borrar cobro' }).first().click();
+  await dclick('Borrar');
+  await page.getByText('Cobro borrado').waitFor();
+  await page.getByText('Pagos por confirmar').waitFor();
+  assert(true, 'borrar el cobro lo devuelve a pagos por confirmar');
+  await click('Resumen', { exact: true });
+  assert((await page.locator('[data-tour="hero"]').innerText()).includes('500.00'), 'el saldo no cambió (500)');
 
   step('Separate couple profile (copy)');
   const partnerWizard = async (name) => {

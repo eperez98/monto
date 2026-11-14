@@ -10,6 +10,13 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Añadido
+- **«Agregar a tu balance actual»** al confirmar un salario recibido (*Ingresos y salario*). Viene activado; si lo apagas, el pago solo se marca como recibido y tu saldo no cambia. Sirve para el dinero que ya estaba incluido en el saldo que indicaste al crear el perfil.
+- **Cobros registrados**: cada fuente de ingreso lista sus cobros con la opción de editarlos o borrarlos. Al borrar uno, el pago vuelve a «Pagos por confirmar».
+
+### Corregido
+- Ya no se puede registrar dos veces el mismo pago de salario.
+
 ## [0.7.0-beta.6] - 2026-11-13
 
 ### Corregido

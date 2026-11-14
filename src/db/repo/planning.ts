@@ -4,7 +4,7 @@ import { camel } from '../map';
 import { assertCan } from '../../domain/permissions';
 import { categoryIdByName, getSetting, log, setSetting } from './core';
 import type { PlanItem } from '../../domain/plan';
-import { createTransaction, deleteTransaction, listAccounts } from './finance';
+import { createTransaction, deleteTransaction, getTransaction, listAccounts } from './finance';
 import { estimateIncome, nextPayment, payOccurrences, type IncomeConfig, type PayOccurrence } from '../../domain/salary';
 import { applyPayments, type DebtStatus } from '../../domain/amortization';
 import { budgetStatus, type BudgetStatus } from '../../domain/budget';
@@ -12,7 +12,7 @@ import { occurrences, type RecurFrequency } from '../../domain/recurrence';
 import { netBalances, simplifyDebts } from '../../domain/split';
 import { addDays, lastMonths, monthKey, today, type ISODate } from '../../lib/dates';
 import { formatMoney, type Currency } from '../../lib/money';
-import type { Actor, Budget, Contribution, Debt, Goal, IncomeSource, Recurring, Reminder, Scope, ScopeFilter, Settlement } from '../types';
+import type { Actor, Transaction, Budget, Contribution, Debt, Goal, IncomeSource, Recurring, Reminder, Scope, ScopeFilter, Settlement } from '../types';
 import { tr } from '../../lib/i18n';
 
 const currency = z.enum(['PAB', 'USD']);
@@ -86,8 +86,27 @@ export function deleteIncomeSource(e: Engine, actor: Actor, id: string) {
   e.run('UPDATE income_sources SET active = 0 WHERE id = ?', [id]);
 }
 
+/** A payment confirmed as received without adding it to the balance (it was already in the opening balance). */
+export interface IncomeAck { periodKey: string; label: string; date: ISODate; amount: number }
+const ackKey = (sourceId: string) => `incomeAck:${sourceId}`;
+// Stored as { items } because getSetting merges objects (a bare array would come back as one).
+export function listIncomeAcks(e: Engine, sourceId: string): IncomeAck[] { return getSetting<{ items: IncomeAck[] }>(e, ackKey(sourceId), { items: [] }).items; }
+
 export function receivedKeys(e: Engine, sourceId: string): Set<string> {
-  return new Set(e.all<{ period_key: string }>('SELECT period_key FROM transactions WHERE income_source_id = ? AND period_key IS NOT NULL', [sourceId]).map((r) => r.period_key));
+  const keys = e.all<{ period_key: string }>('SELECT period_key FROM transactions WHERE income_source_id = ? AND period_key IS NOT NULL', [sourceId]).map((r) => r.period_key);
+  return new Set([...keys, ...listIncomeAcks(e, sourceId).map((a) => a.periodKey)]);
+}
+
+/** Recorded payments of an income source, newest first: income transactions plus confirmations that didn't touch the balance. */
+export function listReceived(e: Engine, sourceId: string, limit = 12): Array<{ tx: Transaction } | { ack: IncomeAck }> {
+  const txs = e.all<{ id: string }>('SELECT id FROM transactions WHERE income_source_id = ? ORDER BY date DESC, created_at DESC LIMIT ?', [sourceId, limit]).map((r) => getTransaction(e, r.id)).filter((t): t is Transaction => !!t);
+  const rows: Array<{ date: string; row: { tx: Transaction } | { ack: IncomeAck } }> = [...txs.map((tx) => ({ date: tx.date, row: { tx } })), ...listIncomeAcks(e, sourceId).map((ack) => ({ date: ack.date, row: { ack } }))];
+  return rows.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit).map((r) => r.row);
+}
+
+export function removeIncomeAck(e: Engine, actor: Actor, sourceId: string, periodKey: string) {
+  assertCan(actor.role, 'income.manage');
+  setSetting(e, ackKey(sourceId), { items: listIncomeAcks(e, sourceId).filter((a) => a.periodKey !== periodKey) });
 }
 
 export interface IncomeSummary {
@@ -122,9 +141,19 @@ export function incomeSummary(e: Engine, s: IncomeSource, ref: ISODate = today()
 }
 
 /** Register an expected payment as actually received (creates a real income transaction). */
-export function markPaymentReceived(e: Engine, actor: Actor, s: IncomeSource, occ: PayOccurrence, opts: { amount?: number; date?: ISODate; accountId?: string } = {}) {
+/**
+ * Confirm a pay date as received. By default an income transaction is recorded (the balance goes up); with
+ * `addToBalance: false` it only counts as received, for money already included in the opening balance.
+ */
+export function markPaymentReceived(e: Engine, actor: Actor, s: IncomeSource, occ: PayOccurrence, opts: { amount?: number; date?: ISODate; accountId?: string; addToBalance?: boolean } = {}): Transaction | null {
   const date = opts.date ?? today();
   if (date > today()) throw new Error(tr('No puedes registrar como recibido un pago con fecha futura.'));
+  if (receivedKeys(e, s.id).has(occ.periodKey)) throw new Error(tr('Este pago ya está registrado.'));
+  if (opts.addToBalance === false) {
+    assertCan(actor.role, 'income.manage');
+    setSetting(e, ackKey(s.id), { items: [...listIncomeAcks(e, s.id), { periodKey: occ.periodKey, label: occ.label, date, amount: opts.amount ?? occ.net }] });
+    return null;
+  }
   const accountId = opts.accountId ?? s.accountId;
   if (!accountId) throw new Error(tr('Selecciona la cuenta donde recibiste el pago.'));
   const cat = occ.kind === 'decimo' ? (e.get<{ id: string }>('SELECT id FROM categories WHERE name IN (?, ?)', [tr('Décimo tercer mes'), 'Décimo tercer mes'])?.id ?? s.categoryId) : s.categoryId;

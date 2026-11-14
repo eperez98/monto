@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { useActor, useCan, useMutate, useProfile, useQuery } from '../../hooks/useDb';
-import { listIncomeSources, incomeSummary, createIncomeSource, updateIncomeSource, deleteIncomeSource, markPaymentReceived, type IncomeSummary } from '../../db/repo/planning';
+import { listIncomeSources, incomeSummary, createIncomeSource, updateIncomeSource, deleteIncomeSource, markPaymentReceived, listReceived, removeIncomeAck, type IncomeSummary } from '../../db/repo/planning';
+import { deleteTransaction } from '../../db/repo/finance';
+import { useApp } from '../../store/app';
 import { listAccounts } from '../../db/repo/finance';
-import { Button, Card, CardHeader, EmptyState, EstimateTag, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, useConfirm, Stat, useMotionOK, IconButton } from '../../components/ui';
+import { Button, Card, CardHeader, EmptyState, EstimateTag, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, useConfirm, Stat, useMotionOK, IconButton, Toggle } from '../../components/ui';
 import { IncomeConfigForm, draftFromConfig, draftToConfig, emptyDraft, type IncomeDraft } from './IncomeConfigForm';
 import { Icon } from '../../icons';
 import { FREQUENCY_LABEL, type PayOccurrence } from '../../domain/salary';
@@ -49,9 +51,11 @@ function ReceiveModal({ s, occ, onClose }: { s: IncomeSummary; occ: PayOccurrenc
   const [amount, setAmount] = useState(centsToInput(occ.net));
   const [date, setDate] = useState(occ.date <= today() ? occ.date : today());
   const [accountId, setAccountId] = useState(s.source.accountId ?? accounts[0]?.id ?? '');
+  const [addToBalance, setAddToBalance] = useState(true);
   const save = () => {
-    const r = mutate((e, a) => markPaymentReceived(e, a, s.source, occ, { amount: parseMoney(amount), date, accountId }), { title: tr('Ingreso recibido'), body: `${occ.label} · ${formatMoney(parseMoney(amount), s.source.currency)}` });
-    if (r) onClose();
+    const r = mutate((e, a) => markPaymentReceived(e, a, s.source, occ, { amount: parseMoney(amount), date, accountId, addToBalance }),
+      { title: addToBalance ? tr('Ingreso recibido') : tr('Marcado como recibido, sin sumar al saldo'), body: `${occ.label} · ${formatMoney(parseMoney(amount), s.source.currency)}` });
+    if (r !== undefined) onClose();
   };
   return (
     <Modal open onClose={onClose} title={tr('Confirmar {v0}', { v0: lang === 'es' ? occ.label.toLowerCase() : occ.label })} subtitle={tr('{name} · previsto el {v1}', { name: s.source.name, v1: formatDate(occ.date) })} icon="check" width={460}
@@ -60,9 +64,55 @@ function ReceiveModal({ s, occ, onClose }: { s: IncomeSummary; occ: PayOccurrenc
       <div className="grid grid-cols-2 gap-3">
         <Field label={tr('Importe recibido (neto)')} className="col-span-2"><MoneyInput autoFocus currency={s.source.currency} value={amount} onChange={setAmount} aria-label={tr('Importe recibido')} /></Field>
         <Field label={tr('Fecha de cobro')}><Input type="date" max={today()} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-        <Field label={tr('Cuenta')}><Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>{accounts.filter((a) => a.currency === s.source.currency).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select></Field>
+        {addToBalance && <Field label={tr('Cuenta')}><Select value={accountId} onChange={(e) => setAccountId(e.target.value)}>{accounts.filter((a) => a.currency === s.source.currency).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select></Field>}
+      </div>
+      <div className="mt-4 rounded-[16px] border border-line bg-surface-2 p-3.5">
+        <Toggle checked={addToBalance} onChange={setAddToBalance} label={tr('Agregar a tu balance actual')}
+          description={addToBalance ? tr('Se registra como ingreso y tu saldo sube.') : tr('Solo se marca como recibido. Úsalo si este dinero ya estaba incluido en el saldo que indicaste.')} />
       </div>
     </Modal>
+  );
+}
+
+/** Recorded pay dates, each editable or removable (removing puts the pay date back as pending). */
+function ReceivedList({ s }: { s: IncomeSummary }) {
+  const rows = useQuery((e) => listReceived(e, s.source.id), [s.source.id]);
+  const canManage = useCan('income.manage');
+  const mutate = useMutate();
+  const confirm = useConfirm();
+  const openTx = useApp((st) => st.openTx);
+  if (!rows.length) return null;
+  const cur = s.source.currency;
+  const remove = (r: (typeof rows)[number]) => confirm.ask({
+    title: tr('¿Borrar este cobro?'), confirmLabel: tr('Borrar'),
+    body: 'tx' in r ? tr('Se elimina el ingreso y tu saldo baja. El pago vuelve a quedar por confirmar.') : tr('El pago vuelve a quedar por confirmar. Tu saldo no cambia.'),
+    onConfirm: () => mutate((e, a) => ('tx' in r ? deleteTransaction(e, a, r.tx.id) : removeIncomeAck(e, a, s.source.id, r.ack.periodKey)), tr('Cobro borrado')),
+  });
+  return (
+    <Card className="col-span-12" hover={false}>
+      <CardHeader title={tr('Cobros registrados')} subtitle={tr('Edita o borra un cobro si lo registraste por error.')} />
+      <ul className="p-2">
+        {rows.map((r) => {
+          const tx = 'tx' in r ? r.tx : null;
+          const ack = 'ack' in r ? r.ack : null;
+          return (
+            <li key={tx?.id ?? ack!.periodKey} className="flex flex-wrap items-center gap-3 px-3 py-2.5 rounded-[14px] hover:bg-surface-2">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-medium text-ink truncate">{tx ? tx.description : `${s.source.name} · ${ack!.label}`}</span>
+                <span className="block text-[11.5px] text-muted">{formatDate(tx?.date ?? ack!.date)}</span>
+              </span>
+              <Badge tone={tx ? 'green' : 'amber'}>{tx ? tr('Sumado al saldo') : tr('Sin sumar al saldo')}</Badge>
+              <Money cents={tx?.amount ?? ack!.amount} currency={tx?.currency ?? cur} className="w-24 text-right text-[13px] font-semibold" />
+              {canManage && <span className="flex gap-1">
+                {tx && <IconButton icon="edit" label={tr('Editar cobro')} size={32} onClick={() => openTx(undefined, tx)} />}
+                <IconButton icon="trash" label={tr('Borrar cobro')} size={32} onClick={() => remove(r)} />
+              </span>}
+            </li>
+          );
+        })}
+      </ul>
+      {confirm.node}
+    </Card>
   );
 }
 
@@ -118,6 +168,7 @@ function SourceCard({ s, index, onEdit, onReceive }: { s: IncomeSummary; index: 
           <div className="flex flex-wrap gap-2">{s.pending.map((p) => <Button key={p.periodKey} variant="secondary" size="sm" icon="check" onClick={() => onReceive(p)}>{p.label} · {formatDate(p.date, 'day')} · {formatMoney(p.net, cur)}</Button>)}</div>
         </Card>
       )}
+      <ReceivedList s={s} />
       <Card className="col-span-12 xl:col-span-7" delay={0.12}>
         <CardHeader title={tr('Recibido vs. estimado')} subtitle={tr('Últimos 6 meses (neto)')} />
         <div className="px-3 pb-3 h-[200px]">
