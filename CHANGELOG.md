@@ -10,29 +10,33 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-### Añadido
-- **Borrar copias de más de 30 días** en *Configuración → Datos*: elimina las copias de seguridad antiguas de este equipo tras confirmar. La copia más reciente siempre se conserva.
-
-### Cambiado
-- **Base de datos v2**: índices nuevos para movimientos, ingresos, actividad y sesiones, para que las consultas sigan siendo rápidas con más datos. La actualización es automática y no modifica tus datos. Las copias hechas con la v2 no se pueden restaurar en versiones anteriores de Monto.
-
-### Seguridad
-- Revisión de conexiones: la interfaz no se conecta a nada fuera de la app (la política de seguridad solo permite el propio origen). Las únicas salidas a Internet son buscar actualizaciones en GitHub (opcional) y abrir el repositorio en tu navegador cuando pulsas los botones de «Acerca de Monto».
-- Los nombres de las copias de seguridad se validan antes de leerlas o borrarlas, para que no puedan apuntar fuera de la carpeta de copias.
-
 ## [0.7.1-beta.1] - 2026-11-14 · Design Update
 
-Actualización de diseño: inicio minimalista, tema Windows 11, página «Acerca de Monto» y mejoras al registrar el salario.
+Una actualización centrada en el diseño y en cuidar tus datos: un inicio más limpio, un tema al estilo Windows 11, la página «Acerca de Monto», más control al registrar tu salario y una base de datos más rápida.
 
 ### Añadido
-- **Página «Acerca de Monto»** (botón ⓘ junto a Configuración y en «Más» en el celular): qué es Monto, la versión, una sección para apoyar el desarrollo con enlaces al repositorio, a sugerencias y a las versiones, y dos versiones futuras con ideas (0.8 «Smart Money» y 0.9 «Calm Design»).
-- **Tema de color «Windows 11»** en *Configuración → Apariencia*: superficies acrílicas y Mica, el azul de acento de Windows, la fuente Segoe UI Variable y esquinas de 8 px, en modo claro y oscuro.
-- **Inicio minimalista con carga en esqueleto**: mientras Monto abre se ve la silueta de la app con un indicador pequeño, y la pantalla para pedir la contraseña usa el mismo diseño. El inicio dura menos.
-- **«Agregar a tu balance actual»** al confirmar un salario recibido (*Ingresos y salario*). Viene activado; si lo apagas, el pago solo se marca como recibido y tu saldo no cambia. Sirve para el dinero que ya estaba incluido en el saldo que indicaste al crear el perfil.
-- **Cobros registrados**: cada fuente de ingreso lista sus cobros con la opción de editarlos o borrarlos. Al borrar uno, el pago vuelve a «Pagos por confirmar».
+- **Inicio minimalista con carga en esqueleto.** Mientras Monto abre se ve la silueta de la app con un indicador pequeño, en lugar de la animación grande de antes. El inicio tarda menos.
+- **Contraseña con el mismo diseño.** Si tu perfil tiene contraseña, se pide en una tarjeta compacta sobre esa silueta; el selector de perfiles sigue disponible ahí.
+- **Tema de color «Windows 11»** (*Configuración → Apariencia*), junto a Violeta y Clásico: menú lateral y diálogos acrílicos, un fondo suave al estilo Mica, el azul de acento de Windows, la fuente Segoe UI Variable y esquinas de 8 px. Funciona en modo claro y oscuro.
+- **Página «Acerca de Monto»** (botón ⓘ junto a Configuración, o «Más» en el celular): qué es Monto, la versión con su nombre, cómo apoyar el desarrollo (ver el repositorio en GitHub, sugerir ideas o ver todas las versiones) y las ideas para las próximas versiones, 0.8 «Smart Money» y 0.9 «Calm Design».
+- **«Agregar a tu balance actual»** al confirmar un salario recibido (*Ingresos y salario*). Viene activado; si lo apagas, el pago solo cuenta como recibido y tu saldo no cambia. Es para el dinero que ya estaba incluido en el saldo que indicaste al crear el perfil.
+- **Cobros registrados.** Cada fuente de ingreso muestra sus cobros e indica si se sumaron al saldo. Puedes editarlos o borrarlos; al borrar uno, el pago vuelve a «Pagos por confirmar».
+- **Borrar copias de más de 30 días** (*Configuración → Datos*). Pide confirmación y siempre conserva la copia más reciente.
+
+### Cambiado
+- **Base de datos v2.** Al abrir Monto se agregan índices para movimientos, cobros de salario, actividad y sesiones, para que las consultas sigan siendo rápidas con más datos. Es automático y no modifica tus datos.
 
 ### Corregido
 - Ya no se puede registrar dos veces el mismo pago de salario.
+
+### Seguridad
+- Revisión de conexiones. La interfaz no puede conectarse a nada fuera de la app: la política de seguridad solo permite su propio origen, y no hay analíticas ni telemetría. Las únicas salidas a internet son la búsqueda opcional de actualizaciones en GitHub, que no envía tus datos, y los botones de «Acerca de Monto», que abren tu navegador solo en tres direcciones fijas del repositorio.
+- Los nombres de las copias de seguridad se validan antes de leerlas o borrarlas, para que no puedan apuntar fuera de la carpeta de copias.
+- El texto de privacidad en *Configuración → Datos* ahora menciona la consulta de actualizaciones a GitHub.
+
+### Notas
+- Las copias de seguridad hechas con esta versión (base de datos v2) no se pueden restaurar en versiones anteriores de Monto.
+- Si actualizas desde una versión anterior a la 0.7.0 Beta 6, abre Monto a mano cuando termine el instalador; desde la Beta 6 se vuelve a abrir solo.
 
 ## [0.7.0-beta.6] - 2026-11-13
 
