@@ -81,6 +81,27 @@
   --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 0.7);
 }
 
+/* Windows 11 palette: Mica/acrylic surfaces, system accent blue, Segoe UI Variable, 8px corners */
+.theme-win11 {
+  --bg: #F3F3F3; --surface: rgb(255 255 255 / 0.72); --surface-2: rgb(249 249 249 / 0.85); --surface-3: rgb(0 0 0 / 0.055); --border: rgb(0 0 0 / 0.08);
+  --ink: #1A1A1A; --ink-2: #5D5D5D; --muted: #8A8A8A;
+  --brand: #005FB8; --brand-2: #1975C5; --brand-ink: #FFFFFF; --brand-soft: #E5EFF9; --lavender: #99C9F2;
+  --emerald: #0F7B0F; --emerald-soft: #DFF6DD; --sage: #8FC1EA; --sage-soft: #E5EFF9;
+  --coral: #C42B1C; --coral-soft: #FDE7E9; --amber: #9D5D00; --amber-soft: #FFF4CE; --blue: #005FB8; --blue-soft: #E5EFF9;
+  --shadow: 0 2px 4px rgb(0 0 0 / 0.04), 0 8px 16px -6px rgb(0 0 0 / 0.10);
+  --shadow-lg: 0 32px 64px -12px rgb(0 0 0 / 0.28);
+  --font-sans: 'Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+}
+.dark.theme-win11 {
+  --bg: #202020; --surface: rgb(44 44 44 / 0.72); --surface-2: rgb(52 52 52 / 0.85); --surface-3: rgb(255 255 255 / 0.065); --border: rgb(255 255 255 / 0.08);
+  --ink: #FFFFFF; --ink-2: #C5C5C5; --muted: #9A9A9A;
+  --brand: #60CDFF; --brand-2: #4CC2FF; --brand-ink: #000000; --brand-soft: #1E3443; --lavender: #99EBFF;
+  --emerald: #6CCB5F; --emerald-soft: #1E3A1E; --sage: #3A96DD; --sage-soft: #1E3443;
+  --coral: #FF99A4; --coral-soft: #442726; --amber: #FCE100; --amber-soft: #433519; --blue: #60CDFF; --blue-soft: #1E3443;
+  --shadow: 0 2px 4px rgb(0 0 0 / 0.25), 0 8px 16px -6px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 32px 64px -12px rgb(0 0 0 / 0.6);
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -159,6 +180,25 @@ input, textarea, select, [contenteditable] { user-select: text; }
 
 /* Inside the phone preview frame: leave room for the simulated home indicator. */
 .phone-preview { --safe-bottom: 22px; }
+
+.theme-win11 body {
+  background:
+    radial-gradient(60% 70% at 85% 10%, rgb(153 201 242 / 0.55) 0%, transparent 60%),
+    radial-gradient(55% 60% at 10% 95%, rgb(199 184 255 / 0.40) 0%, transparent 60%),
+    var(--bg);
+}
+.dark.theme-win11 body {
+  background:
+    radial-gradient(60% 70% at 85% 10%, rgb(0 95 184 / 0.35) 0%, transparent 60%),
+    radial-gradient(55% 60% at 10% 95%, rgb(90 60 170 / 0.28) 0%, transparent 60%),
+    var(--bg);
+}
+.theme-win11 .acrylic { backdrop-filter: blur(30px) saturate(150%); }
+.theme-win11 .card { border-radius: 8px; }
+.theme-win11 .btn, .theme-win11 .nav-pill { border-radius: 4px; }
+.theme-win11 .field { border-radius: 4px; }
+.theme-win11 .hero-surface { background: radial-gradient(80% 120% at 90% 0%, rgb(255 255 255 / 0.22) 0%, transparent 55%), linear-gradient(135deg, #0067C0 0%, #004A99 55%, #003070 100%); }
+.dark.theme-win11 .hero-surface { background: radial-gradient(80% 120% at 90% 0%, rgb(96 205 255 / 0.25) 0%, transparent 55%), linear-gradient(135deg, #0F5A9C 0%, #0B3E70 55%, #082848 100%); }
 
 /* Guided tour spotlight */
 .tour-hole { box-shadow: 0 0 0 9999px rgb(12 10 24 / 0.62); border-radius: 18px; transition: all .35s cubic-bezier(.22,1,.36,1); }

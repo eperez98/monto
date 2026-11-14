@@ -24,7 +24,7 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
   const next = useQuery((e) => upcoming(e, { scope: 'personal', memberId: actor.id }, 45).find((u) => u.kind !== 'income'), [actor.id]);
 
   return (
-    <aside className="w-[248px] shrink-0 h-full flex flex-col bg-surface border-r border-line/70 overflow-y-auto">
+    <aside className="acrylic w-[248px] shrink-0 h-full flex flex-col bg-surface border-r border-line/70 overflow-y-auto">
       <div className="px-5 pt-6 pb-5"><Wordmark /></div>
       <nav className="px-3 space-y-4" aria-label={tr('Principal')} data-tour="nav">
         {NAV_GROUPS.map((g) => (
@@ -34,8 +34,8 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
               {g.items.filter((n) => !n.family || profile.mode !== 'individual').map((n) => {
                 const active = route === n.key;
                 return (
-                  <button key={n.key} data-tour={`nav-${n.key}`} onClick={() => go(n.key)} title={n.hint} className={clsx('group relative w-full flex items-center gap-3 h-9 px-3 rounded-full text-[13px] transition-colors', active ? 'text-brand-ink font-semibold' : 'text-ink-2 hover:text-ink hover:bg-surface-3/70')}>
-                    {active && <motion.span layoutId="nav-active" className="absolute inset-0 rounded-full bg-brand shadow-[0_8px_20px_-10px_color-mix(in_srgb,var(--brand)_75%,transparent)]" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
+                  <button key={n.key} data-tour={`nav-${n.key}`} onClick={() => go(n.key)} title={n.hint} className={clsx('nav-pill group relative w-full flex items-center gap-3 h-9 px-3 rounded-full text-[13px] transition-colors', active ? 'text-brand-ink font-semibold' : 'text-ink-2 hover:text-ink hover:bg-surface-3/70')}>
+                    {active && <motion.span layoutId="nav-active" className="nav-pill absolute inset-0 rounded-full bg-brand shadow-[0_8px_20px_-10px_color-mix(in_srgb,var(--brand)_75%,transparent)]" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
                     <Icon name={n.icon} size={18} active={active} className={clsx('relative z-10 transition-colors', active ? 'text-brand-ink' : 'text-muted group-hover:text-ink-2')} />
                     <span className="relative z-10 truncate">{n.label}</span>
                   </button>

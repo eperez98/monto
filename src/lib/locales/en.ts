@@ -1334,4 +1334,6 @@ export const EN: Record<string, string> = {
   "Sin sumar al saldo": "Not added to balance",
   "Editar cobro": "Edit payment",
   "Borrar cobro": "Delete payment",
+  "Windows 11": "Windows 11",
+  "Acrílico, Mica y el azul de Windows": "Acrylic, Mica and the Windows blue",
 };

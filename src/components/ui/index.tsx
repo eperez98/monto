@@ -25,7 +25,7 @@ export function Card({ children, className, delay = 0, hover = true, as = 'secti
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: ok ? delay : 0, ease }}
       whileHover={hover && ok ? { y: -2 } : undefined}
-      className={clsx('rounded-[26px] bg-surface border border-line/70 shadow-card transition-shadow duration-300', hover && 'hover:shadow-pop/20', onClick && 'cursor-pointer text-left', className)}
+      className={clsx('card rounded-[26px] bg-surface border border-line/70 shadow-card transition-shadow duration-300', hover && 'hover:shadow-pop/20', onClick && 'cursor-pointer text-left', className)}
     >
       {children}
     </C>
@@ -60,7 +60,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       disabled={disabled || loading}
       className={clsx(
-        'group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap',
+        'btn group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap',
         size === 'sm' ? 'h-8 px-3.5 text-[12.5px]' : size === 'lg' ? 'h-12 px-6 text-[15px]' : 'h-10 px-4.5 text-[13.5px]',
         BTN[variant],
         className,
@@ -103,7 +103,7 @@ export function Field({ label, error, hint, children, className }: { label?: str
     </label>
   );
 }
-const inputCls = 'w-full h-10 rounded-[14px] bg-surface-2 border border-line px-3.5 text-[13.5px] text-ink placeholder:text-muted outline-none transition focus:border-brand focus:bg-surface focus:ring-4 focus:ring-brand/15 aria-[invalid=true]:border-coral';
+const inputCls = 'field w-full h-10 rounded-[14px] bg-surface-2 border border-line px-3.5 text-[13.5px] text-ink placeholder:text-muted outline-none transition focus:border-brand focus:bg-surface focus:ring-4 focus:ring-brand/15 aria-[invalid=true]:border-coral';
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean; prefix?: string }>(function Input({ className, invalid, prefix, ...rest }, ref) {
   if (prefix) return (
     <div className="relative">
@@ -293,7 +293,7 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={ok ? { opacity: 0, scale: 0.97, y: 8 } : { opacity: 0 }}
             transition={{ duration: 0.32, ease }}
-            className="relative w-full max-h-[calc(100vh-48px)] flex flex-col rounded-[26px] bg-surface border border-line shadow-pop"
+            className="acrylic card relative w-full max-h-[calc(100vh-48px)] flex flex-col rounded-[26px] bg-surface border border-line shadow-pop"
             style={{ maxWidth: width }}
           >
             <div className="flex items-start gap-3 px-6 pt-6 pb-4">

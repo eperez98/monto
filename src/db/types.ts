@@ -56,7 +56,7 @@ export interface Settlement { id: string; fromMemberId: string; toMemberId: stri
 export interface Activity { id: number; memberId: string | null; action: string; entity: string; entityId: string | null; summary: string; scope: Scope; createdAt: string }
 
 export interface Profile { name: string; mode: ProfileMode; primaryCurrency: Currency; onboarded: boolean; householdName?: string }
-export interface Preferences { theme: 'system' | 'light' | 'dark'; palette?: 'violet' | 'classic'; dashboardStyle?: 'today' | 'stories' | 'calm'; reducedMotion: 'system' | 'on' | 'off'; autoLockMinutes: number; showBothCurrencies: boolean; recentAutoBackup?: string; autoCheckUpdates?: boolean; betaUpdates?: boolean }
+export interface Preferences { theme: 'system' | 'light' | 'dark'; palette?: 'violet' | 'classic' | 'win11'; dashboardStyle?: 'today' | 'stories' | 'calm'; reducedMotion: 'system' | 'on' | 'off'; autoLockMinutes: number; showBothCurrencies: boolean; recentAutoBackup?: string; autoCheckUpdates?: boolean; betaUpdates?: boolean }
 
 export interface Actor { id: string; role: Role }
 export interface ScopeFilter { scope: Scope; memberId: string }

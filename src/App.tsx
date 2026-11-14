@@ -70,6 +70,7 @@ export default function App() {
     const reduce = prefs.reducedMotion === 'on' || (prefs.reducedMotion === 'system' && sysReduce);
     document.documentElement.classList.toggle('dark', dark);
     document.documentElement.classList.toggle('theme-classic', prefs.palette === 'classic');
+    document.documentElement.classList.toggle('theme-win11', prefs.palette === 'win11');
     document.documentElement.classList.toggle('reduce-motion', reduce);
     useApp.getState().setVisual({ dark, reducedMotion: reduce });
   }, []);
@@ -147,7 +148,7 @@ export default function App() {
   useEffect(() => {
     if (IS_PREVIEW) return;
     let cancelled = false;
-    const minSplash = new Promise((r) => setTimeout(r, ok ? 2100 : 300));
+    const minSplash = new Promise((r) => setTimeout(r, ok ? 900 : 200));
     (async () => {
       try {
         setStatus(tr('Cargando motor de base de datos…'));

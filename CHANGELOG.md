@@ -11,6 +11,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 ## [Sin publicar]
 
 ### Añadido
+- **Tema de color «Windows 11»** en *Configuración → Apariencia*: superficies acrílicas y Mica, el azul de acento de Windows, la fuente Segoe UI Variable y esquinas de 8 px, en modo claro y oscuro.
+- **Inicio minimalista con carga en esqueleto**: mientras Monto abre se ve la silueta de la app con un indicador pequeño, y la pantalla para pedir la contraseña usa el mismo diseño. El inicio dura menos.
 - **«Agregar a tu balance actual»** al confirmar un salario recibido (*Ingresos y salario*). Viene activado; si lo apagas, el pago solo se marca como recibido y tu saldo no cambia. Sirve para el dinero que ya estaba incluido en el saldo que indicaste al crear el perfil.
 - **Cobros registrados**: cada fuente de ingreso lista sus cobros con la opción de editarlos o borrarlos. Al borrar uno, el pago vuelve a «Pagos por confirmar».
 

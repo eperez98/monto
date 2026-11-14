@@ -168,8 +168,8 @@ function AppearanceTab() {
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Tema de color')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('Elige el estilo de color. Funciona tanto en modo claro como oscuro.')}</p>
-        <div className="grid grid-cols-2 gap-3">
-          {([['violet', tr('Violeta'), tr('El diseño nuevo'), 'linear-gradient(135deg,#7B5CFF,#5B3FE0 45%,#2E1D86)'], ['classic', tr('Clásico'), tr('El verde original de Monto'), 'linear-gradient(145deg,#1D4636,#0F241B 55%,#0B1A14)']] as const).map(([v, l, d, bg]) => {
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {([['violet', tr('Violeta'), tr('El diseño nuevo'), 'linear-gradient(135deg,#7B5CFF,#5B3FE0 45%,#2E1D86)'], ['classic', tr('Clásico'), tr('El verde original de Monto'), 'linear-gradient(145deg,#1D4636,#0F241B 55%,#0B1A14)'], ['win11', tr('Windows 11'), tr('Acrílico, Mica y el azul de Windows'), 'linear-gradient(135deg,#0067C0,#004A99 55%,#003070)']] as const).map(([v, l, d, bg]) => {
             const sel = (prefs.palette ?? 'violet') === v;
             return (
               <button key={v} type="button" aria-pressed={sel} onClick={() => mutate((e) => setPrefs(e, { palette: v }))}

@@ -229,8 +229,15 @@ try {
   assert(await page.evaluate(() => document.documentElement.classList.contains('dark')), 'modo oscuro activo');
   await click('Clásico');
   await page.waitForFunction(() => document.documentElement.classList.contains('theme-classic'));
+  await click('Windows 11');
+  await page.waitForFunction(() => document.documentElement.classList.contains('theme-win11') && !document.documentElement.classList.contains('theme-classic'));
+  await click('Resumen', { exact: true });
+  await page.waitForTimeout(1200);
+  await shot('17c-theme-win11-dark');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Apariencia');
   await click('Violeta');
-  await page.waitForFunction(() => !document.documentElement.classList.contains('theme-classic'));
+  await page.waitForFunction(() => !document.documentElement.classList.contains('theme-classic') && !document.documentElement.classList.contains('theme-win11'));
   assert(true, 'tema de color clásico y violeta seleccionables');
 
   step('Summary styles');
@@ -369,11 +376,13 @@ try {
   await page.getByText('Pago registrado y descontado del saldo').waitFor();
   await click('Resumen', { exact: true });
   await page.getByText('Saldo disponible').first().waitFor();
+  await page.waitForFunction((v) => document.querySelector('[data-tour="hero"]')?.textContent?.includes(v), '400.00', { timeout: 5000 }).catch(() => undefined);
   assert((await page.locator('[data-tour="hero"]').innerText()).includes('400.00'), 'descontar del saldo: 500 − 900 = −400');
   await click('Plan mensual');
   await page.locator('ol li').first().getByRole('switch', { name: 'Descontar del saldo actual' }).uncheck();
   await page.getByText('Marcado como pagado').last().waitFor();
   await click('Resumen', { exact: true });
+  await page.waitForFunction((v) => document.querySelector('[data-tour="hero"]')?.textContent?.includes(v), '500.00', { timeout: 5000 }).catch(() => undefined);
   assert((await page.locator('[data-tour="hero"]').innerText()).includes('500.00'), 'quitar el descuento devuelve el saldo (500)');
 
   step('Salary received without adding to the balance');
@@ -395,6 +404,7 @@ try {
   await page.getByText('Pagos por confirmar').waitFor();
   assert(true, 'borrar el cobro lo devuelve a pagos por confirmar');
   await click('Resumen', { exact: true });
+  await page.waitForFunction((v) => document.querySelector('[data-tour="hero"]')?.textContent?.includes(v), '500.00', { timeout: 5000 }).catch(() => undefined);
   assert((await page.locator('[data-tour="hero"]').innerText()).includes('500.00'), 'el saldo no cambió (500)');
 
   step('Separate couple profile (copy)');
