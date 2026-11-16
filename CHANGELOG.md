@@ -10,22 +10,34 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.8.0-rc.1] - 2026-11-15 · Smart Money (Release Candidate 1)
+
+Primera versión candidata de la 0.8 «Smart Money»: Monto ordena tus movimientos solo, importa tus estados de cuenta, aparta ahorro de cada salario y te avisa antes de que venza una factura. También trae mejoras para las parejas y un plan mensual más fácil de editar. En Windows aparece como versión 0.8.0.1.
+
 ### Añadido
-- **Correo del banco** (*Configuración → Correo del banco*, solo en la app de escritorio): conecta Gmail o Outlook con su inicio de sesión oficial (OAuth con PKCE, solo lectura), indica el asunto de los avisos de tu banco y Monto convierte esos correos en movimientos: monto, comercio, fecha y si es gasto o ingreso. Los revisas y eliges cuáles agregar, o activas «Agregar automáticamente al abrir Monto». Cada correo se agrega una sola vez. Incluye una guía para obtener el ID de cliente en Google Cloud y en Microsoft.
-- **Saldos de la pareja en el resumen**: en un perfil de pareja, arriba del resumen se ven *Mi saldo*, *Saldo de tu pareja* y *En conjunto*, calculados con las cuentas de cada uno (las compartidas cuentan en el total).
-- **Plan mensual de cada uno y en conjunto**: en un perfil de pareja hay pestañas *Mi plan*, *Plan de tu pareja* y *En conjunto*.
+- **Categorías automáticas.** Si la descripción de un movimiento contiene un texto, Monto le pone la categoría: por ejemplo «Super 99» → Alimentación. Crea tus reglas en *Configuración → Categorías → Reglas automáticas*; si ninguna coincide, Monto usa una lista de comercios comunes de Panamá. Se aplican a todo movimiento nuevo sin categoría: manual, de CSV o del correo.
+- **Importar estados de cuenta.** El importador de CSV (*Movimientos*) ahora entiende las columnas «Débito» y «Crédito» de los bancos, los años de dos dígitos y los montos con coma decimal (1.234,56). Pone la categoría con las reglas y no duplica lo que ya importaste.
+- **Ahorro automático** (*Objetivos*). Elige un objetivo y un porcentaje: cada vez que marques un salario como recibido y sumado a tu saldo, esa parte se aparta en el objetivo, sin pasarte de la meta.
+- **Avisos de pagos en Windows** (*Configuración → Apariencia*). Al abrir Monto, una vez al día, una notificación te avisa de los gastos del plan mensual que vencen hoy o en los próximos 2 días y aún no marcaste como pagados.
+- **Correo del banco** (opcional, *Configuración → Correo del banco*, solo en la app de escritorio). Inicia sesión con Gmail o Outlook en su página oficial, indica el asunto de los avisos de tu banco y Monto lee esos correos y te propone los movimientos (monto, comercio, fecha, gasto o ingreso) para que elijas cuáles agregar. Cada correo se agrega una sola vez. Incluye una guía para obtener el ID de cliente en Google Cloud y en Microsoft.
+- **Saldos de la pareja en el resumen.** En un perfil de pareja se ven *Mi saldo*, *Saldo de tu pareja* y *En conjunto*, según las cuentas de cada uno; las compartidas cuentan en el total.
+- **Plan mensual de cada uno y en conjunto.** En un perfil de pareja hay pestañas *Mi plan*, *Plan de tu pareja* y *En conjunto*.
 
 ### Cambiado
-- **Nuevo diseño del plan mensual**: arriba, una tarjeta grande con el resultado del mes (ingreso, gastos, fondo restante y cuánto puedes ahorrar); debajo, una tarjeta por gasto en el orden de pago, donde editas el monto y la fecha, lo marcas como pagado o lo quitas. Hay una tarjeta para agregar un gasto y la opción de volver a preguntar los gastos uno por uno.
-- En un perfil de pareja, los dos ven todas las cuentas (las de cada uno y las compartidas). En los perfiles de familia cada integrante sigue viendo solo las suyas y las compartidas.
-- La cuenta que se crea para tu pareja se llama por defecto «Cuenta de …» en lugar de «Banco General».
-
-### Seguridad
-- La conexión con el correo la hace la parte de escritorio de Monto y solo con las direcciones fijas de Google y Microsoft; la interfaz sigue sin poder conectarse a nada. El inicio de sesión vuelve a tu propio equipo (http://127.0.0.1) y el acceso se guarda en la base de datos local, cifrado si Monto tiene contraseña.
+- **Nuevo diseño del plan mensual.** Arriba, el resultado del mes (ingreso, gastos, fondo restante y cuánto puedes ahorrar); debajo, una tarjeta por gasto en el orden de pago, donde editas el monto y la fecha, lo marcas como pagado o lo quitas. Puedes agregar gastos o volver a responder el cuestionario uno por uno.
+- En un perfil de pareja los dos ven todas las cuentas. En los perfiles de familia cada integrante sigue viendo solo las suyas y las compartidas.
+- La cuenta que se crea para tu pareja se llama «Cuenta de …» en lugar de «Banco General».
+- «Acerca de Monto» muestra las ideas para la 0.9 «Calm Design» y la 1.0.
 
 ### Corregido
 - Perfil de pareja (también el externo): el plan mensual de tu pareja, su cuenta y su saldo no aparecían.
 - El plan mensual ya se puede editar directamente, sin repetir todo el cuestionario.
+
+### Seguridad
+- **El correo no deja nada guardado.** Monto no guarda la conexión, ni tokens, ni contraseñas: cada búsqueda pide iniciar sesión de nuevo, solo pide acceso de lectura y sin acceso permanente (no hay token de actualización), y el acceso temporal nunca sale de la parte de escritorio. El de Google se revoca al terminar. El secreto de cliente de Google se escribe en cada búsqueda y no se guarda.
+- **Solo se extrae lo necesario.** De cada correo se piden únicamente el asunto, el remitente, la fecha y el texto, nunca los adjuntos. Del correo solo se guarda lo que eliges agregar como movimiento, y de cada correo importado queda una huella anónima para no repetirlo.
+- La conexión con el correo la hace la parte de escritorio de Monto y solo con las direcciones fijas de Google y Microsoft; la interfaz sigue sin poder conectarse a nada. El inicio de sesión vuelve a tu propio equipo (http://127.0.0.1) y se protege con PKCE.
+- Nuevo permiso: notificaciones de Windows, para los avisos de pagos (se pueden apagar).
 
 ## [0.7.1-beta.1] - 2026-11-14 · Design Update
 
@@ -220,7 +232,8 @@ Primera versión funcional de **Monto**, una aplicación nueva que reemplaza por
 - Los datos de prueba de la compilación interna *Balbo* (`com.balbo.finanzas`) no se migran.
 - Se elimina la aplicación anterior en Python (`SalaryGoals_Modern.py`). Sus datos no se migran.
 
-[Sin publicar]: https://github.com/eperez98/monto/compare/v0.7.1-beta.1...HEAD
+[Sin publicar]: https://github.com/eperez98/monto/compare/v0.8.0-rc.1...HEAD
+[0.8.0-rc.1]: https://github.com/eperez98/monto/releases/tag/v0.8.0-rc.1
 [0.7.1-beta.1]: https://github.com/eperez98/monto/releases/tag/v0.7.1-beta.1
 [0.7.0-beta.6]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.6
 [0.7.0-beta.5]: https://github.com/eperez98/monto/releases/tag/v0.7.0-beta.5

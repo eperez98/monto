@@ -28,3 +28,22 @@ describe('old backups cleanup', () => {
     expect(await m.listBackups()).toEqual([]);
   });
 });
+
+describe('bank statement CSV import', () => {
+  it('reads Débito/Crédito columns, two-digit years, automatic categories and skips repeats', async () => {
+    const { freshEngine } = await import('../test/helpers');
+    const { createAccount, getAccount, listTransactions } = await import('../db/repo/finance');
+    const { categoryIdByName } = await import('../db/repo/core');
+    const { importTransactionsCSV } = await import('./backup');
+    const { e, actor } = await freshEngine();
+    const acc = createAccount(e, actor, { name: 'Banco', type: 'checking', currency: 'PAB', initialBalance: 100000 });
+    const csv = 'Fecha;Descripción;Débito;Crédito;Saldo\n14/11/26;COMPRA SUPER 99 ALBROOK;45,80;;954,20\n15/11/2026;DEPOSITO PLANILLA;;1.500,00;2.454,20\n';
+    const r = importTransactionsCSV(e, actor, csv, acc.id);
+    expect(r).toMatchObject({ imported: 2, skipped: 0 });
+    expect(getAccount(e, acc.id)!.balance).toBe(100000 - 4580 + 150000);
+    const txs = listTransactions(e, {});
+    expect(txs.find((t) => t.description.includes('SUPER 99'))).toMatchObject({ type: 'expense', date: '2026-11-14', categoryId: categoryIdByName(e, 'Alimentación', 'expense') });
+    expect(txs.find((t) => t.description.includes('PLANILLA'))?.type).toBe('income');
+    expect(importTransactionsCSV(e, actor, csv, acc.id)).toMatchObject({ imported: 0, skipped: 2 });
+  });
+});

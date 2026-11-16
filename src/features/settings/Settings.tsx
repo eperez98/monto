@@ -19,6 +19,7 @@ import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
 import { MailTab } from './MailTab';
+import { RulesCard } from './RulesCard';
 import { IS_PREVIEW } from '../../lib/preview';
 
 type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'mail' | 'categories' | 'updates' | 'about';
@@ -43,7 +44,7 @@ export default function Settings() {
           {tab === 'appearance' && <AppearanceTab />}
           {tab === 'security' && <SecurityTab />}
           {tab === 'data' && <DataTab />}
-          {tab === 'categories' && <CategoriesTab />}
+          {tab === 'categories' && <><CategoriesTab /><RulesCard /></>}
           {tab === 'mail' && <MailTab />}
           {tab === 'updates' && <UpdatesTab />}
           {tab === 'about' && <AboutTab />}
@@ -186,6 +187,11 @@ function AppearanceTab() {
         <p className="text-[13.5px] font-semibold mb-1">{tr('Estilo del resumen')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('Elige cuánta información ves al abrir Monto.')}</p>
         <StylePicker value={prefs.dashboardStyle ?? 'calm'} onChange={(v) => mutate((e) => setPrefs(e, { dashboardStyle: v }))} />
+      </div>
+      <div>
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Avisos de pagos')}</p>
+        <Toggle checked={prefs.billAlerts !== false} onChange={(v) => mutate((e) => setPrefs(e, { billAlerts: v }))} label={tr('Avisarme con una notificación de Windows')}
+          description={tr('Al abrir Monto, una vez al día, te avisa de los gastos de tu plan mensual que vencen hoy o en los próximos 2 días y aún no marcaste como pagados.')} />
       </div>
       {!IS_PREVIEW && (
         <div>

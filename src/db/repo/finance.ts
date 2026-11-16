@@ -3,6 +3,7 @@ import { Engine, nowISO, uid } from '../engine';
 import { camel } from '../map';
 import { assertCan, canEditTransaction, PermissionError } from '../../domain/permissions';
 import { log } from './core';
+import { categoryFor } from './rules';
 import { formatMoney } from '../../lib/money';
 import type { Account, Actor, Attachment, Category, ScopeFilter, Transaction, TxType } from '../types';
 import { tr } from '../../lib/i18n';
@@ -210,6 +211,8 @@ export function createTransaction(e: Engine, actor: Actor, input: TransactionInp
   const v = transactionSchema.parse({ ...input, memberId: input.memberId ?? actor.id });
   if (v.memberId !== actor.id && !canEditTransaction(actor.role, actor.id, v.memberId ?? null)) throw new PermissionError('tx.create.other');
   checkAccounts(e, v);
+  // No category chosen: fall back to the automatic rules ("Super 99" → Alimentación).
+  if (!v.categoryId && (v.type === 'expense' || v.type === 'income')) v.categoryId = categoryFor(e, v.description, v.type);
   const id = uid();
   const now = nowISO();
   e.transaction(() => {

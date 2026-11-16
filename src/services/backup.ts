@@ -4,6 +4,7 @@ import { openFile, saveFile, stamp } from './files';
 import { getPrefs, setPrefs } from '../db/repo/core';
 import { createTransaction } from '../db/repo/finance';
 import { parseMoney } from '../lib/money';
+import { parseAmount } from '../domain/bankMail';
 import type { Actor } from '../db/types';
 import { tr } from '../lib/i18n';
 
@@ -83,8 +84,9 @@ export function parseCSVLine(line: string, sep: string): string[] {
 export interface CsvImportResult { imported: number; skipped: number; errors: string[] }
 
 /**
- * Import transactions from a CSV with columns: fecha, descripcion, importe[, categoria][, tipo].
- * Negative amounts (or tipo=gasto) are expenses; positive are income.
+ * Import transactions from a CSV or a bank statement: fecha, descripcion and either importe or débito/crédito
+ * columns (categoria and tipo optional). Negative amounts, débitos or tipo=gasto are expenses. Without a
+ * category column the automatic rules choose one; rows already in the account are skipped.
  */
 export function importTransactionsCSV(e: Engine, actor: Actor, text: string, accountId: string): CsvImportResult {
   const acc = e.get<{ currency: 'PAB' | 'USD' }>('SELECT currency FROM accounts WHERE id = ?', [accountId]);
@@ -94,25 +96,34 @@ export function importTransactionsCSV(e: Engine, actor: Actor, text: string, acc
   const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
   const head = parseCSVLine(lines[0], sep).map((h) => h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''));
   const idx = (names: string[]) => head.findIndex((h) => names.some((n) => h.includes(n)));
-  const iDate = idx(['fecha', 'date']), iDesc = idx(['desc', 'concepto', 'detalle']), iAmt = idx(['importe', 'monto', 'amount', 'valor']), iCat = idx(['categ']), iType = idx(['tipo', 'type']);
-  if (iDate < 0 || iDesc < 0 || iAmt < 0) throw new Error(tr('El CSV debe tener columnas fecha, descripción e importe.'));
+  const iDate = idx(['fecha', 'date']), iDesc = idx(['desc', 'concepto', 'detalle', 'transaccion', 'comercio']), iAmt = idx(['importe', 'monto', 'amount', 'valor']), iCat = idx(['categ']), iType = idx(['tipo', 'type']);
+  // Bank statements often split the amount into "Débito" (money out) and "Crédito" (money in) columns.
+  const iDeb = idx(['debito', 'cargo', 'retiro']), iCred = idx(['credito', 'abono', 'deposito']);
+  const split = iAmt < 0 && (iDeb >= 0 || iCred >= 0);
+  if (iDate < 0 || iDesc < 0 || (iAmt < 0 && !split)) throw new Error(tr('El CSV debe tener columnas fecha, descripción e importe (o débito y crédito).'));
+  const exists = (date: string, amount: number, description: string) => !!e.get('SELECT 1 FROM transactions WHERE account_id = ? AND date = ? AND amount = ? AND description = ?', [accountId, date, amount, description]);
   const cats = e.all<{ id: string; name: string; kind: string }>('SELECT id, name, kind FROM categories');
   const res: CsvImportResult = { imported: 0, skipped: 0, errors: [] };
   e.transaction(() => {
     lines.slice(1).forEach((line, n) => {
       const c = parseCSVLine(line, sep);
       try {
-        let date = c[iDate];
-        const dm = date.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
-        if (dm) date = `${dm[3]}-${dm[2].padStart(2, '0')}-${dm[1].padStart(2, '0')}`;
-        let amount = parseMoney(c[iAmt]);
+        let date = (c[iDate] ?? '').trim();
+        const dm = date.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/);
+        if (dm) date = `${dm[3].length === 2 ? `20${dm[3]}` : dm[3]}-${dm[2].padStart(2, '0')}-${dm[1].padStart(2, '0')}`;
+        const num = (i: number) => (i >= 0 && c[i]?.trim() ? parseAmount(c[i].replace(/[^\d.,-]/g, '')) : 0);
+        // Both decimal styles: 1,234.56 and 1.234,56.
+        let amount = split ? num(iCred) - num(iDeb) : (Number.isNaN(parseMoney(c[iAmt])) ? parseAmount(c[iAmt].replace(/[^\d.,-]/g, '')) : parseMoney(c[iAmt]));
         if (Number.isNaN(amount) || amount === 0) throw new Error(tr('importe no válido'));
         const t = iType >= 0 ? c[iType].toLowerCase() : '';
         const isExpense = t.startsWith('gas') || t.startsWith('exp') || (!t && amount < 0);
         amount = Math.abs(amount);
         const kind = isExpense ? 'expense' : 'income';
         const cat = iCat >= 0 ? cats.find((x) => x.kind === kind && x.name.toLowerCase() === c[iCat]?.toLowerCase()) : undefined;
-        createTransaction(e, actor, { type: kind, description: c[iDesc] || tr('Importado'), amount, currency: acc.currency, date, accountId, categoryId: cat?.id ?? null, notes: tr('Importado desde CSV') });
+        const description = (c[iDesc] || tr('Importado')).trim().slice(0, 120);
+        // Importing the same statement twice doesn't duplicate movements.
+        if (exists(date, amount, description)) { res.skipped++; return; }
+        createTransaction(e, actor, { type: kind, description, amount, currency: acc.currency, date, accountId, categoryId: cat?.id ?? null, notes: tr('Importado desde CSV') });
         res.imported++;
       } catch (err) {
         res.skipped++;

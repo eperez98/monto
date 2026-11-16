@@ -46,7 +46,8 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, mail::mail_auth, mail::mail_fetch])
+        .plugin(tauri_plugin_notification::init())
+        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, mail::mail_read])
         .setup(|app| {
             // Make sure the data folder exists before the UI asks for it.
             if let Ok(dir) = app.path().app_data_dir() {

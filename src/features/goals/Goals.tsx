@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { useApp } from '../../store/app';
-import { useCan, useMutate, useProfile, useQuery, useScope, useEngine } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, useScope, useEngine } from '../../hooks/useDb';
 import { listGoals, createGoal, updateGoal, deleteGoal, contributeToGoal, listContributions, goalMonthlyPace, GOAL_KIND_LABEL } from '../../db/repo/planning';
 import { Button, Card, EmptyState, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, useConfirm, EstimateTag, Stat, useMotionOK } from '../../components/ui';
+import { getAutoSave, setAutoSave } from '../../db/repo/planning';
 import { Icon } from '../../icons';
 import { monthsToGoal } from '../../domain/insights';
 import { centsToInput, formatMoney, parseMoney, pct, type Currency } from '../../lib/money';
@@ -38,6 +39,32 @@ export function celebrate() {
     confetti({ particleCount: 4, angle: 120, spread: 60, origin: { x: 1, y: 0.7 }, colors });
     if (Date.now() < end) requestAnimationFrame(frame);
   })();
+}
+
+/** "Put X % of each salary into this goal" — applied when a salary is marked received. */
+function AutoSaveCard({ goals }: { goals: Goal[] }) {
+  const actor = useActor();
+  const can = useCan('goal.contribute');
+  const mutate = useMutate();
+  const cfg = useQuery((e) => getAutoSave(e, actor.id), [actor.id]);
+  const [pct, setPct] = useState(String(cfg.percent || 10));
+  if (!goals.length || !can) return null;
+  const save = (goalId: string, percent: number) => mutate((e, a) => setAutoSave(e, a, { goalId, percent }), goalId && percent > 0 ? tr('Ahorro automático activado') : tr('Ahorro automático desactivado'));
+  return (
+    <Card hover={false} className="p-5 mb-6 flex flex-wrap items-end gap-4">
+      <div className="flex-1 min-w-[220px]">
+        <p className="text-[14px] font-semibold">{tr('Ahorro automático')}</p>
+        <p className="text-[12.5px] text-muted mt-0.5">{tr('Cada vez que marques un salario como recibido y sumado a tu saldo, una parte se aparta en el objetivo que elijas.')}</p>
+      </div>
+      <Field label={tr('Porcentaje')} className="w-28"><Input type="number" inputMode="decimal" min={1} max={100} value={pct} onChange={(ev) => setPct(ev.target.value)} onBlur={() => cfg.goalId && save(cfg.goalId, Number(pct) || 0)} aria-label={tr('Porcentaje del salario')} /></Field>
+      <Field label={tr('Objetivo')} className="w-56">
+        <Select value={cfg.goalId} onChange={(ev) => save(ev.target.value, ev.target.value ? Number(pct) || 10 : 0)} aria-label={tr('Objetivo del ahorro automático')}>
+          <option value="">{tr('Desactivado')}</option>
+          {goals.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+        </Select>
+      </Field>
+    </Card>
+  );
 }
 
 export default function Goals() {
@@ -82,6 +109,7 @@ export default function Goals() {
   return (
     <div>
       <PageHeader title={tr('Objetivos de ahorro')} subtitle={tr('Metas claras, progreso visible')} actions={canManage && <Button icon="plus" onClick={() => openForm()}>{tr('Nuevo objetivo')}</Button>} />
+      <AutoSaveCard goals={goals.filter((g) => !g.completedAt)} />
       {goals.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-6">
           <Card className="p-5"><Stat label={tr('Ahorrado en objetivos')} value={<Money animated cents={totalSaved} currency={profile.primaryCurrency} className="text-emerald" />} /></Card>

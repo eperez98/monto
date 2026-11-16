@@ -1,7 +1,7 @@
 {
   "name": "monto",
   "private": true,
-  "version": "0.7.1-beta.1",
+  "version": "0.8.0-rc.1",
   "description": "Monto — finanzas personales y familiares para Panamá (PAB/USD). Aplicación de escritorio para Windows 11.",
   "type": "module",
   "scripts": {
@@ -28,6 +28,7 @@
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-dialog": "^2.8.4",
     "@tauri-apps/plugin-fs": "^2.7.1",
+    "@tauri-apps/plugin-notification": "^2.8.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
@@ -69,5 +70,8 @@
     "type": "git",
     "url": "https://github.com/eperez98/monto.git"
   },
-  "homepage": "https://github.com/eperez98/monto"
+  "homepage": "https://github.com/eperez98/monto",
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
 }

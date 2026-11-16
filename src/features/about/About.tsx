@@ -17,21 +17,21 @@ const HIGHLIGHTS: Array<[string, string, string]> = [
 /** Ideas for upcoming releases. Not promises: they can change or move. */
 const ROADMAP: Array<{ version: string; name: string; kind: string; items: string[] }> = [
   {
-    version: '0.8', name: 'Smart Money', kind: tr('Funciones'),
-    items: [
-      tr('Importar estados de cuenta (CSV) de los bancos de Panamá con categorías automáticas.'),
-      tr('Reglas de categorías: «si dice Super 99, es Alimentación».'),
-      tr('Ahorro automático: apartar un % del salario en tu objetivo al marcarlo como recibido.'),
-      tr('Avisos de Windows cuando una factura está por vencer.'),
-    ],
-  },
-  {
     version: '0.9', name: 'Calm Design', kind: tr('Diseño'),
     items: [
       tr('Mica real de Windows 11 y un modo compacto para pantallas pequeñas.'),
       tr('Resumen personalizable: elige y ordena tus tarjetas.'),
       tr('«Tu mes en resumen»: un informe visual al cerrar cada mes.'),
+      tr('Más bancos de Panamá reconocidos al leer correos y estados de cuenta.'),
+    ],
+  },
+  {
+    version: '1.0', name: 'Estable', kind: tr('Funciones'),
+    items: [
+      tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
       tr('Sincronización cifrada entre tus equipos y una app de celular acompañante.'),
+      tr('Resumen anual listo para tu declaración de impuestos.'),
+      tr('Metas compartidas en pareja con aportes de cada uno.'),
     ],
   },
 ];

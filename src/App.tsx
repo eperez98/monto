@@ -8,7 +8,7 @@ import { WrongPasswordError } from './db/crypto';
 import { endSession, getMember, getPrefs, getProfile, listMembers, seedCategories, startSession, verifyMemberPin } from './db/repo/core';
 import { runAutoPost } from './db/repo/planning';
 import { autoBackup } from './services/backup';
-import { autoImportMail } from './services/mail';
+import { notifyBillsDue } from './services/billAlerts';
 import { checkForUpdate, updatesSupported, type UpdateInfo } from './services/updates';
 import { UpdatePrompt } from './components/layout/UpdatePrompt';
 import { IS_PRERELEASE } from './lib/version';
@@ -98,8 +98,7 @@ export default function App() {
     const posted = runAutoPost(e, { id: m.id, role: m.role });
     if (posted) useApp.getState().toast({ kind: 'info', title: tr('{posted} movimiento(s) programado(s) registrado(s)', { posted }), body: tr('Se registraron automáticamente los pagos recurrentes vencidos.') });
     void autoBackup(e).catch(() => undefined);
-    // Bank emails: only when the user turned on automatic import in Settings → Bank email.
-    void autoImportMail(e, { id: m.id, role: m.role }).then((n) => { if (n) useApp.getState().toast({ kind: 'info', title: tr('{n} movimiento(s) agregado(s) desde tu correo', { n }) }); }).catch(() => undefined);
+    void notifyBillsDue(e, m.id).catch(() => undefined);
     const prefs = getPrefs(e);
     // On by default; the user can turn it off in Settings → Updates. Nothing installs without their OK.
     if (prefs.autoCheckUpdates !== false && updatesSupported()) {

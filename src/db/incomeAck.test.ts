@@ -26,3 +26,19 @@ describe('salary received without adding to the balance', () => {
     expect('tx' in listReceived(e, src.id)[0]).toBe(true);
   });
 });
+
+describe('automatic saving', () => {
+  it('puts a percentage of each received salary into the chosen goal, never past its target', async () => {
+    const { createGoal, getGoal, setAutoSave } = await import('./repo/planning');
+    const { e, actor } = await freshEngine();
+    const acc = createAccount(e, actor, { name: 'Banco', type: 'savings', currency: 'PAB', initialBalance: 0, ownerMemberId: actor.id });
+    const src = createIncomeSource(e, actor, { name: 'Empresa', currency: 'PAB', accountId: acc.id, startDate: addDays(today(), -40), config: { frequency: 'semimonthly', amount1: 150000, sameAmount: true, payDay1: 15, payDay2: 30 } });
+    const goal = createGoal(e, actor, { name: 'Emergencia', kind: 'emergency', target: 20000, currency: 'PAB', scope: 'personal' });
+    setAutoSave(e, actor, { goalId: goal.id, percent: 10 });
+    const [first, second] = incomeSummary(e, src).pending;
+    markPaymentReceived(e, actor, src, first);
+    expect(getGoal(e, goal.id)!.saved).toBe(15000);
+    if (second) { markPaymentReceived(e, actor, src, second); expect(getGoal(e, goal.id)!.saved).toBe(20000); }
+    expect(getAccount(e, acc.id)!.balance).toBeGreaterThanOrEqual(150000);
+  });
+});

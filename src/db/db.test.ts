@@ -217,3 +217,20 @@ describe('couple balances', () => {
     expect(b.total.PAB).toBe(150000);
   });
 });
+
+describe('automatic categories on new transactions', () => {
+  it('fills the category from the rules only when none was chosen', async () => {
+    const { freshEngine: fresh } = await import('../test/helpers');
+    const { createAccount, createTransaction } = await import('./repo/finance');
+    const { saveCategoryRules } = await import('./repo/rules');
+    const { categoryIdByName } = await import('./repo/core');
+    const { e, actor } = await fresh();
+    const acc = createAccount(e, actor, { name: 'B', type: 'savings', currency: 'PAB', initialBalance: 0 });
+    const food = categoryIdByName(e, 'Alimentación', 'expense');
+    const shop = categoryIdByName(e, 'Compras', 'expense')!;
+    expect(createTransaction(e, actor, { type: 'expense', description: 'SUPER 99 Albrook', amount: 1000, currency: 'PAB', date: '2026-11-15', accountId: acc.id }).categoryId).toBe(food);
+    saveCategoryRules(e, actor, [{ match: 'super 99', categoryId: shop, kind: 'expense' }]);
+    expect(createTransaction(e, actor, { type: 'expense', description: 'Super 99', amount: 1000, currency: 'PAB', date: '2026-11-15', accountId: acc.id }).categoryId).toBe(shop);
+    expect(createTransaction(e, actor, { type: 'expense', description: 'Super 99', amount: 1000, currency: 'PAB', date: '2026-11-15', accountId: acc.id, categoryId: food }).categoryId).toBe(food);
+  });
+});

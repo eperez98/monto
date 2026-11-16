@@ -157,10 +157,36 @@ export function markPaymentReceived(e: Engine, actor: Actor, s: IncomeSource, oc
   const accountId = opts.accountId ?? s.accountId;
   if (!accountId) throw new Error(tr('Selecciona la cuenta donde recibiste el pago.'));
   const cat = occ.kind === 'decimo' ? (e.get<{ id: string }>('SELECT id FROM categories WHERE name IN (?, ?)', [tr('Décimo tercer mes'), 'Décimo tercer mes'])?.id ?? s.categoryId) : s.categoryId;
-  return createTransaction(e, actor, {
-    type: 'income', description: `${s.name} · ${occ.label}`, amount: opts.amount ?? occ.net, currency: s.currency, date,
-    categoryId: cat, accountId, paymentMethod: 'ach', memberId: s.memberId ?? actor.id, scope: 'personal', incomeSourceId: s.id, periodKey: occ.periodKey,
+  return e.transaction(() => {
+    const amount = opts.amount ?? occ.net;
+    const tx = createTransaction(e, actor, {
+      type: 'income', description: `${s.name} · ${occ.label}`, amount, currency: s.currency, date,
+      categoryId: cat, accountId, paymentMethod: 'ach', memberId: s.memberId ?? actor.id, scope: 'personal', incomeSourceId: s.id, periodKey: occ.periodKey,
+    });
+    applyAutoSave(e, actor, s.memberId ?? actor.id, amount, date);
+    return tx;
   });
+}
+
+// ------------------------------------------------------------------ automatic saving
+/** Put `percent` % of every salary marked received (and added to the balance) into a goal. */
+export interface AutoSave { goalId: string; percent: number }
+const autoSaveKey = (memberId: string) => `autoSave:${memberId}`;
+export function getAutoSave(e: Engine, memberId: string): AutoSave { return getSetting<AutoSave>(e, autoSaveKey(memberId), { goalId: '', percent: 0 }); }
+export function setAutoSave(e: Engine, actor: Actor, v: AutoSave) {
+  assertCan(actor.role, 'goal.contribute');
+  const p = z.object({ goalId: z.string(), percent: z.number().min(0).max(100) }).parse(v);
+  setSetting(e, autoSaveKey(actor.id), { goalId: p.goalId, percent: Math.round(p.percent * 10) / 10 });
+}
+/** The amount set aside from a salary of `amount` cents (0 when off or the goal is gone or completed). */
+export function applyAutoSave(e: Engine, actor: Actor, memberId: string, amount: number, date: ISODate): number {
+  const cfg = getAutoSave(e, memberId);
+  if (!cfg.goalId || !(cfg.percent > 0)) return 0;
+  const g = getGoal(e, cfg.goalId);
+  if (!g || g.completedAt) return 0;
+  const part = Math.min(Math.round((amount * cfg.percent) / 100), Math.max(0, g.target - g.saved));
+  if (part > 0) contributeToGoal(e, actor, g.id, part, date, tr('Ahorro automático ({pct} % del salario)', { pct: cfg.percent }));
+  return part;
 }
 
 // ================================================================= budgets
