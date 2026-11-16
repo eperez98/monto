@@ -63,6 +63,18 @@ export function balances(e: Engine, visibleTo?: string, sharedOnly = false) {
   return { accounts: accs, available, netWorth, cardDebt: debt };
 }
 
+/** Available (liquid) money grouped by who owns the account; `total` adds every account, shared ones included. */
+export function balancesByOwner(e: Engine) {
+  const byMember: Record<string, ReturnType<typeof zeroTotals>> = {};
+  const shared = zeroTotals(), total = zeroTotals();
+  for (const a of listAccounts(e).filter(isLiquid)) {
+    const bucket = a.ownerMemberId ? (byMember[a.ownerMemberId] ??= zeroTotals()) : shared;
+    bucket[a.currency] += a.balance;
+    total[a.currency] += a.balance;
+  }
+  return { byMember, shared, total };
+}
+
 export interface UpcomingItem { date: ISODate; title: string; amount: number; currency: Currency; kind: 'income' | 'expense' | 'debt' | 'reminder'; estimated: boolean; ref?: string }
 
 /** Upcoming payments & income in the next `days` days (salaries are estimates until received). */

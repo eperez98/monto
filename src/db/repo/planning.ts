@@ -458,20 +458,21 @@ export function defaultPayAccount(e: Engine, memberId: string) {
  * Mark a plan bill paid or unpaid for the month. With `deduct`, an expense is recorded so the balance goes down;
  * without it, the bill only counts as paid (for bills paid before the opening balance was entered).
  */
-export function setPlanPaid(e: Engine, actor: Actor, item: PlanItem, opts: { paid: boolean; deduct: boolean; month?: string; date?: ISODate }) {
-  assertCan(actor.role, 'income.manage');
+export function setPlanPaid(e: Engine, actor: Actor, item: PlanItem, opts: { paid: boolean; deduct: boolean; month?: string; date?: ISODate; memberId?: string }) {
+  const memberId = opts.memberId ?? actor.id;
+  assertCan(actor.role, memberId === actor.id ? 'income.manage' : 'member.manage');
   const month = opts.month ?? monthKey(today());
-  const key = `planPaid:${actor.id}:${month}`;
+  const key = `planPaid:${memberId}:${month}`;
   const state = getSetting<Record<string, PlanPaid>>(e, key, {});
   const cur = state[item.name] ?? { paid: false };
   e.transaction(() => {
     let txId = cur.txId;
     if (txId && (!opts.paid || !opts.deduct)) { deleteTransaction(e, actor, txId); txId = undefined; }
     if (opts.paid && opts.deduct && !txId) {
-      const acc = defaultPayAccount(e, actor.id);
+      const acc = defaultPayAccount(e, memberId);
       if (!acc) throw new Error(tr('Crea una cuenta para poder descontar el pago.'));
       txId = createTransaction(e, actor, {
-        type: 'expense', description: item.name, amount: item.amount, currency: acc.currency, date: opts.date ?? today(), accountId: acc.id,
+        type: 'expense', description: item.name, amount: item.amount, currency: acc.currency, date: opts.date ?? today(), accountId: acc.id, memberId,
         categoryId: categoryIdByName(e, PLAN_CATEGORY[item.name] ?? (item.kind === 'subscription' ? 'Entretenimiento' : 'Otros gastos'), 'expense'),
       }).id;
     }

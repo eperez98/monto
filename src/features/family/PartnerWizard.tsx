@@ -29,7 +29,7 @@ export function PartnerWizard({ open, onClose }: { open: boolean; onClose: () =>
   const [income, setIncome] = useState<IncomeDraft>(() => emptyDraft(today()));
   const [plan, setPlan] = useState<PlanItem[]>([]);
   const [withAccount, setWithAccount] = useState(true);
-  const [accName, setAccName] = useState('Banco General');
+  const [accName, setAccName] = useState('');
   const [accBalance, setAccBalance] = useState('');
   const [err, setErr] = useState('');
   const monthlyNet = useMemo(() => (noIncome ? 0 : estimateIncome(draftToConfig(income)).monthlyNet), [noIncome, income]);
@@ -76,7 +76,7 @@ export function PartnerWizard({ open, onClose }: { open: boolean; onClose: () =>
         <div className="space-y-4">
           <Toggle checked={withAccount} onChange={setWithAccount} label={tr('Crear una cuenta para tu pareja')} description={tr('Donde recibe su salario. Puedes añadir más cuentas después.')} />
           {withAccount && <div className="grid grid-cols-2 gap-3">
-            <Field label={tr('Banco o nombre')}><Input value={accName} onChange={(e) => setAccName(e.target.value)} /></Field>
+            <Field label={tr('Banco o nombre')}><Input value={accName} onChange={(e) => setAccName(e.target.value)} placeholder={tr('Cuenta de {name}', { name: name.trim() || tr('tu pareja') })} /></Field>
             <Field label={tr('Saldo inicial')}><MoneyInput currency={cur} value={accBalance} onChange={setAccBalance} aria-label={tr('Saldo inicial')} /></Field>
           </div>}
         </div>

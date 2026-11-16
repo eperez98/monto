@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../../store/app';
-import { useActor, useCan, useMutate, useProfile, useQuery, useScope } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, useScope, accountsVisibleTo } from '../../hooks/useDb';
 import { useRange } from '../../hooks/useRange';
 import { listTransactions, listCategories, listAccounts, countTransactions, TX_TYPE_LABEL, PAYMENT_METHOD_LABEL } from '../../db/repo/finance';
 import { listMembers } from '../../db/repo/core';
@@ -41,7 +41,7 @@ export default function Transactions() {
   const count = useQuery((e) => countTransactions(e, filter), [filter]);
   const t = useQuery((e) => totals(e, range, sf), [range, sf]);
   const cats = useQuery((e) => listCategories(e, undefined, true));
-  const accounts = useQuery((e) => listAccounts(e, { includeArchived: true, visibleTo: profile.mode === 'individual' ? undefined : actor.id }), [actor.id]);
+  const accounts = useQuery((e) => listAccounts(e, { includeArchived: true, visibleTo: accountsVisibleTo(profile.mode, actor.id) }), [actor.id]);
   const members = useQuery((e) => listMembers(e, true));
   const cur = profile.primaryCurrency;
 

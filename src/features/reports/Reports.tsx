@@ -1,3 +1,4 @@
+import { getProfile } from '../../db/repo/core';
 import { useMemo, useState } from 'react';
 import { useApp } from '../../store/app';
 import { useCan, useEngine, useProfile, useScope, useQuery } from '../../hooks/useDb';
@@ -41,7 +42,7 @@ function buildReport(e: Engine, kind: Kind, sf: ScopeFilter, range: { from: stri
       const ever = { from: '0000-01-01', to: '9999-12-31' };
       const goals = listGoals(e, sf);
       const debts = listDebts(e, sf);
-      const accounts = listAccounts(e, { includeArchived: true, ...(sf.scope === 'family' ? { sharedOnly: true } : { visibleTo: sf.memberId }) });
+      const accounts = listAccounts(e, { includeArchived: true, ...(sf.scope === 'family' ? (getProfile(e).mode === 'couple' ? {} : { sharedOnly: true }) : { visibleTo: sf.memberId }) });
       const txs = listTransactions(e, { ...ever, scope: sf, limit: 1000000 });
       const plan = sf.scope === 'personal' ? getExpensePlan(e, sf.memberId) : [];
       const inflow = (t: string) => t === 'income' || t === 'refund' || t === 'loan_disbursement';

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
-import { useActor, useEngine, useMutate, useProfile, useQuery } from '../../hooks/useDb';
+import { useActor, useEngine, useMutate, useProfile, useQuery, accountsVisibleTo } from '../../hooks/useDb';
 import { Button, Field, Input, Modal, MoneyInput, Select, Textarea, Toggle, Avatar, Badge, useConfirm, Money } from '../../components/ui';
 import { Icon } from '../../icons';
 import { listAccounts, listCategories, createTransaction, updateTransaction, deleteTransaction, TX_TYPE_LABEL, PAYMENT_METHOD_LABEL, addAttachment, listAttachments, deleteAttachment, getAttachmentData, MAX_ATTACHMENT_BYTES, getTransaction } from '../../db/repo/finance';
@@ -46,7 +46,7 @@ export function TxEditor() {
   const e = useEngine();
   const mutate = useMutate();
   const confirm = useConfirm();
-  const accounts = useQuery((en) => listAccounts(en, { visibleTo: profile.mode === 'individual' ? undefined : actor.id }), [actor.id, profile.mode]);
+  const accounts = useQuery((en) => listAccounts(en, { visibleTo: accountsVisibleTo(profile.mode, actor.id) }), [actor.id, profile.mode]);
   const members = useQuery((en) => listMembers(en));
   const [type, setType] = useState<TxType>('expense');
   const [amount, setAmount] = useState('');

@@ -4,14 +4,14 @@ import clsx from 'clsx';
 import { useApp } from '../../store/app';
 import { useActor, useCan, useProfile, useQuery, useScope } from '../../hooks/useDb';
 import { useRange } from '../../hooks/useRange';
-import { alerts, balances, expensesByCategory, monthlySeries, totals, upcoming } from '../../db/repo/analytics';
-import { getPrefs } from '../../db/repo/core';
+import { alerts, balances, balancesByOwner, expensesByCategory, monthlySeries, totals, upcoming } from '../../db/repo/analytics';
+import { getPrefs, listMembers } from '../../db/repo/core';
 import { listAccounts, listTransactions } from '../../db/repo/finance';
 import { listGoals } from '../../db/repo/planning';
 import { Card, CardHeader, Money, EmptyState, Button, Segmented, useMotionOK } from '../../components/ui';
 import { IncomeExpenseBars, CategoryDonut } from '../../components/charts';
 import { Icon } from '../../icons';
-import { combined, pct } from '../../lib/money';
+import { combined, formatMoney, pct } from '../../lib/money';
 import { daysInMonth, diffDays, formatDate, today } from '../../lib/dates';
 import { buildStories, dailyAllowance, type StoryRoute } from '../../domain/overview';
 import { savingsRate } from '../../domain/insights';
@@ -27,7 +27,8 @@ function useDashData() {
   const cur = profile.primaryCurrency;
   const visibleTo = profile.mode === 'individual' ? undefined : sf.scope === 'personal' ? actor.id : undefined;
   const t = useQuery((e) => totals(e, range, sf), [range, sf]);
-  const bal = useQuery((e) => balances(e, visibleTo, profile.mode !== 'individual' && sf.scope === 'family'), [visibleTo, sf.scope]);
+  // Household view: a couple adds up every account; a family only the shared ones.
+  const bal = useQuery((e) => balances(e, visibleTo, profile.mode === 'family' && sf.scope === 'family'), [visibleTo, sf.scope, profile.mode]);
   const series = useQuery((e) => monthlySeries(e, 6, sf), [sf]);
   const cats = useQuery((e) => expensesByCategory(e, range, sf), [range, sf]);
   const prevCats = useQuery((e) => expensesByCategory(e, prev, sf), [prev, sf]);
@@ -210,12 +211,38 @@ function StoriesView({ d }: { d: Data }) {
   );
 }
 
+/** For couples: my money, my partner's and the two together, from the accounts each one owns. */
+function CoupleBalances({ d }: { d: Data }) {
+  const actor = useActor();
+  const b = useQuery((e) => balancesByOwner(e));
+  const partner = useQuery((e) => listMembers(e).find((m) => m.id !== actor.id), [actor.id]);
+  const shared = combined(b.shared, d.cur);
+  const cards: Array<[string, number, string | null]> = [
+    [tr('Mi saldo'), combined(b.byMember[actor.id] ?? { PAB: 0, USD: 0 }, d.cur), null],
+    [partner ? tr('Saldo de {name}', { name: partner.name.split(' ')[0] }) : tr('Saldo de tu pareja'), partner ? combined(b.byMember[partner.id] ?? { PAB: 0, USD: 0 }, d.cur) : 0, null],
+    [tr('En conjunto'), combined(b.total, d.cur), shared ? tr('Incluye {amount} en cuentas compartidas', { amount: formatMoney(shared, d.cur) }) : null],
+  ];
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5" aria-label={tr('Saldos de la pareja')}>
+      {cards.map(([label, value, note], i) => (
+        <div key={label} className={clsx('card rounded-[20px] border px-5 py-4', i === 2 ? 'border-brand/30 bg-brand-soft/50' : 'border-line/70 bg-surface')}>
+          <p className="text-[12px] text-muted">{label}</p>
+          <Money animated cents={value} currency={d.cur} className="block text-[22px] font-semibold tracking-[-0.04em] mt-1" />
+          {note && <p className="text-[11px] text-muted mt-0.5">{note}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const go = useApp((s) => s.go);
   const style = useQuery((e) => getPrefs(e).dashboardStyle ?? 'calm');
   const d = useDashData();
+  const couple = useProfile().mode === 'couple';
   if (!d.hasAccounts) {
     return <Card className="mt-6"><EmptyState icon="bank" title={tr('Crea tu primera cuenta')} body={tr('Añade una cuenta bancaria, efectivo o tarjeta para empezar a registrar movimientos.')} action={<Button icon="plus" onClick={() => go('accounts')}>{tr('Añadir cuenta')}</Button>} /></Card>;
   }
-  return style === 'today' ? <TodayView d={d} /> : style === 'stories' ? <StoriesView d={d} /> : <CalmView d={d} />;
+  const view = style === 'today' ? <TodayView d={d} /> : style === 'stories' ? <StoriesView d={d} /> : <CalmView d={d} />;
+  return <>{couple && <CoupleBalances d={d} />}{view}</>;
 }

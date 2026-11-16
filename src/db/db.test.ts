@@ -197,3 +197,23 @@ describe('family', () => {
     expect(monthlySeries(e, 3, { scope: 'family', memberId: owner.id }, '2026-11-15').at(-1)!.expense).toBe(80000);
   });
 });
+
+describe('couple balances', () => {
+  it('splits available money by owner and adds shared accounts only to the total', async () => {
+    const { freshEngine: fresh } = await import('../test/helpers');
+    const { createMember } = await import('./repo/core');
+    const { createAccount } = await import('./repo/finance');
+    const { balancesByOwner } = await import('./repo/analytics');
+    const { e, actor } = await fresh();
+    const ana = createMember(e, actor, { name: 'Ana', role: 'adult' });
+    createAccount(e, actor, { name: 'Mía', type: 'savings', currency: 'PAB', initialBalance: 100000, ownerMemberId: actor.id });
+    createAccount(e, actor, { name: 'De Ana', type: 'checking', currency: 'PAB', initialBalance: 40000, ownerMemberId: ana.id });
+    createAccount(e, actor, { name: 'Casa', type: 'savings', currency: 'PAB', initialBalance: 10000 });
+    createAccount(e, actor, { name: 'Tarjeta', type: 'credit_card', currency: 'PAB', initialBalance: -5000, ownerMemberId: actor.id });
+    const b = balancesByOwner(e);
+    expect(b.byMember[actor.id].PAB).toBe(100000);
+    expect(b.byMember[ana.id].PAB).toBe(40000);
+    expect(b.shared.PAB).toBe(10000);
+    expect(b.total.PAB).toBe(150000);
+  });
+});

@@ -4,7 +4,7 @@ import { Icon } from '../../icons';
 import { Wordmark } from '../../brand/Logo';
 import { useApp } from '../../store/app';
 import { NAV_GROUPS } from './nav';
-import { useActor, useProfile, useQuery } from '../../hooks/useDb';
+import { useActor, useProfile, useQuery, accountsVisibleTo } from '../../hooks/useDb';
 import { listMembers } from '../../db/repo/core';
 import { balances, upcoming } from '../../db/repo/analytics';
 import { Avatar, Money } from '../ui';
@@ -20,7 +20,7 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
   const profile = useProfile();
   const members = useQuery((e) => listMembers(e));
   const me = members.find((m) => m.id === actor.id);
-  const { accounts } = useQuery((e) => balances(e, profile.mode === 'individual' ? undefined : actor.id), [actor.id, profile.mode]);
+  const { accounts } = useQuery((e) => balances(e, accountsVisibleTo(profile.mode, actor.id)), [actor.id, profile.mode]);
   const next = useQuery((e) => upcoming(e, { scope: 'personal', memberId: actor.id }, 45).find((u) => u.kind !== 'income'), [actor.id]);
 
   return (

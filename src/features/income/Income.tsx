@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
-import { useActor, useCan, useMutate, useProfile, useQuery } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, accountsVisibleTo } from '../../hooks/useDb';
 import { listIncomeSources, incomeSummary, createIncomeSource, updateIncomeSource, deleteIncomeSource, markPaymentReceived, listReceived, removeIncomeAck, type IncomeSummary } from '../../db/repo/planning';
 import { deleteTransaction } from '../../db/repo/finance';
 import { useApp } from '../../store/app';
@@ -18,7 +18,7 @@ import { lang, tr } from '../../lib/i18n';
 function SourceForm({ open, onClose, source }: { open: boolean; onClose: () => void; source: IncomeSource | null }) {
   const profile = useProfile();
   const actor = useActor();
-  const accounts = useQuery((e) => listAccounts(e, { visibleTo: profile.mode === 'individual' ? undefined : actor.id }), [actor.id]);
+  const accounts = useQuery((e) => listAccounts(e, { visibleTo: accountsVisibleTo(profile.mode, actor.id) }), [actor.id]);
   const mutate = useMutate();
   const [name, setName] = useState(source?.name ?? '');
   const [currency, setCurrency] = useState<Currency>(source?.currency ?? profile.primaryCurrency);
@@ -46,7 +46,7 @@ function SourceForm({ open, onClose, source }: { open: boolean; onClose: () => v
 function ReceiveModal({ s, occ, onClose }: { s: IncomeSummary; occ: PayOccurrence; onClose: () => void }) {
   const actor = useActor();
   const profile = useProfile();
-  const accounts = useQuery((e) => listAccounts(e, { visibleTo: profile.mode === 'individual' ? undefined : actor.id }), [actor.id]);
+  const accounts = useQuery((e) => listAccounts(e, { visibleTo: accountsVisibleTo(profile.mode, actor.id) }), [actor.id]);
   const mutate = useMutate();
   const [amount, setAmount] = useState(centsToInput(occ.net));
   const [date, setDate] = useState(occ.date <= today() ? occ.date : today());

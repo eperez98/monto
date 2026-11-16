@@ -454,6 +454,19 @@ try {
   await click('Convertir en perfil de pareja');
   await partnerWizard('Sofía');
   assert(await page.getByRole('tab', { name: 'Hogar' }).isVisible(), 'perfil convertido a pareja');
+  await click('Resumen', { exact: true });
+  await page.getByText('Saldo de Sofía').waitFor();
+  assert(await page.getByText('En conjunto', { exact: true }).first().isVisible(), 'pareja: mi saldo, el de mi pareja y en conjunto');
+  await click('Plan mensual');
+  await page.getByRole('tab', { name: 'Plan de Sofía' }).click();
+  await page.getByText('Gasto 1 de 12').waitFor();
+  assert(true, 'pareja: el plan de mi pareja se ve y se puede completar');
+  await page.getByRole('tab', { name: 'En conjunto' }).click();
+  await page.getByText('Resultado del mes').waitFor();
+  assert(await page.getByRole('list', { name: 'Gastos de los dos' }).getByText('Vivienda (alquiler o hipoteca)').isVisible(), 'pareja: plan en conjunto con los gastos de los dos');
+  await page.waitForTimeout(800);
+  await shot('20b-couple-plan');
+  await page.getByRole('tab', { name: 'Mi plan' }).click();
 
   step('Delete current profile');
   await page.getByRole('button', { name: 'Configuración' }).click();

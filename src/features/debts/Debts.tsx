@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useActor, useCan, useMutate, useProfile, useQuery, useScope } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, useScope, accountsVisibleTo } from '../../hooks/useDb';
 import { listDebts, createDebt, updateDebt, deleteDebt, payDebt, DEBT_KIND_LABEL, type DebtView } from '../../db/repo/planning';
 import { listAccounts } from '../../db/repo/finance';
 import { Button, Card, EmptyState, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, Progress, Stat, useConfirm, Segmented } from '../../components/ui';
@@ -65,7 +65,7 @@ export default function Debts() {
   const mutate = useMutate();
   const confirm = useConfirm();
   const debts = useQuery((e) => listDebts(e, sf), [sf]);
-  const accounts = useQuery((e) => listAccounts(e, { visibleTo: profile.mode === 'individual' ? undefined : actor.id }), [actor.id]);
+  const accounts = useQuery((e) => listAccounts(e, { visibleTo: accountsVisibleTo(profile.mode, actor.id) }), [actor.id]);
   const [form, setForm] = useState<{ open: boolean; d: DebtView | null }>({ open: false, d: null });
   const [detail, setDetail] = useState<DebtView | null>(null);
   const [pay, setPay] = useState<DebtView | null>(null);

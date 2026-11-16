@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
-import { useActor, useCan, useMutate, useProfile, useQuery } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, accountsVisibleTo } from '../../hooks/useDb';
 import { listAccounts, createAccount, updateAccount, archiveAccount, deleteAccount, ACCOUNT_TYPE_LABEL, listTransactions, listCategories, isLiability } from '../../db/repo/finance';
 import { listMembers } from '../../db/repo/core';
 import { balances } from '../../db/repo/analytics';
@@ -91,7 +91,7 @@ export default function Accounts() {
   const mutate = useMutate();
   const confirm = useConfirm();
   const openTx = useApp((s) => s.openTx);
-  const visibleTo = profile.mode === 'individual' ? undefined : actor.id;
+  const visibleTo = accountsVisibleTo(profile.mode, actor.id);
   const accounts = useQuery((e) => listAccounts(e, { includeArchived: true, visibleTo }), [visibleTo]);
   const bal = useQuery((e) => balances(e, visibleTo), [visibleTo]);
   const cats = useQuery((e) => listCategories(e, undefined, true));

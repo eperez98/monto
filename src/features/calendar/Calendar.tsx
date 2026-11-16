@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import clsx from 'clsx';
-import { useActor, useCan, useMutate, useProfile, useQuery, useScope } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, useScope, accountsVisibleTo } from '../../hooks/useDb';
 import { listRecurring, recurringOccurrences, createRecurring, deleteRecurring, postRecurring, listReminders, createReminder, toggleReminder, deleteReminder, listIncomeSources, listDebts } from '../../db/repo/planning';
 import { listAccounts, listCategories, listTransactions } from '../../db/repo/finance';
 import { payOccurrences } from '../../domain/salary';
@@ -29,7 +29,7 @@ export default function Calendar() {
   const from = `${month}-01`;
   const to = `${month}-${String(daysInMonth(Number(month.slice(0, 4)), Number(month.slice(5)) - 1)).padStart(2, '0')}`;
   const rules = useQuery((e) => listRecurring(e, sf), [sf]);
-  const accounts = useQuery((e) => listAccounts(e, { visibleTo: profile.mode === 'individual' ? undefined : actor.id }), [actor.id]);
+  const accounts = useQuery((e) => listAccounts(e, { visibleTo: accountsVisibleTo(profile.mode, actor.id) }), [actor.id]);
   const cats = useQuery((e) => listCategories(e));
 
   const events = useQuery((e) => {

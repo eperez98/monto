@@ -10,6 +10,19 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Añadido
+- **Saldos de la pareja en el resumen**: en un perfil de pareja, arriba del resumen se ven *Mi saldo*, *Saldo de tu pareja* y *En conjunto*, calculados con las cuentas de cada uno (las compartidas cuentan en el total).
+- **Plan mensual de cada uno y en conjunto**: en un perfil de pareja hay pestañas *Mi plan*, *Plan de tu pareja* y *En conjunto*.
+
+### Cambiado
+- **Nuevo diseño del plan mensual**: arriba, una tarjeta grande con el resultado del mes (ingreso, gastos, fondo restante y cuánto puedes ahorrar); debajo, una tarjeta por gasto en el orden de pago, donde editas el monto y la fecha, lo marcas como pagado o lo quitas. Hay una tarjeta para agregar un gasto y la opción de volver a preguntar los gastos uno por uno.
+- En un perfil de pareja, los dos ven todas las cuentas (las de cada uno y las compartidas). En los perfiles de familia cada integrante sigue viendo solo las suyas y las compartidas.
+- La cuenta que se crea para tu pareja se llama por defecto «Cuenta de …» en lugar de «Banco General».
+
+### Corregido
+- Perfil de pareja (también el externo): el plan mensual de tu pareja, su cuenta y su saldo no aparecían.
+- El plan mensual ya se puede editar directamente, sin repetir todo el cuestionario.
+
 ## [0.7.1-beta.1] - 2026-11-14 · Design Update
 
 Una actualización centrada en el diseño y en cuidar tus datos: un inicio más limpio, un tema al estilo Windows 11, la página «Acerca de Monto», más control al registrar tu salario y una base de datos más rápida.

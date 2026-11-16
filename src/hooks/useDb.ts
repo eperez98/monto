@@ -70,3 +70,8 @@ export function useMutate() {
     }
   };
 }
+
+/** Whose accounts a member sees: a couple shares everything; in a family each member sees their own plus the shared ones. */
+export function accountsVisibleTo(mode: string, actorId: string): string | undefined {
+  return mode === 'family' ? actorId : undefined;
+}
