@@ -217,6 +217,11 @@ try {
   await page.getByText('No hay copias de más de 30 días').waitFor();
   assert(true, 'borrar copias antiguas: sin copias de más de 30 días que borrar');
 
+  step('Bank email tab');
+  await click('Correo del banco', { exact: true });
+  await page.getByText('Disponible en la app de escritorio de Monto.').waitFor();
+  assert(true, 'correo del banco: solo en la app de escritorio (en el navegador no se conecta)');
+
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
   await page.getByText('Monto 0.7.1 Beta 1').waitFor();

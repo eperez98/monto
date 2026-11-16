@@ -18,12 +18,13 @@ import { copyProfileForCouple, createProfile, deleteCurrentProfile, switchProfil
 import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
+import { MailTab } from './MailTab';
 import { IS_PREVIEW } from '../../lib/preview';
 
-type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'categories' | 'updates' | 'about';
+type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'mail' | 'categories' | 'updates' | 'about';
 const TABS: Array<{ k: Tab; label: string; icon: string }> = [
   { k: 'profile', label: tr('Perfil'), icon: 'user' }, { k: 'appearance', label: tr('Apariencia'), icon: 'sun' }, { k: 'security', label: tr('Seguridad'), icon: 'lock' },
-  { k: 'data', label: tr('Datos y copias'), icon: 'database' }, { k: 'categories', label: tr('Categorías'), icon: 'budget' }, { k: 'updates', label: tr('Actualizaciones'), icon: 'refresh' }, { k: 'about', label: tr('Acerca de'), icon: 'info' },
+  { k: 'data', label: tr('Datos y copias'), icon: 'database' }, { k: 'mail', label: tr('Correo del banco'), icon: 'bell' }, { k: 'categories', label: tr('Categorías'), icon: 'budget' }, { k: 'updates', label: tr('Actualizaciones'), icon: 'refresh' }, { k: 'about', label: tr('Acerca de'), icon: 'info' },
 ];
 
 export default function Settings() {
@@ -43,6 +44,7 @@ export default function Settings() {
           {tab === 'security' && <SecurityTab />}
           {tab === 'data' && <DataTab />}
           {tab === 'categories' && <CategoriesTab />}
+          {tab === 'mail' && <MailTab />}
           {tab === 'updates' && <UpdatesTab />}
           {tab === 'about' && <AboutTab />}
         </div>

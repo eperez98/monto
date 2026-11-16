@@ -6,6 +6,7 @@
 //! a single-instance guard so two windows never write the same database, and
 //! opt-in updates from GitHub Releases verified with SHA-256 (see `updater`).
 
+mod mail;
 mod updater;
 
 use tauri::Manager;
@@ -45,7 +46,7 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page])
+        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, mail::mail_auth, mail::mail_fetch])
         .setup(|app| {
             // Make sure the data folder exists before the UI asks for it.
             if let Ok(dir) = app.path().app_data_dir() {

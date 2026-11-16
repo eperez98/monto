@@ -11,6 +11,7 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 ## [Sin publicar]
 
 ### Añadido
+- **Correo del banco** (*Configuración → Correo del banco*, solo en la app de escritorio): conecta Gmail o Outlook con su inicio de sesión oficial (OAuth con PKCE, solo lectura), indica el asunto de los avisos de tu banco y Monto convierte esos correos en movimientos: monto, comercio, fecha y si es gasto o ingreso. Los revisas y eliges cuáles agregar, o activas «Agregar automáticamente al abrir Monto». Cada correo se agrega una sola vez. Incluye una guía para obtener el ID de cliente en Google Cloud y en Microsoft.
 - **Saldos de la pareja en el resumen**: en un perfil de pareja, arriba del resumen se ven *Mi saldo*, *Saldo de tu pareja* y *En conjunto*, calculados con las cuentas de cada uno (las compartidas cuentan en el total).
 - **Plan mensual de cada uno y en conjunto**: en un perfil de pareja hay pestañas *Mi plan*, *Plan de tu pareja* y *En conjunto*.
 
@@ -18,6 +19,9 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 - **Nuevo diseño del plan mensual**: arriba, una tarjeta grande con el resultado del mes (ingreso, gastos, fondo restante y cuánto puedes ahorrar); debajo, una tarjeta por gasto en el orden de pago, donde editas el monto y la fecha, lo marcas como pagado o lo quitas. Hay una tarjeta para agregar un gasto y la opción de volver a preguntar los gastos uno por uno.
 - En un perfil de pareja, los dos ven todas las cuentas (las de cada uno y las compartidas). En los perfiles de familia cada integrante sigue viendo solo las suyas y las compartidas.
 - La cuenta que se crea para tu pareja se llama por defecto «Cuenta de …» en lugar de «Banco General».
+
+### Seguridad
+- La conexión con el correo la hace la parte de escritorio de Monto y solo con las direcciones fijas de Google y Microsoft; la interfaz sigue sin poder conectarse a nada. El inicio de sesión vuelve a tu propio equipo (http://127.0.0.1) y el acceso se guarda en la base de datos local, cifrado si Monto tiene contraseña.
 
 ### Corregido
 - Perfil de pareja (también el externo): el plan mensual de tu pareja, su cuenta y su saldo no aparecían.
