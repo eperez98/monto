@@ -231,15 +231,15 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.8.0 Release Candidate 1').waitFor();
-  assert(true, 'versión 0.8.0 Release Candidate 1 visible en Actualizaciones');
+  await page.getByText('Monto 0.8.0 Release Candidate 2').waitFor();
+  assert(true, 'versión 0.8.0 Release Candidate 2 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('0.8.0 Release Candidate 1 · Smart Money'), 'acerca de: versión con nombre Smart Money');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('0.8.0 Release Candidate 2 · Smart Money'), 'acerca de: versión con nombre Smart Money');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
   assert(await page.getByText('0.9 · Calm Design').isVisible() && await page.getByText('1.0 · Estable').isVisible(), 'acerca de: dos versiones futuras con ideas');
   await page.waitForTimeout(700);
