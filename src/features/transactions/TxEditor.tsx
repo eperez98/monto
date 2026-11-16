@@ -14,6 +14,8 @@ import { findDuplicates } from '../../domain/insights';
 import { centsToInput, parseMoney, formatMoney } from '../../lib/money';
 import { addDays, today, formatDate } from '../../lib/dates';
 import { openFile, saveFile } from '../../services/files';
+import { readReceipt, receiptSupported, RECEIPT_EXTENSIONS } from '../../services/receipt';
+import { categoryFor } from '../../db/repo/rules';
 import type { Category, PaymentMethod, Scope, TxType } from '../../db/types';
 import { tr } from '../../lib/i18n';
 
@@ -66,6 +68,10 @@ export function TxEditor() {
   const [files, setFiles] = useState<Array<{ name: string; mime: string; data: Uint8Array }>>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+  // New movements start by choosing: read a receipt photo, or type the data.
+  const [step, setStep] = useState<'choose' | 'form'>('form');
+  const [reading, setReading] = useState(false);
+  const [fromPhoto, setFromPhoto] = useState(false);
 
   const kind = type === 'income' || type === 'loan_disbursement' ? 'income' : 'expense';
   const cats = useQuery((en) => listCategories(en, kind), [kind]);
@@ -77,7 +83,7 @@ export function TxEditor() {
 
   useEffect(() => {
     if (!open) return;
-    setSaved(false); setErrors({}); setFiles([]);
+    setSaved(false); setErrors({}); setFiles([]); setReading(false); setFromPhoto(false); setStep(tx || (initialType && initialType !== 'expense') ? 'form' : 'choose'); // a receipt is an expense: Ingreso/Transferir go straight to the form
     const full = tx ? getTransaction(e, tx.id) : null;
     if (full) {
       setType(full.type); setAmount(centsToInput(full.amount)); setDesc(full.description); setDate(full.date); setAccountId(full.accountId ?? '');
@@ -137,16 +143,38 @@ export function TxEditor() {
     setFiles([...files, { name: f.name, mime: ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`, data: f.data }]);
   };
 
+  const scanReceipt = async () => {
+    const f = await openFile([{ name: tr('Foto del comprobante'), extensions: RECEIPT_EXTENSIONS }]);
+    if (!f) return;
+    setReading(true);
+    try {
+      const r = await readReceipt(f.data);
+      setType('expense');
+      if (r.amount) setAmount(centsToInput(r.amount));
+      if (r.merchant) { setDesc(r.merchant); setCategoryId(categoryFor(e, r.merchant, 'expense') ?? ''); }
+      if (r.date) setDate(r.date);
+      const ext = f.name.split('.').pop()?.toLowerCase();
+      if (f.data.length <= MAX_ATTACHMENT_BYTES) setFiles([{ name: f.name, mime: `image/${ext === 'jpg' ? 'jpeg' : ext}`, data: f.data }]);
+      setFromPhoto(true);
+      setStep('form');
+    } catch (err) {
+      useApp.getState().toast({ kind: 'error', title: tr('No pudimos leer el comprobante'), body: String(err) });
+    } finally {
+      setReading(false);
+    }
+  };
+
   const showCategory = type === 'income' || type === 'expense' || type === 'refund' || type === 'loan_payment';
   const tone = kind === 'income' ? 'text-emerald' : type === 'transfer' || type === 'card_payment' ? 'text-blue' : 'text-coral';
 
   return (
-    <Modal open={open} onClose={close} width={640} title={tx ? tr('Editar movimiento') : tr('Nuevo movimiento')} subtitle={tx ? tr('Registrado el {v0}', { v0: formatDate(tx.createdAt.slice(0, 10)) }) : tr('Ingresos, gastos, transferencias y pagos')}
+    <Modal open={open} onClose={close} width={640} title={tx ? tr('Editar movimiento') : tr('Nuevo movimiento')} subtitle={tx ? tr('Registrado el {v0}', { v0: formatDate(tx.createdAt.slice(0, 10)) }) : step === 'choose' ? tr('¿Cómo quieres registrarlo?') : tr('Ingresos, gastos, transferencias y pagos')}
       footer={
         <>
           {tx && editable && <Button variant="ghost" icon="trash" className="mr-auto !text-coral" onClick={remove}>{tr('Eliminar')}</Button>}
           <Button variant="ghost" onClick={close}>{tr('Cancelar')}</Button>
-          {editable && <Button onClick={submit} icon={saved ? 'check' : undefined}>{tx ? tr('Guardar cambios') : tr('Registrar')}</Button>}
+          {!tx && step === 'form' && <Button variant="ghost" icon="upload" className="mr-auto" onClick={() => setStep('choose')}>{tr('Usar foto')}</Button>}
+          {editable && step === 'form' && <Button onClick={submit} icon={saved ? 'check' : undefined}>{tx ? tr('Guardar cambios') : tr('Registrar')}</Button>}
         </>
       }>
       <AnimatePresence>
@@ -156,6 +184,28 @@ export function TxEditor() {
           </motion.div>
         )}
       </AnimatePresence>
+      {step === 'choose' ? (
+        <div className="grid sm:grid-cols-2 gap-3">
+          <button type="button" onClick={scanReceipt} disabled={!receiptSupported() || reading} className="card group text-left p-5 rounded-[22px] border border-line hover:border-brand transition disabled:opacity-60 disabled:hover:border-line">
+            <span className="grid place-items-center size-12 rounded-[16px] bg-brand-soft text-brand mb-4">
+              {reading ? <span className="size-5 rounded-full border-2 border-current border-r-transparent animate-spin" /> : <Icon name="upload" size={22} />}
+            </span>
+            <p className="text-[15px] font-semibold">{reading ? tr('Leyendo el comprobante…') : tr('Subir foto del comprobante')}</p>
+            <p className="text-[12.5px] text-muted mt-1">{receiptSupported() ? tr('Monto lee el comercio, la fecha y el total. Tú revisas antes de registrar. La foto no sale de tu computadora.') : tr('Disponible en la app de escritorio para Windows.')}</p>
+          </button>
+          <button type="button" onClick={() => setStep('form')} disabled={reading} className="card group text-left p-5 rounded-[22px] border border-line hover:border-brand transition">
+            <span className="grid place-items-center size-12 rounded-[16px] bg-surface-2 text-ink-2 mb-4"><Icon name="edit" size={22} /></span>
+            <p className="text-[15px] font-semibold">{tr('Ingresar los datos a mano')}</p>
+            <p className="text-[12.5px] text-muted mt-1">{tr('Gastos, ingresos, transferencias, pagos de tarjeta y préstamos.')}</p>
+          </button>
+        </div>
+      ) : (<>
+      {fromPhoto && (
+        <div className="mb-4 flex items-start gap-2 rounded-[14px] bg-brand-soft text-brand px-3 py-2.5 text-[12.5px]">
+          <Icon name="sparkle" size={16} className="mt-0.5" />
+          <span className="flex-1">{tr('Leímos el comprobante. Revisa el importe, la descripción y la fecha antes de registrar; la foto queda adjunta.')}</span>
+        </div>
+      )}
       {!editable && <p className="mb-4 rounded-[12px] bg-amber-soft text-amber text-[12.5px] px-3 py-2">{tr('Solo lectura: no tienes permiso para editar este movimiento.')}</p>}
       <fieldset disabled={!editable} className="space-y-4">
         <div className="flex flex-wrap gap-1.5">
@@ -170,7 +220,7 @@ export function TxEditor() {
             <p className="text-[11.5px] text-muted mb-1">{tr('Importe')}</p>
             <div className="flex items-baseline gap-2">
               <span className={clsx('text-[26px] font-semibold', tone)}>{currency === 'PAB' ? 'B/.' : '$'}</span>
-              <input autoFocus inputMode="decimal" aria-label={tr('Importe')} value={amount} onChange={(ev) => setAmount(ev.target.value.replace(/[^\d.,]/g, ''))} placeholder="0.00" className={clsx('num w-full bg-transparent outline-none text-[34px] font-semibold tracking-[-0.04em] placeholder:text-line', tone)} />
+              <input autoFocus={!fromPhoto} inputMode="decimal" aria-label={tr('Importe')} value={amount} onChange={(ev) => setAmount(ev.target.value.replace(/[^\d.,]/g, ''))} placeholder="0.00" className={clsx('num w-full bg-transparent outline-none text-[34px] font-semibold tracking-[-0.04em] placeholder:text-line', tone)} />
             </div>
             {errors.amount && <p className="text-[11.5px] text-coral">{errors.amount}</p>}
           </div>
@@ -262,6 +312,7 @@ export function TxEditor() {
           </motion.div>
         )}
       </fieldset>
+      </>)}
       {confirm.node}
     </Modal>
   );

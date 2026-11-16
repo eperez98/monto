@@ -10,6 +10,13 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+### Cambiado
+- **Nuevo movimiento** empieza preguntando cómo registrarlo: subir la foto del comprobante o ingresar los datos a mano. Los atajos de Ingreso y Transferir siguen yendo directo al formulario.
+
+### Añadido
+- **Leer comprobantes**: Monto saca el comercio, la fecha y el total de la foto de un recibo. También elige la categoría con las reglas automáticas y deja la foto adjunta. Siempre revisas los datos antes de registrar.
+  - Usa el reconocimiento de texto que trae Windows: la foto se lee en tu computadora y no se sube ni se descarga nada. Solo en la app de escritorio.
+
 ## [0.8.0-rc.1] - 2026-11-15 · Smart Money (Release Candidate 1)
 
 Primera versión candidata de la 0.8 «Smart Money»: Monto ordena tus movimientos solo, importa tus estados de cuenta, aparta ahorro de cada salario y te avisa antes de que venza una factura. También trae mejoras para las parejas y un plan mensual más fácil de editar. En Windows aparece como versión 0.8.0.1.

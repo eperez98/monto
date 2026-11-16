@@ -109,6 +109,11 @@ try {
 
   step('Create expense');
   await click('Movimiento', { exact: true });
+  await page.getByText('Subir foto del comprobante').waitFor();
+  assert(await page.getByRole('button', { name: /Subir foto del comprobante/ }).isDisabled(), 'leer comprobantes solo en la app de escritorio');
+  await page.waitForTimeout(700);
+  await shot('05a-new-transaction-choice');
+  await click('Ingresar los datos a mano');
   await page.getByRole('textbox', { name: 'Importe', exact: true }).fill('45.20');
   await page.getByPlaceholder(/Super 99/).fill('Super 99');
   await page.locator('select').filter({ hasText: 'Sin categoría' }).selectOption({ label: 'Supermercado' });
@@ -121,6 +126,7 @@ try {
 
   step('Duplicate warning');
   await click('Movimiento', { exact: true });
+  await click('Ingresar los datos a mano');
   await page.getByRole('textbox', { name: 'Importe', exact: true }).fill('45.20');
   await page.getByPlaceholder(/Super 99/).fill('Super 99');
   await page.getByText('Posible duplicado').waitFor();
@@ -129,6 +135,7 @@ try {
 
   step('Income: a second transaction (income)');
   await click('Movimiento', { exact: true });
+  await click('Ingresar los datos a mano');
   await page.getByRole('dialog').getByRole('button', { name: 'Ingreso', exact: true }).click();
   await page.getByRole('textbox', { name: 'Importe', exact: true }).fill('300');
   await page.getByPlaceholder(/Quincena, cliente/).fill('Proyecto freelance');
