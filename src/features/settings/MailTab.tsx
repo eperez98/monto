@@ -1,46 +1,47 @@
 import { useState } from 'react';
-import clsx from 'clsx';
 import { useApp } from '../../store/app';
-import { useCan, useEngine, useMutate, useQuery, errorMessage } from '../../hooks/useDb';
+import { useActor, useCan, useEngine, useMutate, useQuery, errorMessage } from '../../hooks/useDb';
 import { listAccounts } from '../../db/repo/finance';
-import { Badge, Button, Card, CardHeader, Field, Input, Money, Segmented, Select } from '../../components/ui';
+import { Badge, Button, Card, CardHeader, Field, Input, Segmented, Select } from '../../components/ui';
 import { Icon } from '../../icons';
-import { getMailPrefs, importMailTransactions, mailSupported, readMailTransactions, saveMailPrefs, type MailCandidate, type MailPrefs } from '../../services/mail';
-import { formatDate } from '../../lib/dates';
-import { tr } from '../../lib/i18n';
+import { connectMail, disconnectMail, getMailPrefs, mailSupported, saveMailPrefs, syncMail, type MailPrefs } from '../../services/mail';
+import { MailReview } from './MailReview';
+import { formatDate, today } from '../../lib/dates';
+import { locale, tr } from '../../lib/i18n';
 
-/** Optional bank-email reading. Nothing to connect permanently: each search signs in and forgets the access. */
+/** Optional bank-email sync: connect once, then Monto reads the bank's alerts when it opens. */
 export function MailTab() {
   const e = useEngine();
+  const actor = useActor();
   const can = useCan('account.manage');
   const mutate = useMutate();
   const toast = useApp((s) => s.toast);
+  const review = useApp((s) => s.mailReview);
+  const setReview = useApp((s) => s.setMailReview);
   const saved = useQuery((en) => getMailPrefs(en));
   const accounts = useQuery((en) => listAccounts(en));
-  const [prefs, setPrefs] = useState<MailPrefs>(saved);
-  // Only in memory while this screen is open; never written anywhere.
+  const [draft, setDraft] = useState<MailPrefs>(saved);
+  // Only in memory while connecting; the desktop side moves it to the Windows vault.
   const [secret, setSecret] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [found, setFound] = useState<MailCandidate[] | null>(null);
-  const [picked, setPicked] = useState<Set<string>>(new Set());
-  const set = (p: Partial<MailPrefs>) => { const next = { ...prefs, ...p }; setPrefs(next); if (can) mutate((en, a) => saveMailPrefs(en, a, next)); };
+  const [busy, setBusy] = useState<'' | 'connect' | 'sync' | 'off'>('');
+  const set = (p: Partial<MailPrefs>) => { setDraft({ ...draft, ...p }); if (saved.connected && can) mutate((en, a) => saveMailPrefs(en, a, p)); };
 
   if (!mailSupported()) {
     return <Card hover={false} className="p-6"><p className="text-[14px] font-semibold">{tr('Correo del banco')}{' '}<Badge>{tr('Opcional')}</Badge></p><p className="text-[12.5px] text-muted mt-1">{tr('Disponible en la app de escritorio de Monto.')}</p></Card>;
   }
 
-  const search = async () => {
-    setBusy(true);
-    try { const r = await readMailTransactions(e, prefs, secret); setFound(r); setPicked(new Set(r.map((c) => c.key))); }
-    catch (x) { toast({ kind: 'error', title: tr('No se pudo leer el correo'), body: errorMessage(x) }); }
-    setBusy(false);
+  const run = async (kind: 'connect' | 'sync' | 'off') => {
+    setBusy(kind);
+    try {
+      if (kind === 'off') { await disconnectMail(e, actor); setReview(null); toast({ kind: 'success', title: tr('Correo desconectado') }); }
+      else {
+        if (kind === 'connect') { await connectMail(e, actor, draft, secret); setSecret(''); toast({ kind: 'success', title: tr('Correo conectado') }); }
+        setReview(await syncMail(e));
+      }
+    } catch (x) { toast({ kind: 'error', title: kind === 'connect' ? tr('No se pudo conectar el correo') : tr('No se pudo leer el correo'), body: errorMessage(x) }); }
+    setBusy('');
   };
-  const addPicked = () => {
-    if (!found || !prefs.accountId) return;
-    const n = mutate((en, a) => importMailTransactions(en, a, found.filter((c) => picked.has(c.key)), prefs.accountId));
-    if (n !== undefined) { toast({ kind: 'success', title: tr('{n} movimiento(s) agregado(s)', { n }) }); setFound(found.filter((c) => !picked.has(c.key))); setPicked(new Set()); }
-  };
-  const ready = prefs.clientId.trim() && prefs.subject.trim() && (prefs.provider === 'microsoft' || secret.trim());
+  const ready = draft.clientId.trim() && draft.subject.trim() && draft.since && (draft.provider === 'microsoft' || secret.trim());
 
   return (
     <div className="space-y-5">
@@ -48,84 +49,97 @@ export function MailTab() {
         <div className="flex items-start gap-4">
           <span className="grid place-items-center size-11 shrink-0 rounded-full bg-brand-soft text-brand"><Icon name="bell" size={20} /></span>
           <div className="flex-1">
-            <p className="text-[14px] font-semibold flex items-center gap-2">{tr('Correo del banco')}<Badge>{tr('Opcional')}</Badge></p>
-            <p className="text-[12.5px] text-muted mt-1">{tr('Monto puede leer, solo en modo lectura, los avisos de transacción de tu banco y convertirlos en movimientos. Solo toma el asunto, la fecha y el texto de esos correos; no guarda la conexión, ni tokens, ni contraseñas: cada búsqueda vuelve a pedirte iniciar sesión.')}</p>
+            <p className="text-[14px] font-semibold flex flex-wrap items-center gap-2">{tr('Correo del banco')}<Badge>{tr('Opcional')}</Badge>{saved.connected && <Badge tone="green">{tr('Conectado')}</Badge>}</p>
+            <p className="text-[12.5px] text-muted mt-1">{tr('Conecta tu correo una vez y Monto buscará los avisos de transacción de tu banco cada vez que lo abras. Solo lee esos correos (asunto, fecha y texto), en modo lectura, y siempre te muestra lo encontrado para que elijas qué agregar.')}</p>
+            {saved.connected && saved.lastSync && <p className="text-[11.5px] text-muted mt-1">{tr('Última sincronización: {when}', { when: new Date(saved.lastSync).toLocaleString(locale) })}</p>}
           </div>
         </div>
-        <div className="mt-5 space-y-4">
-          <Segmented value={prefs.provider} onChange={(v) => set({ provider: v })} options={[{ value: 'google', label: 'Google (Gmail)' }, { value: 'microsoft', label: 'Microsoft (Outlook)' }]} />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label={tr('ID de cliente (Client ID)')} hint={tr('Es un identificador público de tu app, no una contraseña.')}>
-              <Input value={prefs.clientId} disabled={!can} onChange={(ev) => setPrefs({ ...prefs, clientId: ev.target.value })} onBlur={() => set({})} placeholder={prefs.provider === 'google' ? '1234-abc.apps.googleusercontent.com' : '00000000-0000-0000-0000-000000000000'} />
-            </Field>
-            {prefs.provider === 'google' && (
-              <Field label={tr('Secreto de cliente (Client secret)')} hint={tr('No se guarda: escríbelo cada vez que busques.')}>
-                <Input type="password" autoComplete="off" value={secret} onChange={(ev) => setSecret(ev.target.value)} disabled={!can} />
+
+        {!saved.connected ? (
+          <div className="mt-5 space-y-5">
+            <div className="space-y-3">
+              <p className="text-[13px] font-semibold">{tr('1. Tu cuenta de correo')}</p>
+              <Segmented value={draft.provider} onChange={(v) => setDraft({ ...draft, provider: v })} options={[{ value: 'google', label: 'Google (Gmail)' }, { value: 'microsoft', label: 'Microsoft (Outlook)' }]} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label={tr('ID de cliente (Client ID)')} hint={tr('Es un identificador público de tu app, no una contraseña.')}>
+                  <Input value={draft.clientId} disabled={!can} onChange={(ev) => setDraft({ ...draft, clientId: ev.target.value })} placeholder={draft.provider === 'google' ? '1234-abc.apps.googleusercontent.com' : '00000000-0000-0000-0000-000000000000'} />
+                </Field>
+                {draft.provider === 'google' && (
+                  <Field label={tr('Secreto de cliente (Client secret)')} hint={tr('Se guarda en el Administrador de credenciales de Windows, no en Monto.')}>
+                    <Input type="password" autoComplete="off" value={secret} onChange={(ev) => setSecret(ev.target.value)} disabled={!can} />
+                  </Field>
+                )}
+              </div>
+              <GuideDetails provider={draft.provider} />
+            </div>
+            <div className="space-y-3">
+              <p className="text-[13px] font-semibold">{tr('2. ¿Cuál es el asunto de los correos que te envía tu banco cuando haces una transacción?')}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Field label={tr('Asunto')} hint={tr('Cópialo de uno de esos correos. Solo se buscarán los correos con este asunto.')} className="sm:col-span-2">
+                  <Input value={draft.subject} disabled={!can} placeholder={tr('Ej. Notificación de transacción')} onChange={(ev) => setDraft({ ...draft, subject: ev.target.value })} />
+                </Field>
+                <Field label={tr('Buscar desde')} hint={tr('Se leen los correos de esta fecha en adelante.')}>
+                  <Input type="date" max={today()} value={draft.since} disabled={!can} onChange={(ev) => setDraft({ ...draft, since: ev.target.value })} />
+                </Field>
+              </div>
+              <Field label={tr('Cuenta donde se registran')}>
+                <Select value={draft.accountId} disabled={!can} onChange={(ev) => setDraft({ ...draft, accountId: ev.target.value })}><option value="">—</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
               </Field>
-            )}
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button icon="lock" loading={busy === 'connect'} disabled={!can || !ready} onClick={() => void run('connect')}>{draft.provider === 'google' ? tr('Conectar con Google y buscar') : tr('Conectar con Microsoft y buscar')}</Button>
+              {busy === 'connect' && <span className="text-[12px] text-muted">{tr('Se abrió tu navegador. Inicia sesión y acepta el permiso de lectura; luego vuelve a Monto.')}</span>}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Field label={tr('El asunto contiene')} hint={tr('Copia el asunto que usa tu banco en sus avisos de transacción.')} className="sm:col-span-2">
-              <Input value={prefs.subject} disabled={!can} placeholder={tr('Ej. Notificación de transacción')} onChange={(ev) => setPrefs({ ...prefs, subject: ev.target.value })} onBlur={() => set({})} />
+        ) : (
+          <div className="mt-5 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Field label={tr('Asunto')} className="sm:col-span-2"><Input value={draft.subject} disabled={!can} onChange={(ev) => setDraft({ ...draft, subject: ev.target.value })} onBlur={() => set({ subject: draft.subject })} /></Field>
+              <Field label={tr('Buscar desde')}><Input type="date" max={today()} value={draft.since} disabled={!can} onChange={(ev) => set({ since: ev.target.value })} /></Field>
+            </div>
+            <Field label={tr('Cuenta donde se registran')}>
+              <Select value={draft.accountId} disabled={!can} onChange={(ev) => set({ accountId: ev.target.value })}><option value="">—</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
             </Field>
-            <Field label={tr('Buscar en los últimos')}>
-              <Select value={prefs.days} disabled={!can} onChange={(ev) => set({ days: Number(ev.target.value) })}>{[7, 30, 90].map((d) => <option key={d} value={d}>{tr('{n} días', { n: d })}</option>)}</Select>
-            </Field>
+            <p className="text-[11.5px] text-muted">{tr('Cuenta: {provider} · buscando correos desde el {date}', { provider: saved.provider === 'google' ? 'Gmail' : 'Outlook', date: formatDate(saved.since) })}</p>
+            <div className="flex flex-wrap gap-2">
+              <Button icon="refresh" loading={busy === 'sync'} disabled={!can} onClick={() => void run('sync')}>{tr('Sincronizar ahora')}</Button>
+              <Button variant="ghost" loading={busy === 'off'} disabled={!can} onClick={() => void run('off')}>{tr('Desconectar')}</Button>
+            </div>
           </div>
-          <Field label={tr('Cuenta donde se registran')}>
-            <Select value={prefs.accountId} disabled={!can} onChange={(ev) => set({ accountId: ev.target.value })}><option value="">—</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
-          </Field>
-          <details className="rounded-[16px] border border-line/70 px-4 py-3 text-[12.5px] text-ink-2">
-            <summary className="cursor-pointer font-medium text-ink">{tr('Cómo obtener el ID de cliente')}</summary>
-            {prefs.provider === 'google' ? (
-              <ol className="list-decimal pl-5 mt-2 space-y-1">
-                <li>{tr('Entra a console.cloud.google.com y crea un proyecto (por ejemplo «Monto»).')}</li>
-                <li>{tr('En «APIs y servicios → Biblioteca», activa la Gmail API.')}</li>
-                <li>{tr('En «Pantalla de consentimiento de OAuth» elige «Externo», deja la app en modo de prueba y agrega tu correo como usuario de prueba.')}</li>
-                <li>{tr('En «Credenciales → Crear credenciales → ID de cliente de OAuth» elige «App de escritorio».')}</li>
-                <li>{tr('Copia aquí el ID de cliente. El secreto lo escribes cuando busques.')}</li>
-              </ol>
-            ) : (
-              <ol className="list-decimal pl-5 mt-2 space-y-1">
-                <li>{tr('Entra a portal.azure.com → «Registros de aplicaciones» → «Nuevo registro».')}</li>
-                <li>{tr('En tipos de cuenta elige «Cuentas de cualquier directorio y cuentas personales de Microsoft».')}</li>
-                <li>{tr('En «URI de redirección» elige «Cliente público/nativo (móvil y escritorio)» y escribe http://127.0.0.1')}</li>
-                <li>{tr('En «Permisos de API» agrega Microsoft Graph → permisos delegados → Mail.Read.')}</li>
-                <li>{tr('Copia aquí el «Id. de aplicación (cliente)». No hace falta secreto.')}</li>
-              </ol>
-            )}
-          </details>
-        </div>
+        )}
       </Card>
 
-      <Card hover={false}>
-        <CardHeader title={tr('Movimientos encontrados')} subtitle={tr('Revisa y elige cuáles agregar. Cada correo se agrega una sola vez.')}
-          action={<Button size="sm" icon="lock" loading={busy} disabled={!can || !ready} onClick={() => void search()}>{tr('Iniciar sesión y buscar')}</Button>} />
-        <div className="p-3">
-          {busy && <p className="px-3 pb-2 text-[12px] text-muted">{tr('Se abrió tu navegador. Inicia sesión y acepta el permiso de lectura; luego vuelve a Monto.')}</p>}
-          {found === null && !busy && <p className="px-3 py-3 text-[12.5px] text-muted">{tr('Completa los datos de arriba y pulsa «Iniciar sesión y buscar». Al terminar, Monto olvida el acceso.')}</p>}
-          {found?.length === 0 && <p className="px-3 py-3 text-[12.5px] text-muted">{tr('No hay correos nuevos de transacciones con ese asunto.')}</p>}
-          {!!found?.length && (
-            <>
-              <ul className="space-y-1">
-                {found.map((c) => (
-                  <li key={c.key}>
-                    <label className="flex items-center gap-3 rounded-[14px] px-3 py-2.5 hover:bg-surface-2 cursor-pointer">
-                      <input type="checkbox" className="size-4 accent-brand" checked={picked.has(c.key)} onChange={(ev) => { const p = new Set(picked); if (ev.target.checked) p.add(c.key); else p.delete(c.key); setPicked(p); }} />
-                      <span className="min-w-0 flex-1"><span className="block text-[13px] font-medium truncate">{c.tx.merchant}</span><span className="block text-[11.5px] text-muted truncate">{formatDate(c.tx.date)} · {c.subject}</span></span>
-                      <Money cents={c.tx.type === 'income' ? c.tx.amount : -c.tx.amount} currency={c.tx.currency} sign className={clsx('text-[13px] font-semibold', c.tx.type === 'income' ? 'text-emerald' : 'text-ink')} />
-                    </label>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex flex-wrap items-center justify-between gap-2 px-3 pt-3">
-                {!prefs.accountId ? <p className="text-[12px] text-coral">{tr('Elige la cuenta donde se registran.')}</p> : <span />}
-                <Button icon="plus" disabled={!picked.size || !prefs.accountId} onClick={addPicked}>{tr('Agregar seleccionados ({n})', { n: picked.size })}</Button>
-              </div>
-            </>
-          )}
-        </div>
-      </Card>
+      {review && (
+        <Card hover={false}>
+          <CardHeader title={tr('Resultado')} subtitle={tr('Elige qué movimientos agregar y cambia el nombre si quieres. Los duplicados no se modifican.')} />
+          <div className="p-3"><MailReview key={review.read + ':' + review.candidates.length} result={review} accountId={saved.accountId || draft.accountId} onDone={setReview} /></div>
+        </Card>
+      )}
     </div>
+  );
+}
+
+function GuideDetails({ provider }: { provider: 'google' | 'microsoft' }) {
+  return (
+    <details className="rounded-[16px] border border-line/70 px-4 py-3 text-[12.5px] text-ink-2">
+      <summary className="cursor-pointer font-medium text-ink">{tr('Cómo obtener el ID de cliente')}</summary>
+      {provider === 'google' ? (
+        <ol className="list-decimal pl-5 mt-2 space-y-1">
+          <li>{tr('Entra a console.cloud.google.com y crea un proyecto (por ejemplo «Monto»).')}</li>
+          <li>{tr('En «APIs y servicios → Biblioteca», activa la Gmail API.')}</li>
+          <li>{tr('En «Pantalla de consentimiento de OAuth» elige «Externo», deja la app en modo de prueba y agrega tu correo como usuario de prueba.')}</li>
+          <li>{tr('En «Credenciales → Crear credenciales → ID de cliente de OAuth» elige «App de escritorio».')}</li>
+          <li>{tr('Copia aquí el ID de cliente y el secreto de cliente.')}</li>
+        </ol>
+      ) : (
+        <ol className="list-decimal pl-5 mt-2 space-y-1">
+          <li>{tr('Entra a portal.azure.com → «Registros de aplicaciones» → «Nuevo registro».')}</li>
+          <li>{tr('En tipos de cuenta elige «Cuentas de cualquier directorio y cuentas personales de Microsoft».')}</li>
+          <li>{tr('En «URI de redirección» elige «Cliente público/nativo (móvil y escritorio)» y escribe http://127.0.0.1')}</li>
+          <li>{tr('En «Permisos de API» agrega Microsoft Graph → permisos delegados → Mail.Read.')}</li>
+          <li>{tr('Copia aquí el «Id. de aplicación (cliente)». No hace falta secreto.')}</li>
+        </ol>
+      )}
+    </details>
   );
 }

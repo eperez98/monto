@@ -9,6 +9,8 @@ import { endSession, getMember, getPrefs, getProfile, listMembers, seedCategorie
 import { runAutoPost } from './db/repo/planning';
 import { autoBackup } from './services/backup';
 import { notifyBillsDue } from './services/billAlerts';
+import { getMailPrefs, mailSupported, syncMail } from './services/mail';
+import { MailReviewHost } from './features/settings/MailReviewHost';
 import { checkForUpdate, updatesSupported, type UpdateInfo } from './services/updates';
 import { UpdatePrompt } from './components/layout/UpdatePrompt';
 import { IS_PRERELEASE } from './lib/version';
@@ -99,6 +101,10 @@ export default function App() {
     if (posted) useApp.getState().toast({ kind: 'info', title: tr('{posted} movimiento(s) programado(s) registrado(s)', { posted }), body: tr('Se registraron automáticamente los pagos recurrentes vencidos.') });
     void autoBackup(e).catch(() => undefined);
     void notifyBillsDue(e, m.id).catch(() => undefined);
+    // Bank email (optional): when connected, read new alerts and ask the user what to add.
+    if (getMailPrefs(e).connected && mailSupported()) {
+      void syncMail(e).then((r) => { if (r.candidates.some((c) => !c.duplicate)) useApp.getState().setMailReview(r); }).catch(() => undefined);
+    }
     const prefs = getPrefs(e);
     // On by default; the user can turn it off in Settings → Updates. Nothing installs without their OK.
     if (prefs.autoCheckUpdates !== false && updatesSupported()) {
@@ -283,6 +289,7 @@ export default function App() {
             <NotificationsPanel />
             <GuideTour />
             <PartnerSetupHost />
+            <MailReviewHost />
           </motion.div>
         )}
       </AnimatePresence>

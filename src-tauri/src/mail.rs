@@ -5,8 +5,9 @@
 //! sends a provider name, never a URL. Sign-in uses the OAuth 2.0 loopback flow with PKCE: the browser
 //! returns to http://127.0.0.1:<port>/ on this machine, so no server of ours is involved.
 //!
-//! Nothing is kept: no refresh token is requested, the access token lives only inside one `mail_read`
-//! call (Google's is revoked right after), and only subject, sender, date and text body are requested.
+//! Staying connected: the refresh token (and Google's client secret) are kept in the Windows Credential
+//! Manager, never in Monto's files or backups, and never handed to the UI. Access tokens live only inside
+//! one call. Only subject, sender, date and text body are requested. Disconnecting deletes the vault entry.
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
@@ -28,7 +29,7 @@ fn provider(name: &str) -> Result<Provider, String> {
         "microsoft" => Ok(Provider {
             auth: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
             token: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-            scope: "https://graph.microsoft.com/Mail.Read",
+            scope: "offline_access https://graph.microsoft.com/Mail.Read",
         }),
         _ => Err("Proveedor de correo desconocido".into()),
     }
@@ -67,8 +68,8 @@ pub fn dec(s: &str) -> String {
 
 pub fn auth_url(p: &str, client_id: &str, redirect: &str, challenge: &str, state: &str) -> Result<String, String> {
     let pr = provider(p)?;
-    // Online access only: no refresh token is issued, so there is nothing long-lived to keep.
-    let extra = if p == "google" { "&access_type=online&prompt=consent" } else { "&prompt=select_account" };
+    // Offline access: a refresh token lets Monto sync when it opens; it is kept in the Windows vault.
+    let extra = if p == "google" { "&access_type=offline&prompt=consent" } else { "&prompt=select_account" };
     Ok(format!(
         "{}?response_type=code&client_id={}&redirect_uri={}&scope={}&code_challenge={}&code_challenge_method=S256&state={}{extra}",
         pr.auth, enc(client_id), enc(redirect), enc(pr.scope), enc(challenge), enc(state)
@@ -146,11 +147,37 @@ fn get_json(url: &str, token: &str) -> Result<serde_json::Value, String> {
     }
 }
 
-/// Sign in, read recent emails whose subject contains `subject` (at most 50) and forget the access.
-/// Nothing is returned but the trimmed messages: no token ever leaves this function.
+// ---------------------------------------------------------------- Windows vault
+const VAULT: &str = "Monto · correo del banco";
+const MAX_MESSAGES: usize = 300;
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct Saved { refresh_token: String, client_secret: String }
+
+fn vault(provider: &str) -> Result<keyring::Entry, String> {
+    provider_known(provider)?;
+    keyring::Entry::new(VAULT, provider).map_err(|e| e.to_string())
+}
+fn provider_known(p: &str) -> Result<(), String> { provider(p).map(|_| ()) }
+fn load(provider: &str) -> Result<Saved, String> {
+    let raw = vault(provider)?.get_password().map_err(|_| "El correo no est\u{e1} conectado. Vuelve a conectarlo.".to_string())?;
+    serde_json::from_str(&raw).map_err(|e| e.to_string())
+}
+fn store(provider: &str, s: &Saved) -> Result<(), String> {
+    vault(provider)?.set_password(&serde_json::to_string(s).map_err(|e| e.to_string())?).map_err(|e| format!("No se pudo guardar en el Administrador de credenciales: {e}"))
+}
+
+/// `YYYY-MM-DD`, checked before it goes into a query.
+fn valid_date(d: &str) -> Result<(), String> {
+    let ok = d.len() == 10 && d.chars().enumerate().all(|(i, c)| if i == 4 || i == 7 { c == '-' } else { c.is_ascii_digit() });
+    if ok { Ok(()) } else { Err("Fecha no v\u{e1}lida".into()) }
+}
+
+/// Sign in once (browser, PKCE) and keep the connection in the Windows vault. Nothing is returned to the UI.
 #[tauri::command]
-pub async fn mail_read(provider: String, client_id: String, client_secret: Option<String>, challenge: String, verifier: String, state: String, subject: String, days: u32) -> Result<Vec<serde_json::Value>, String> {
+pub async fn mail_connect(provider: String, client_id: String, client_secret: Option<String>, challenge: String, verifier: String, state: String) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
+        provider_known(&provider)?;
         let listener = TcpListener::bind("127.0.0.1:0").map_err(|e| e.to_string())?;
         let redirect = format!("http://127.0.0.1:{}/", listener.local_addr().map_err(|e| e.to_string())?.port());
         open_browser(&auth_url(&provider, &client_id, &redirect, &challenge, &state)?)?;
@@ -160,30 +187,70 @@ pub async fn mail_read(provider: String, client_id: String, client_secret: Optio
         let mut form = vec![("grant_type", "authorization_code"), ("code", code.as_str()), ("client_id", client_id.as_str()), ("redirect_uri", redirect.as_str()), ("code_verifier", verifier.as_str())];
         if !secret.is_empty() { form.push(("client_secret", secret.as_str())); }
         let t = token_request(&provider, &form)?;
-        let access = t["access_token"].as_str().ok_or("Sin token de acceso")?.to_string();
-        let days = days.clamp(1, 365);
-        let subject = subject.replace(['"', '\''], "");
-        let result = if provider == "google" { read_gmail(&access, &subject, days) } else { read_outlook(&access, &subject, days) };
-        if provider == "google" {
-            // Best effort: invalidate the access token now instead of letting it live its hour.
-            let _ = agent().post("https://oauth2.googleapis.com/revoke").send_form(&[("token", access.as_str())]);
-        }
-        result
+        let refresh_token = t["refresh_token"].as_str().ok_or("El proveedor no permiti\u{f3} mantener la conexi\u{f3}n")?.to_string();
+        store(&provider, &Saved { refresh_token, client_secret: secret })
     })
     .await
     .map_err(|e| e.to_string())?
 }
 
-fn read_gmail(access: &str, subject: &str, days: u32) -> Result<Vec<serde_json::Value>, String> {
-    let q = format!("subject:\"{subject}\" newer_than:{days}d");
-    let list = get_json(&format!("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&fields=messages(id)&q={}", enc(&q)), access)?;
+/// Read the emails whose subject contains `subject`, received on `since` (YYYY-MM-DD) or later.
+#[tauri::command]
+pub async fn mail_sync(provider: String, client_id: String, subject: String, since: String) -> Result<Vec<serde_json::Value>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        valid_date(&since)?;
+        let saved = load(&provider)?;
+        let mut form = vec![("grant_type", "refresh_token"), ("refresh_token", saved.refresh_token.as_str()), ("client_id", client_id.as_str())];
+        if !saved.client_secret.is_empty() { form.push(("client_secret", saved.client_secret.as_str())); }
+        let t = token_request(&provider, &form)?;
+        let access = t["access_token"].as_str().ok_or("Sin token de acceso")?.to_string();
+        // Microsoft rotates the refresh token: keep the newest one.
+        if let Some(r) = t["refresh_token"].as_str() { if r != saved.refresh_token { store(&provider, &Saved { refresh_token: r.to_string(), client_secret: saved.client_secret.clone() })?; } }
+        let subject = subject.replace(['"', '\''], "");
+        if provider == "google" { read_gmail(&access, &subject, &since) } else { read_outlook(&access, &subject, &since) }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Forget the connection: revoke it with Google (best effort) and delete the vault entry.
+#[tauri::command]
+pub async fn mail_disconnect(provider: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Ok(saved) = load(&provider) {
+            if provider == "google" { let _ = agent().post("https://oauth2.googleapis.com/revoke").send_form(&[("token", saved.refresh_token.as_str())]); }
+        }
+        match vault(&provider)?.delete_credential() {
+            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+pub fn gmail_query(subject: &str, since: &str) -> String {
+    // Gmail's after: takes YYYY/MM/DD and is exclusive of nothing before that day.
+    format!("subject:\"{subject}\" after:{}", since.replace('-', "/"))
+}
+
+fn read_gmail(access: &str, subject: &str, since: &str) -> Result<Vec<serde_json::Value>, String> {
+    let q = enc(&gmail_query(subject, since));
+    let mut ids: Vec<String> = vec![];
+    let mut page = String::new();
+    while ids.len() < MAX_MESSAGES {
+        let url = format!("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=100&fields=messages(id),nextPageToken&q={q}{}", if page.is_empty() { String::new() } else { format!("&pageToken={}", enc(&page)) });
+        let list = get_json(&url, access)?;
+        for m in list["messages"].as_array().cloned().unwrap_or_default() {
+            // Gmail ids are hex; anything else is not put in a URL.
+            if let Some(id) = m["id"].as_str().filter(|id| id.chars().all(|c| c.is_ascii_alphanumeric())) { ids.push(id.to_string()); }
+        }
+        match list["nextPageToken"].as_str() { Some(p) => page = p.to_string(), None => break }
+    }
     // Only the date, the headers and the text parts; attachments are never requested.
     let fields = enc("id,internalDate,payload(headers,mimeType,body/data,parts(mimeType,body/data,parts(mimeType,body/data)))");
     let mut out = vec![];
-    for m in list["messages"].as_array().cloned().unwrap_or_default() {
-        let Some(id) = m["id"].as_str() else { continue };
-        // Gmail ids are hex; anything else is not put in a URL.
-        if !id.chars().all(|c| c.is_ascii_alphanumeric()) { continue; }
+    for id in ids.into_iter().take(MAX_MESSAGES) {
         let mut msg = get_json(&format!("https://gmail.googleapis.com/gmail/v1/users/me/messages/{id}?format=full&fields={fields}"), access)?;
         // Keep just Subject, From and Date out of all the headers.
         if let Some(h) = msg["payload"]["headers"].as_array_mut() {
@@ -194,30 +261,21 @@ fn read_gmail(access: &str, subject: &str, days: u32) -> Result<Vec<serde_json::
     Ok(out)
 }
 
-fn read_outlook(access: &str, subject: &str, days: u32) -> Result<Vec<serde_json::Value>, String> {
-    let filter = format!("receivedDateTime ge {} and contains(subject,'{}')", chrono_like_days_ago(days), subject);
-    let v = get_json(&format!("https://graph.microsoft.com/v1.0/me/messages?$top=50&$orderby=receivedDateTime%20desc&$select=id,subject,from,receivedDateTime,body&$filter={}", enc(&filter)), access)?;
-    Ok(v["value"].as_array().cloned().unwrap_or_default())
-}
-
-/// UTC timestamp `days` ago as ISO 8601 (YYYY-MM-DDT00:00:00Z), without pulling in a date crate.
-pub fn chrono_like_days_ago(days: u32) -> String {
-    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0).saturating_sub(days as u64 * 86_400);
-    let (y, m, d) = civil_from_days((secs / 86_400) as i64);
-    format!("{y:04}-{m:02}-{d:02}T00:00:00Z")
-}
-
-/// Days since 1970-01-01 to (year, month, day) — Howard Hinnant's algorithm.
-fn civil_from_days(z: i64) -> (i64, u32, u32) {
-    let z = z + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z.rem_euclid(146_097);
-    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
-    (yoe + era * 400 + if m <= 2 { 1 } else { 0 }, m, d)
+fn read_outlook(access: &str, subject: &str, since: &str) -> Result<Vec<serde_json::Value>, String> {
+    let filter = format!("receivedDateTime ge {since}T00:00:00Z and contains(subject,'{subject}')");
+    let mut url = format!("https://graph.microsoft.com/v1.0/me/messages?$top=50&$orderby=receivedDateTime%20desc&$select=id,subject,from,receivedDateTime,body&$filter={}", enc(&filter));
+    let mut out = vec![];
+    loop {
+        let v = get_json(&url, access)?;
+        out.extend(v["value"].as_array().cloned().unwrap_or_default());
+        // Follow paging links only when they point back at Graph.
+        match v["@odata.nextLink"].as_str() {
+            Some(next) if out.len() < MAX_MESSAGES && next.starts_with("https://graph.microsoft.com/v1.0/me/messages?") => url = next.to_string(),
+            _ => break,
+        }
+    }
+    out.truncate(MAX_MESSAGES);
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -228,10 +286,10 @@ mod tests {
     fn builds_pkce_auth_urls_for_known_providers_only() {
         let g = auth_url("google", "abc.apps.googleusercontent.com", "http://127.0.0.1:5555/", "CH", "ST").unwrap();
         assert!(g.starts_with("https://accounts.google.com/o/oauth2/v2/auth?"));
-        assert!(g.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A5555%2F") && g.contains("code_challenge_method=S256") && g.contains("access_type=online"));
+        assert!(g.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A5555%2F") && g.contains("code_challenge_method=S256") && g.contains("access_type=offline"));
         assert!(g.contains("gmail.readonly"));
         let m = auth_url("microsoft", "id", "http://127.0.0.1:1/", "CH", "ST").unwrap();
-        assert!(m.contains("Mail.Read") && !m.contains("offline_access"));
+        assert!(m.contains("Mail.Read") && m.contains("offline_access"));
         assert!(auth_url("https://evil.example", "id", "r", "c", "s").is_err());
     }
 
@@ -241,7 +299,7 @@ mod tests {
         assert_eq!(dec("4%2F0AbCd%3D"), "4/0AbCd=");
         assert_eq!(dec("a+b%"), "a b%");
         assert_eq!(dec(&enc("4/0Ab é")), "4/0Ab é");
-        assert_eq!(civil_from_days(0), (1970, 1, 1));
-        assert_eq!(civil_from_days(20_772), (2026, 11, 15));
+        assert_eq!(gmail_query("Compra", "2026-11-01"), "subject:\"Compra\" after:2026/11/01");
+        assert!(valid_date("2026-11-01").is_ok() && valid_date("2026-11-1").is_err() && valid_date("2026-11-01' or 1").is_err());
     }
 }

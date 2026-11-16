@@ -55,6 +55,6 @@ export function parseBankEmail(msg: Pick<MailMessage, 'subject' | 'text' | 'date
   if (!(amount > 0)) return null;
   const currency: Currency = /B\/\.|PAB/i.test(m[1]) ? 'PAB' : 'USD';
   const afterAmount = body.slice(m.index + m[0].length);
-  const merchant = (LABELED.exec(body)?.[1] ?? AFTER_AMOUNT.exec(afterAmount)?.[1] ?? msg.subject).trim().slice(0, 60) || msg.subject;
+  const merchant = (LABELED.exec(body)?.[1] ?? AFTER_AMOUNT.exec(afterAmount)?.[1] ?? msg.subject).trim().replace(/[.,;:]+$/, '').slice(0, 60) || msg.subject;
   return { amount, currency, type: INCOME.test(body) ? 'income' : 'expense', merchant, date: msg.date };
 }
