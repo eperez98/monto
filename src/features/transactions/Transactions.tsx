@@ -84,7 +84,7 @@ export default function Transactions() {
         <Card className="p-5" delay={0.1}><Stat label={tr('Balance')} value={<Money animated cents={t.net} currency={cur} sign className={t.net < 0 ? 'text-coral' : ''} />} /></Card>
       </div>
       <Card hover={false} className="p-4 mb-5">
-        <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_1fr_auto] gap-2.5 items-center">
+        <div className="grid grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr_auto] gap-2.5 items-center [&>:first-child]:col-span-2 lg:[&>:first-child]:col-span-1">
           <div className="relative"><Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><Input className="pl-9" placeholder={tr('Buscar descripción o notas…')} value={search} onChange={(e) => { setSearch(e.target.value); setLimit(PAGE); }} aria-label={tr('Buscar')} /></div>
           <Select value={type} onChange={(e) => setType(e.target.value as TxType)} aria-label={tr('Tipo')}><option value="">{tr('Todos los tipos')}</option>{Object.entries(TX_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select>
           <Select value={accountId} onChange={(e) => setAccountId(e.target.value)} aria-label={tr('Cuenta')}><option value="">{tr('Todas las cuentas')}</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>

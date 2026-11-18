@@ -13,7 +13,8 @@ fn recognize(bytes: &[u8]) -> windows::core::Result<Vec<String>> {
     writer.StoreAsync()?.join()?;
     writer.DetachStream()?;
     stream.Seek(0)?;
-    let decoder = BitmapDecoder::CreateAsync(&stream)?.join()?;
+    let image = if bytes.starts_with(b"%PDF") { pdf_first_page(&stream)? } else { stream };
+    let decoder = BitmapDecoder::CreateAsync(&image)?.join()?;
 
     // Windows OCR rejects images larger than MaxImageDimension, and phone photos usually are.
     let (w, h) = (decoder.OrientedPixelWidth()?, decoder.OrientedPixelHeight()?);
@@ -36,6 +37,19 @@ fn recognize(bytes: &[u8]) -> windows::core::Result<Vec<String>> {
         found.push((r.X, r.Y + r.Height / 2.0, r.Height, line.Text()?.to_string()));
     }
     Ok(rows(found))
+}
+
+/// Receipts sent as PDF: draw the first page as an image, wide enough for OCR to read small print.
+#[cfg(windows)]
+fn pdf_first_page(pdf: &windows::Storage::Streams::InMemoryRandomAccessStream) -> windows::core::Result<windows::Storage::Streams::InMemoryRandomAccessStream> {
+    use windows::Data::Pdf::{PdfDocument, PdfPageRenderOptions};
+    let doc = PdfDocument::LoadFromStreamAsync(pdf)?.join()?;
+    let out = windows::Storage::Streams::InMemoryRandomAccessStream::new()?;
+    let options = PdfPageRenderOptions::new()?;
+    options.SetDestinationWidth(1600)?;
+    doc.GetPage(0)?.RenderWithOptionsToStreamAsync(&out, &options)?.join()?;
+    out.Seek(0)?;
+    Ok(out)
 }
 
 /// Windows returns a receipt's columns as separate lines ("TOTAL" and "9.10"); join the pieces
@@ -86,6 +100,12 @@ mod tests {
         println!("{text}");
         assert!(text.contains("SUPER 99"), "{text}");
         assert!(text.lines().any(|l| l.starts_with("TOTAL") && l.ends_with("9.10")), "{text}");
+    }
+
+    #[test]
+    fn reads_a_pdf_receipt() {
+        let lines = super::recognize(include_bytes!("../fixtures/receipt.pdf")).expect("Windows PDF + OCR");
+        assert!(lines.iter().any(|l| l.to_uppercase().starts_with("TOTAL") && l.ends_with("9.10")), "{lines:?}");
     }
 
     #[test]

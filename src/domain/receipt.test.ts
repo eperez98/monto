@@ -10,6 +10,11 @@ describe('parseReceipt', () => {
     expect(parseReceipt(['Factura 0012', 'Café Unido', '2026-11-03', 'Latte 4,50', 'Croissant 3,25'])).toEqual({ merchant: 'Café Unido', amount: 450, date: '2026-11-03' });
     expect(parseReceipt(['MONTO TOTAL 1.250,00'])).toMatchObject({ amount: 125000, merchant: '' });
   });
+  it('fixes common photo misreads in the total', () => {
+    expect(parseReceipt(['FARMACIA ARROCHA', 'TOTAL B/ . 187. eo']).amount).toBe(18700);
+    expect(parseReceipt(['TOTAL B/ . 9. 10']).amount).toBe(910);
+    expect(parseReceipt(['TOTAL 12.5O']).amount).toBe(1250);
+  });
   it('leaves everything empty when nothing is readable', () => {
     expect(parseReceipt(['###'])).toEqual({ merchant: '', amount: null, date: null });
   });

@@ -72,6 +72,10 @@ export function TxEditor() {
   const [step, setStep] = useState<'choose' | 'form'>('form');
   const [reading, setReading] = useState(false);
   const [fromPhoto, setFromPhoto] = useState(false);
+  const [photo, setPhoto] = useState<{ url: string | null; name: string } | null>(null);
+  // What the receipt did not give us, so those fields are marked for the user to fill in.
+  const [missing, setMissing] = useState({ amount: false, desc: false, date: false });
+  const [dragOver, setDragOver] = useState(false);
 
   const kind = type === 'income' || type === 'loan_disbursement' ? 'income' : 'expense';
   const cats = useQuery((en) => listCategories(en, kind), [kind]);
@@ -83,7 +87,7 @@ export function TxEditor() {
 
   useEffect(() => {
     if (!open) return;
-    setSaved(false); setErrors({}); setFiles([]); setReading(false); setFromPhoto(false); setStep(tx || (initialType && initialType !== 'expense') ? 'form' : 'choose'); // a receipt is an expense: Ingreso/Transferir go straight to the form
+    setSaved(false); setErrors({}); setFiles([]); setReading(false); setFromPhoto(false); setPhoto(null); setMissing({ amount: false, desc: false, date: false }); setStep(tx || (initialType && initialType !== 'expense') ? 'form' : 'choose'); // a receipt is an expense: Ingreso/Transferir go straight to the form
     const full = tx ? getTransaction(e, tx.id) : null;
     if (full) {
       setType(full.type); setAmount(centsToInput(full.amount)); setDesc(full.description); setDate(full.date); setAccountId(full.accountId ?? '');
@@ -143,9 +147,10 @@ export function TxEditor() {
     setFiles([...files, { name: f.name, mime: ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`, data: f.data }]);
   };
 
-  const scanReceipt = async () => {
-    const f = await openFile([{ name: tr('Foto del comprobante'), extensions: RECEIPT_EXTENSIONS }]);
-    if (!f) return;
+  useEffect(() => () => { if (photo?.url) URL.revokeObjectURL(photo.url); }, [photo]);
+
+  const readPhoto = async (f: { name: string; data: Uint8Array }) => {
+    if (reading) return;
     setReading(true);
     try {
       const r = await readReceipt(f.data);
@@ -153,8 +158,11 @@ export function TxEditor() {
       if (r.amount) setAmount(centsToInput(r.amount));
       if (r.merchant) { setDesc(r.merchant); setCategoryId(categoryFor(e, r.merchant, 'expense') ?? ''); }
       if (r.date) setDate(r.date);
-      const ext = f.name.split('.').pop()?.toLowerCase();
-      if (f.data.length <= MAX_ATTACHMENT_BYTES) setFiles([{ name: f.name, mime: `image/${ext === 'jpg' ? 'jpeg' : ext}`, data: f.data }]);
+      setMissing({ amount: !r.amount, desc: !r.merchant, date: !r.date });
+      const ext = f.name.split('.').pop()?.toLowerCase() ?? 'png';
+      const mime = ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+      if (f.data.length <= MAX_ATTACHMENT_BYTES) setFiles([{ name: f.name, mime, data: f.data }]);
+      setPhoto({ url: ext === 'pdf' ? null : URL.createObjectURL(new Blob([f.data], { type: mime })), name: f.name });
       setFromPhoto(true);
       setStep('form');
     } catch (err) {
@@ -164,11 +172,30 @@ export function TxEditor() {
     }
   };
 
+  const scanReceipt = async () => {
+    const f = await openFile([{ name: tr('Foto o PDF del comprobante'), extensions: RECEIPT_EXTENSIONS }]);
+    if (f) await readPhoto(f);
+  };
+  const fromBrowserFile = async (file: File | null | undefined) => {
+    if (!file) return;
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    const name = RECEIPT_EXTENSIONS.includes(ext) ? file.name : `comprobante.${file.type === 'application/pdf' ? 'pdf' : 'png'}`;
+    if (!RECEIPT_EXTENSIONS.includes(name.split('.').pop()!) || !/^image\/|^application\/pdf$/.test(file.type || 'image/')) return useApp.getState().toast({ kind: 'error', title: tr('Usa una foto o un PDF del comprobante') });
+    await readPhoto({ name, data: new Uint8Array(await file.arrayBuffer()) });
+  };
+  // Ctrl+V with a copied photo (a screenshot, an image from WhatsApp Web) reads it right away.
+  useEffect(() => {
+    if (!open || step !== 'choose' || !receiptSupported()) return;
+    const onPaste = (ev: ClipboardEvent) => { const f = ev.clipboardData?.files?.[0]; if (f) { ev.preventDefault(); void fromBrowserFile(f); } };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, [open, step, reading]);
+
   const showCategory = type === 'income' || type === 'expense' || type === 'refund' || type === 'loan_payment';
   const tone = kind === 'income' ? 'text-emerald' : type === 'transfer' || type === 'card_payment' ? 'text-blue' : 'text-coral';
 
   return (
-    <Modal open={open} onClose={close} width={640} title={tx ? tr('Editar movimiento') : tr('Nuevo movimiento')} subtitle={tx ? tr('Registrado el {v0}', { v0: formatDate(tx.createdAt.slice(0, 10)) }) : step === 'choose' ? tr('¿Cómo quieres registrarlo?') : tr('Ingresos, gastos, transferencias y pagos')}
+    <Modal open={open} onClose={close} width={fromPhoto ? 960 : 640} title={tx ? tr('Editar movimiento') : tr('Nuevo movimiento')} subtitle={tx ? tr('Registrado el {v0}', { v0: formatDate(tx.createdAt.slice(0, 10)) }) : step === 'choose' ? tr('¿Cómo quieres registrarlo?') : tr('Ingresos, gastos, transferencias y pagos')}
       footer={
         <>
           {tx && editable && <Button variant="ghost" icon="trash" className="mr-auto !text-coral" onClick={remove}>{tr('Eliminar')}</Button>}
@@ -186,12 +213,15 @@ export function TxEditor() {
       </AnimatePresence>
       {step === 'choose' ? (
         <div className="grid sm:grid-cols-2 gap-3">
-          <button type="button" onClick={scanReceipt} disabled={!receiptSupported() || reading} className="card group text-left p-5 rounded-[22px] border border-line hover:border-brand transition disabled:opacity-60 disabled:hover:border-line">
+          <button type="button" onClick={scanReceipt} disabled={!receiptSupported() || reading}
+            onDragOver={(ev) => { if (receiptSupported()) { ev.preventDefault(); setDragOver(true); } }} onDragLeave={() => setDragOver(false)}
+            onDrop={(ev) => { ev.preventDefault(); setDragOver(false); void fromBrowserFile(ev.dataTransfer.files[0]); }}
+            className={clsx('card group text-left p-5 rounded-[22px] border border-line hover:border-brand transition disabled:opacity-60 disabled:hover:border-line', dragOver && '!border-brand border-dashed bg-brand-soft/40')}>
             <span className="grid place-items-center size-12 rounded-[16px] bg-brand-soft text-brand mb-4">
               {reading ? <span className="size-5 rounded-full border-2 border-current border-r-transparent animate-spin" /> : <Icon name="upload" size={22} />}
             </span>
             <p className="text-[15px] font-semibold">{reading ? tr('Leyendo el comprobante…') : tr('Subir foto del comprobante')}</p>
-            <p className="text-[12.5px] text-muted mt-1">{receiptSupported() ? tr('Monto lee el comercio, la fecha y el total. Tú revisas antes de registrar. La foto no sale de tu computadora.') : tr('Disponible en la app de escritorio para Windows.')}</p>
+            <p className="text-[12.5px] text-muted mt-1">{receiptSupported() ? tr('Elige, arrastra aquí o pega (Ctrl+V) una foto o un PDF. Monto lee el comercio, la fecha y el total y tú revisas antes de registrar. No sale de tu computadora.') : tr('Disponible en la app de escritorio para Windows.')}</p>
           </button>
           <button type="button" onClick={() => setStep('form')} disabled={reading} className="card group text-left p-5 rounded-[22px] border border-line hover:border-brand transition">
             <span className="grid place-items-center size-12 rounded-[16px] bg-surface-2 text-ink-2 mb-4"><Icon name="edit" size={22} /></span>
@@ -199,7 +229,16 @@ export function TxEditor() {
             <p className="text-[12.5px] text-muted mt-1">{tr('Gastos, ingresos, transferencias, pagos de tarjeta y préstamos.')}</p>
           </button>
         </div>
-      ) : (<>
+      ) : (<div className={fromPhoto ? 'grid md:grid-cols-[minmax(0,300px)_1fr] gap-5 items-start' : undefined}>
+      {photo && (
+        <figure className="md:sticky md:top-0 rounded-[18px] border border-line bg-surface-2 overflow-hidden">
+          {photo.url
+            ? <img src={photo.url} alt={tr('Foto del comprobante')} className="w-full max-h-[60vh] object-contain" />
+            : <div className="grid place-items-center gap-2 h-48 text-muted"><Icon name="reports" size={30} /><span className="text-[12px]">{tr('Comprobante en PDF')}</span></div>}
+          <figcaption className="px-3 py-2 text-[11.5px] text-muted truncate border-t border-line">{photo.name}</figcaption>
+        </figure>
+      )}
+      <div>
       {fromPhoto && (
         <div className="mb-4 flex items-start gap-2 rounded-[14px] bg-brand-soft text-brand px-3 py-2.5 text-[12.5px]">
           <Icon name="sparkle" size={16} className="mt-0.5" />
@@ -215,20 +254,20 @@ export function TxEditor() {
             </button>
           ))}
         </div>
-        <div className="rounded-[20px] bg-surface-2 border border-line p-4 flex items-center gap-4">
+        <div className={clsx('rounded-[20px] bg-surface-2 border p-4 flex items-center gap-4', missing.amount && !amount ? 'border-amber bg-amber-soft/40' : 'border-line')}>
           <div className="flex-1">
             <p className="text-[11.5px] text-muted mb-1">{tr('Importe')}</p>
             <div className="flex items-baseline gap-2">
               <span className={clsx('text-[26px] font-semibold', tone)}>{currency === 'PAB' ? 'B/.' : '$'}</span>
               <input autoFocus={!fromPhoto} inputMode="decimal" aria-label={tr('Importe')} value={amount} onChange={(ev) => setAmount(ev.target.value.replace(/[^\d.,]/g, ''))} placeholder="0.00" className={clsx('num w-full bg-transparent outline-none text-[34px] font-semibold tracking-[-0.04em] placeholder:text-line', tone)} />
             </div>
-            {errors.amount && <p className="text-[11.5px] text-coral">{errors.amount}</p>}
+            {errors.amount ? <p className="text-[11.5px] text-coral">{errors.amount}</p> : missing.amount && !amount && <p className="text-[11.5px] text-amber">{tr('No pudimos leer el total. Escríbelo mirando el comprobante.')}</p>}
           </div>
           <Badge tone="neutral">{currency}</Badge>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label={tr('Descripción')} error={errors.desc} className="col-span-2"><Input value={desc} onChange={(ev) => setDesc(ev.target.value)} placeholder={kind === 'income' ? tr('Ej. Quincena, cliente…') : tr('Ej. Super 99, ENSA, Panapass…')} invalid={!!errors.desc} /></Field>
-          <Field label={tr('Fecha')}><Input type="date" value={date} onChange={(ev) => setDate(ev.target.value)} /></Field>
+          <Field label={tr('Descripción')} error={errors.desc} hint={missing.desc && !desc ? tr('No encontramos el comercio. Escribe dónde compraste.') : undefined} className={clsx('col-span-2', missing.desc && !desc && 'field-warn')}><Input value={desc} onChange={(ev) => setDesc(ev.target.value)} placeholder={kind === 'income' ? tr('Ej. Quincena, cliente…') : tr('Ej. Super 99, ENSA, Panapass…')} invalid={!!errors.desc} /></Field>
+          <Field label={tr('Fecha')} hint={missing.date ? tr('No encontramos la fecha; pusimos la de hoy.') : undefined} className={clsx(missing.date && 'field-warn')}><Input type="date" value={date} onChange={(ev) => { setDate(ev.target.value); setMissing({ ...missing, date: false }); }} /></Field>
           <Field label={type === 'transfer' || type === 'card_payment' ? tr('Desde la cuenta') : tr('Cuenta')} error={errors.account}>
             <Select value={accountId} onChange={(ev) => setAccountId(ev.target.value)} invalid={!!errors.account}>
               <option value="">{tr('Selecciona…')}</option>
@@ -312,7 +351,8 @@ export function TxEditor() {
           </motion.div>
         )}
       </fieldset>
-      </>)}
+      </div>
+      </div>)}
       {confirm.node}
     </Modal>
   );

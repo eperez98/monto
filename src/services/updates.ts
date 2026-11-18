@@ -17,10 +17,11 @@ export async function checkForUpdate(includePrerelease: boolean): Promise<Update
   return invoke<UpdateInfo | null>('check_update', { includePrerelease });
 }
 
-/** Save, back up (when allowed), then download, verify and launch the installer. Monto closes when it starts. */
-export async function downloadAndInstall(e: Engine, backup: boolean, info: UpdateInfo, onProgress: (downloaded: number, total: number) => void): Promise<void> {
+/** Save, back up, then download, verify and launch the installer. Monto closes when it starts. */
+export async function downloadAndInstall(e: Engine, info: UpdateInfo, onProgress: (downloaded: number, total: number) => void): Promise<void> {
   await e.flush();
-  if (backup) await createBackup(e, 'antes-de-actualizar');
+  // Always, whatever the user's role: if the backup fails, the update does not start.
+  await createBackup(e, 'antes-de-actualizar');
   await installUpdate(info, onProgress);
 }
 

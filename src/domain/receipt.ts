@@ -19,8 +19,16 @@ function findDate(text: string): ISODate | null {
   return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+// Common misreads on photos: "B/ ." for "B/.", "9. 10" for "9.10", and "187. eo" (O, D, e for 0; l, I for 1) in the cents.
+const DIGIT: Record<string, string> = { o: '0', O: '0', D: '0', Q: '0', e: '0', l: '1', I: '1' };
+const fixOcr = (l: string) => l
+  .replace(/\s*\/\s*\.\s*/g, '/. ')
+  .replace(/(\d[.,])\s?([oODQel0-9I]{2})(?![A-Za-z0-9])/g, (_, a: string, c: string) => a + c.replace(/./g, (ch) => DIGIT[ch] ?? ch))
+  .replace(/\s+/g, ' ')
+  .trim();
+
 export function parseReceipt(lines: string[]): ReceiptData {
-  const clean = lines.map((l) => l.replace(/\s*\/\s*\.\s*/g, '/. ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const clean = lines.map(fixOcr).filter(Boolean);
   const totalLine = clean.find((l) => TOTAL.test(l) && amounts(l).length);
   // No TOTAL line read: the largest amount on a receipt is almost always the total.
   const amount = totalLine ? amounts(totalLine).at(-1)! : Math.max(0, ...clean.flatMap(amounts)) || null;

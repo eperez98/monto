@@ -132,7 +132,7 @@ function SourceCard({ s, index, onEdit, onReceive }: { s: IncomeSummary; index: 
           </div>
           <div className="flex items-center gap-2"><EstimateTag /><IconButton icon="edit" label={tr('Editar')} onClick={onEdit} className="!text-white/80 hover:!bg-white/10" /></div>
         </div>
-        <div className="relative grid grid-cols-3 gap-5 mt-6">
+        <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-5 mt-6">
           {e.payments.map((p) => (
             <div key={p.label}>
               <p className="text-[11px] text-white/55">{p.label}</p>
@@ -142,7 +142,7 @@ function SourceCard({ s, index, onEdit, onReceive }: { s: IncomeSummary; index: 
           ))}
           <div><p className="text-[11px] text-white/55">{tr('Pagos al año')}</p><p className="text-[22px] font-semibold num">{e.paymentsPerYear}</p></div>
         </div>
-        <div className="relative grid grid-cols-3 gap-5 mt-6 pt-5 border-t border-white/10">
+        <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-5 mt-6 pt-5 border-t border-white/10">
           <div><p className="text-[11px] text-white/55">{tr('Ingreso mensual estimado')}</p><Money animated cents={e.monthlyNet} currency={cur} className="text-[26px] font-semibold text-[#7DF0BF] tracking-[-0.04em]" /><p className="text-[10.5px] text-white/50">{tr('Bruto')}{' '}{formatMoney(e.monthlyGross, cur)}</p></div>
           <div><p className="text-[11px] text-white/55">{tr('Ingreso anual estimado')}</p><Money animated cents={e.annualNet} currency={cur} className="text-[20px] font-semibold" /><p className="text-[10.5px] text-white/50">{tr('Bruto')}{' '}{formatMoney(e.annualGross, cur)}</p></div>
           <div><p className="text-[11px] text-white/55">{tr('Décimo tercer mes')}</p>{e.decimoGross ? <Money cents={e.decimoNet} currency={cur} className="text-[20px] font-semibold" /> : <p className="text-[13px] text-white/50 mt-1">{tr('No incluido')}</p>}</div>

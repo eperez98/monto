@@ -10,6 +10,25 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [0.8.0-rc.3] - 2026-11-18 · Smart Money (Release Candidate 3)
+
+Tercera versión candidata de la 0.8: lectura de comprobantes más completa, más seguridad para tus datos y la vista de celular revisada pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
+
+### Añadido
+- **Comprobantes en PDF**: además de fotos, Monto lee la primera página de un PDF, también con el reconocimiento de texto de Windows y sin conexión.
+- **Arrastrar o pegar la foto**: suelta la foto sobre «Subir foto del comprobante» o pégala con Ctrl+V (una captura o una imagen copiada del navegador).
+- **La foto junto al formulario**: al revisar los datos leídos, el comprobante se ve a la izquierda para comparar.
+- **Campos sin leer en amarillo**: si Monto no encuentra el total, el comercio o la fecha, el campo queda marcado y te dice qué falta.
+
+### Cambiado
+- **Copia automática antes de actualizar**: se hace siempre, sin importar el rol del integrante. Si la copia falla, la actualización no empieza.
+- **Revisar la base de datos** (Configuración → Datos y copias) explica el resultado en palabras simples y, si hay un problema, qué hacer.
+- La insignia de «Acerca de» dice «Candidata» en las versiones candidatas, en lugar de «Beta».
+
+### Corregido
+- **Lectura de fotos reales**: entiende el total aunque la foto esté torcida u oscura, y corrige confusiones típicas («9. 10» o «187. eo» se leen como 9.10 y 187.00).
+- **Vista de celular**: Configuración, Calendario, Informes, Análisis, Ingresos y el plan mensual ya no cortan contenido ni encima números. Los filtros de Movimientos se acomodan en dos columnas.
+
 ## [0.8.0-rc.2] - 2026-11-18 · Smart Money (Release Candidate 2)
 
 Segunda versión candidata de la 0.8: puedes registrar un gasto con la foto del comprobante. En Windows aparece como versión 0.8.0.2.

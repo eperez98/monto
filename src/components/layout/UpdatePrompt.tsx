@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useApp } from '../../store/app';
-import { useCan } from '../../hooks/useDb';
 import { errorMessage } from '../../hooks/useDb';
 import { downloadAndInstall, type UpdateInfo } from '../../services/updates';
 import { Badge, Button, Modal } from '../ui';
@@ -10,7 +9,6 @@ import { tr } from '../../lib/i18n';
 /** Asks whether to download a new version. Nothing is downloaded or installed unless the user accepts. */
 export function UpdatePrompt({ info, onClose }: { info: UpdateInfo; onClose: () => void }) {
   const engine = useApp((s) => s.engine);
-  const canBackup = useCan('backup.manage');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState({ d: 0, t: 0 });
   const [err, setErr] = useState('');
@@ -18,7 +16,7 @@ export function UpdatePrompt({ info, onClose }: { info: UpdateInfo; onClose: () 
   const install = async () => {
     if (!engine) return;
     setBusy(true); setErr('');
-    try { await downloadAndInstall(engine, canBackup, info, (d, t) => setProgress({ d, t })); }
+    try { await downloadAndInstall(engine, info, (d, t) => setProgress({ d, t })); }
     catch (x) { setErr(errorMessage(x)); setBusy(false); }
   };
   return (

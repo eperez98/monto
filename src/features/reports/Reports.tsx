@@ -148,11 +148,11 @@ export default function Reports() {
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-5">{report.summary?.slice(0, 4).map((s, i) => <Card key={s.label} delay={i * 0.04} className="p-5"><Stat label={s.label} value={s.value} /></Card>)}</div>
       <div className="grid grid-cols-12 gap-5 mb-5">
-        <Card className="col-span-8">
+        <Card className="col-span-12 lg:col-span-8">
           <CardHeader title={kind === 'annual' ? tr('Gastos: año anterior vs actual') : kind === 'savings' || kind === 'cashflow' ? tr('Ahorro neto mensual') : tr('Ingresos y gastos')} subtitle={tr('Últimos 12 meses')} />
           <div className="px-3 pb-3">{kind === 'savings' || kind === 'cashflow' ? <NetArea data={series} currency={cur} height={230} /> : <IncomeExpenseBars data={kind === 'annual' ? annual : series} currency={cur} height={230} />}</div>
         </Card>
-        <Card className="col-span-4">
+        <Card className="col-span-12 lg:col-span-4">
           <CardHeader title={tr('Gastos por categoría')} subtitle={label} />
           {cats.length ? <div className="grid place-items-center p-5"><CategoryDonut data={cats.slice(0, 8)} currency={cur} size={200} /></div> : <EmptyState icon="budget" title={tr('Sin gastos')} />}
         </Card>

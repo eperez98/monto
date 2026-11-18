@@ -218,7 +218,7 @@ try {
   await click('Crear copia ahora');
   await page.getByText('Copia creada').waitFor();
   await click('Verificar', { exact: true });
-  await page.getByText(/integrity_check: ok/).waitFor();
+  await page.getByText(/Todo en orden: el archivo no está dañado/).waitFor();
   assert(true, 'copia de seguridad e integridad OK');
   await click('Borrar copias de más de 30 días');
   await page.getByText('No hay copias de más de 30 días').waitFor();
@@ -231,15 +231,15 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.8.0 Release Candidate 2').waitFor();
-  assert(true, 'versión 0.8.0 Release Candidate 2 visible en Actualizaciones');
+  await page.getByText('Monto 0.8.0 Release Candidate 3').waitFor();
+  assert(true, 'versión 0.8.0 Release Candidate 3 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('0.8.0 Release Candidate 2 · Smart Money'), 'acerca de: versión con nombre Smart Money');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('0.8.0 Release Candidate 3 · Smart Money'), 'acerca de: versión con nombre Smart Money');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
   assert(await page.getByText('0.9 · Calm Design').isVisible() && await page.getByText('1.0 · Estable').isVisible(), 'acerca de: dos versiones futuras con ideas');
   await page.waitForTimeout(700);
@@ -512,6 +512,30 @@ try {
   await shot('22-phone-budgets');
   await click('Salir de la vista de celular');
   assert(!(await page.locator('iframe').count()), 'salir de la vista de celular');
+
+  step('Phone size, light and dark: every screen');
+  await page.setViewportSize({ width: 390, height: 844 });
+  const sections = ['Movimientos', 'Cuentas y tarjetas', 'Ingresos y salario', 'Plan mensual', 'Presupuestos', 'Objetivos', 'Préstamos y deudas', 'Calendario', 'Informes', 'Análisis', 'Configuración', 'Acerca de Monto', 'Resumen'];
+  const more = page.getByRole('navigation', { name: 'Principal' }).getByRole('button', { name: 'Más', exact: true });
+  const sheet = page.getByRole('dialog', { name: 'Más secciones' });
+  const closeSheet = async () => { await page.mouse.click(195, 40); await sheet.waitFor({ state: 'detached' }); };
+  for (const theme of ['light', 'dark']) {
+    if ((await page.evaluate(() => document.documentElement.classList.contains('dark'))) !== (theme === 'dark')) {
+      await more.click();
+      await sheet.getByRole('button', { name: /^Modo (oscuro|claro)$/ }).click();
+      await closeSheet();
+    }
+    for (const name of sections) {
+      await more.click();
+      await sheet.getByRole('button', { name, exact: true }).click();
+      await sheet.waitFor({ state: 'detached' });
+      await page.waitForTimeout(500);
+      const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert(wide <= 1, `celular ${theme}: ${name} sin desplazamiento horizontal (${wide}px)`);
+      if (SHOTS) await page.screenshot({ path: `${out}/phone-${theme}-${name.replace(/\W+/g, '-')}.png`, fullPage: true });
+    }
+  }
+  await page.setViewportSize({ width: 1440, height: 900 });
 
   console.log('\nE2E OK');
 } catch (e) {

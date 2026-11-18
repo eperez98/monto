@@ -175,7 +175,7 @@ function PlanResult({ income, expenses, remaining, canSave, rate, currency, line
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mt-3">
         <div><p className="text-[11.5px] text-white/60">{tr('Ingreso mensual neto')}</p><Money animated cents={income} currency={currency} className="block text-[22px] font-semibold" /></div>
         <div><p className="text-[11.5px] text-white/60">{tr('Gastos mensuales')}</p><Money animated cents={expenses} currency={currency} className="block text-[22px] font-semibold" /></div>
-        <div><p className="text-[11.5px] text-white/60">{tr('Fondo restante')}</p><Money animated cents={remaining} currency={currency} className={clsx('block text-[30px] font-semibold tracking-[-0.04em]', remaining < 0 && 'text-[#FFC2CC]')} /></div>
+        <div className="col-span-2 lg:col-span-1 order-first lg:order-none"><p className="text-[11.5px] text-white/60">{tr('Fondo restante')}</p><Money animated cents={remaining} currency={currency} className={clsx('block text-[30px] font-semibold tracking-[-0.04em]', remaining < 0 && 'text-[#FFC2CC]')} /></div>
         <div><p className="text-[11.5px] text-white/60">{tr('Puedes ahorrar')}</p><p className="text-[22px] font-semibold num">{Math.round(rate)}%</p></div>
       </div>
       <p className="text-[13px] text-white/85 mt-4">

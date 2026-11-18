@@ -3,7 +3,7 @@ import { isTauri } from '../db/adapters';
 import { parseReceipt, type ReceiptData } from '../domain/receipt';
 
 export const receiptSupported = () => isTauri();
-export const RECEIPT_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'heic', 'bmp'];
+export const RECEIPT_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'heic', 'bmp', 'pdf'];
 
 export async function readReceipt(image: Uint8Array): Promise<ReceiptData> {
   const { invoke } = await import('@tauri-apps/api/core');

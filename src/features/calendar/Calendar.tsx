@@ -78,7 +78,7 @@ export default function Calendar() {
     <div>
       <PageHeader title={tr('Calendario financiero')} subtitle={tr('Cobros, cuotas, servicios y recordatorios')} actions={canCreate && <><Button variant="secondary" icon="bell" onClick={() => { setMt(''); setMd(selected); setMa(''); setRemOpen(true); }}>{tr('Recordatorio')}</Button><Button icon="repeat" onClick={() => { setRd(''); setRa(''); setRacc(accounts[0]?.id ?? ''); setRcat(''); setRs(selected); setRecOpen(true); }}>{tr('Pago recurrente')}</Button></>} />
       <div className="grid grid-cols-12 gap-5">
-        <Card hover={false} className="col-span-8 p-5">
+        <Card hover={false} className="col-span-12 lg:col-span-8 p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[18px] font-semibold tracking-[-0.03em]">{formatMonth(month)}</h3>
             <div className="flex gap-1"><IconButton icon="chevronLeft" label={tr('Anterior')} onClick={() => setMonth(monthKey(addMonths(from, -1)))} /><Button size="sm" variant="secondary" onClick={() => { setMonth(monthKey(today())); setSelected(today()); }}>{tr('Hoy')}</Button><IconButton icon="chevronRight" label={tr('Siguiente')} onClick={() => setMonth(monthKey(addMonths(from, 1)))} /></div>
@@ -101,7 +101,7 @@ export default function Calendar() {
           </motion.div>
           <div className="flex gap-4 mt-4 text-[11px] text-muted">{[['income', tr('Ingresos')], ['expense', tr('Pagos')], ['debt', tr('Cuotas')], ['reminder', tr('Recordatorios')]].map(([k, l]) => <span key={k} className="flex items-center gap-1.5"><span className={clsx('size-2.5 rounded-full', KIND_STYLE[k as Ev['kind']].split(' ')[0])} />{l}</span>)}</div>
         </Card>
-        <div className="col-span-4 space-y-5">
+        <div className="col-span-12 lg:col-span-4 space-y-5">
           <Card hover={false}>
             <CardHeader title={formatDate(selected, 'long')} subtitle={tr('{events} eventos · {txs} movimientos', { events: selectedEvents.length, txs: dayTx.length })} />
             <ul className="p-3 space-y-1.5">

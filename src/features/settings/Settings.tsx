@@ -35,9 +35,9 @@ export default function Settings() {
   return (
     <div>
       <PageHeader title={tr('Configuración')} subtitle={tr('Personaliza Monto y protege tu información')} />
-      <div className="grid grid-cols-[220px_1fr] gap-6">
-        <nav className="space-y-1">
-          {TABS.map((t) => <button key={t.k} onClick={() => setTab(t.k)} className={clsx('group w-full flex items-center gap-3 h-10 px-3 rounded-[12px] text-[13px] transition', tab === t.k ? 'bg-surface shadow-card text-ink font-semibold' : 'text-ink-2 hover:bg-surface-3/60')}><Icon name={t.icon} size={17} active={tab === t.k} />{t.label}</button>)}
+      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
+        <nav className="flex md:block gap-1 md:space-y-1 overflow-x-auto -mx-1 px-1 md:mx-0 md:px-0">
+          {TABS.map((t) => <button key={t.k} onClick={() => setTab(t.k)} className={clsx('group shrink-0 md:w-full flex items-center gap-3 h-10 px-3 rounded-[12px] whitespace-nowrap text-[13px] transition', tab === t.k ? 'bg-surface shadow-card text-ink font-semibold' : 'text-ink-2 hover:bg-surface-3/60')}><Icon name={t.icon} size={17} active={tab === t.k} />{t.label}</button>)}
         </nav>
         <div className="space-y-5 max-w-[760px]">
           {tab === 'profile' && <ProfileTab />}
@@ -74,7 +74,7 @@ function ProfileTab() {
       </div>
       <div>
         <p className="text-[12px] font-medium text-ink-2 mb-2">{tr('Tipo de perfil')}</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {([['individual', 'user', tr('Individual')], ['couple', 'handshake', tr('En pareja')], ['family', 'family', tr('Familia')]] as Array<[ProfileMode, string, string]>).map(([m, i, l]) => <ChoiceCard key={m} selected={profile.mode === m} onClick={() => canManage && mutate((e) => setProfile(e, { mode: m }), tr('Tipo de perfil actualizado'))} icon={i} title={l} />)}
         </div>
       </div>
@@ -163,7 +163,7 @@ function AppearanceTab() {
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Modo claro u oscuro')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('“Sistema” sigue automáticamente el modo claro u oscuro de Windows.')}</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {([['system', 'monitor', tr('Sistema')], ['light', 'sun', tr('Claro')], ['dark', 'moon', tr('Oscuro')]] as const).map(([v, i, l]) => <ChoiceCard key={v} selected={prefs.theme === v} onClick={() => mutate((e) => setPrefs(e, { theme: v }))} icon={i} title={l} />)}
         </div>
       </div>
@@ -357,7 +357,7 @@ function DataTab() {
       )}
       <Card hover={false} className="p-6 flex items-center gap-4">
         <IconTile name="check" color={integrity ? (integrity.ok ? 'var(--emerald)' : 'var(--coral)') : 'var(--blue)'} size={44} />
-        <div className="flex-1"><p className="text-[14px] font-semibold">{tr('Integridad de la base de datos')}</p><p className="text-[12.5px] text-muted">{integrity ? (integrity.ok ? 'PRAGMA integrity_check: ok · sin referencias rotas.' : integrity.messages.join(' · ')) : tr('Comprueba que el archivo SQLite no esté dañado.')}</p></div>
+        <div className="flex-1"><p className="text-[14px] font-semibold">{tr('Integridad de la base de datos')}</p><p className="text-[12.5px] text-muted">{integrity ? (integrity.ok ? tr('Todo en orden: el archivo no está dañado y no hay datos sueltos.') : `${tr('Encontramos problemas. Restaura una copia de seguridad reciente o exporta tus datos.')} ${integrity.messages.join(' · ')}`) : tr('Revisa que tu base de datos esté sana: que el archivo no esté dañado y que no haya datos sueltos.')}</p></div>
         <Button variant="secondary" onClick={() => setIntegrity(e.integrityCheck())}>{tr('Verificar')}</Button>
       </Card>
       <Modal open={!!restorePw} onClose={() => setRestorePw(null)} title={tr('Copia cifrada')} icon="lock" width={420} footer={<><Button variant="ghost" onClick={() => setRestorePw(null)}>{tr('Cancelar')}</Button><Button onClick={() => restore(restorePw!.bytes, pw)}>{tr('Continuar')}</Button></>}>
@@ -440,7 +440,6 @@ function UpdatesTab() {
   const prefs = useQuery((en) => getPrefs(en));
   const mutate = useMutate();
   const toast = useApp((s) => s.toast);
-  const canBackup = useCan('backup.manage');
   const beta = prefs.betaUpdates ?? IS_PRERELEASE;
   const [state, setState] = useState<'idle' | 'checking' | 'none' | 'available' | 'downloading' | 'error'>('idle');
   const [info, setInfo] = useState<UpdateInfo | null>(null);
@@ -460,7 +459,7 @@ function UpdatesTab() {
     if (!info) return;
     setState('downloading');
     try {
-      await downloadAndInstall(e, canBackup, info, (d, t) => setProgress({ d, t }));
+      await downloadAndInstall(e, info, (d, t) => setProgress({ d, t }));
     } catch (x) {
       setErr(errorMessage(x)); setState('error');
       toast({ kind: 'error', title: tr('No se pudo instalar la actualización'), body: errorMessage(x) });

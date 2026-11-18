@@ -38,9 +38,9 @@ export default function Insights() {
   return (
     <div>
       <PageHeader title={tr('Análisis inteligente')} subtitle={tr('Recomendaciones basadas solo en tus datos registrados')} />
-      <div className="flex gap-3 mb-5 text-[12px] text-muted items-center"><EstimateTag estimated={false} />{' '}{tr('datos registrados')}{' '}<span className="mx-1">·</span> <EstimateTag />{' '}{tr('proyecciones y estimaciones')}</div>
+      <div className="flex flex-wrap gap-3 mb-5 text-[12px] text-muted items-center"><EstimateTag estimated={false} />{' '}{tr('datos registrados')}{' '}<span className="mx-1">·</span> <EstimateTag />{' '}{tr('proyecciones y estimaciones')}</div>
       <div className="grid grid-cols-12 gap-5">
-        <Card className="col-span-5 p-6 hero-surface !border-0 text-[#F5F3EE]">
+        <Card className="col-span-12 lg:col-span-5 p-6 hero-surface !border-0 text-[#F5F3EE]">
           <div className="flex items-center justify-between"><p className="text-[12px] text-white/60">{tr('Resumen de')}{' '}{summary.label}</p><Badge tone="green" className="!bg-white/10 !text-[#7DF0BF]">{tr('Real')}</Badge></div>
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div><p className="text-[11px] text-white/55">{tr('Ingresos')}</p><Money cents={summary.income} currency={cur} className="text-[20px] font-semibold" /></div>
@@ -52,22 +52,22 @@ export default function Insights() {
             {summary.txCount === 0 ? tr('No hay movimientos registrados el mes pasado.') : <>{tr('Registraste')}{' '}{summary.txCount}{' '}{tr('movimientos.')}{' '}{summary.topCategory && <>{tr('Tu mayor gasto fue')}{' '}<b className="text-white">{summary.topCategory}</b>. </>}{summary.vsPrevExpensePct != null && <>{tr('Gastaste un')}{' '}{Math.abs(summary.vsPrevExpensePct).toFixed(0)} % {summary.vsPrevExpensePct > 0 ? tr('más') : 'menos'}{' '}{tr('que el mes anterior.')}</>}</>}
           </p>
         </Card>
-        <Card className="col-span-7">
+        <Card className="col-span-12 lg:col-span-7">
           <CardHeader title={tr('Proyección de ahorro')} subtitle={tr('Promedio de tus últimos 3 meses completos')} action={<EstimateTag />} />
-          <div className="grid grid-cols-3 gap-4 p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-5">
             <div><p className="text-[11.5px] text-muted">{tr('Ahorro mensual promedio')}</p><Money cents={proj.monthlyAverage} currency={cur} sign className={clsx('text-[22px] font-semibold', proj.monthlyAverage < 0 && 'text-coral')} /></div>
             <div><p className="text-[11.5px] text-muted">{tr('En 12 meses podrías tener')}</p><Money cents={proj.projected12} currency={cur} className="text-[22px] font-semibold text-emerald" /></div>
             <div><p className="text-[11.5px] text-muted">{tr('Hacia')}{' '}{formatDate(addMonths(today(), 12), 'short')}</p><p className="text-[13px] mt-1 text-ink-2">{proj.monthlyAverage > 0 ? tr('Mantén el ritmo para llegar.') : tr('Reduce gastos variables para generar ahorro.')}</p></div>
           </div>
           {est > 0 && (
-            <div className="mx-5 mb-5 rounded-[16px] bg-surface-2 p-4 text-[12.5px] text-ink-2 grid grid-cols-3 gap-3">
+            <div className="mx-5 mb-5 rounded-[16px] bg-surface-2 p-4 text-[12.5px] text-ink-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div><p className="text-muted text-[11px]">{tr('Ingreso estimado')}</p><Money cents={est} currency={cur} className="font-semibold" /></div>
               <div><p className="text-muted text-[11px]">{tr('Pagos recurrentes')}</p><Money cents={committed} currency={cur} className="font-semibold" /></div>
               <div><p className="text-muted text-[11px]">{tr('Margen mensual libre')}</p><Money cents={est - committed} currency={cur} className="font-semibold text-emerald" /></div>
             </div>
           )}
         </Card>
-        <Card className="col-span-7">
+        <Card className="col-span-12 lg:col-span-7">
           <CardHeader title={tr('Hábitos de consumo')} subtitle={tr('{v0} (en curso) vs. {v1}', { v0: formatMonth(thisM), v1: formatMonth(prevM) })} action={<EstimateTag estimated={false} />} />
           <div className="p-3">
             {habits.map((h) => {
@@ -87,7 +87,7 @@ export default function Insights() {
             {!habits.length && <EmptyState icon="insights" title={tr('Aún no hay suficientes datos')} body={tr('Con unos días de movimientos podremos comparar tus hábitos mes a mes.')} />}
           </div>
         </Card>
-        <div className="col-span-5 space-y-5">
+        <div className="col-span-12 lg:col-span-5 space-y-5">
           <Card>
             <CardHeader title={tr('Categorías con gasto elevado y duplicados')} />
             <div className="p-2">{al.map((a) => <AlertRow key={a.key} a={a} />)}{!al.length && <p className="text-[12.5px] text-muted px-3 py-4 flex items-center gap-2"><Icon name="check" size={16} className="text-emerald" />{tr('Sin anomalías detectadas.')}</p>}</div>

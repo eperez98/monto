@@ -4,7 +4,7 @@ import { Button, Card, CardHeader, PageHeader, Badge } from '../../components/ui
 import { LogoMark } from '../../brand/Logo';
 import { Icon } from '../../icons';
 import { openProjectPage, type ProjectPage } from '../../services/links';
-import { APP_CODENAME, APP_VERSION_LABEL, IS_PRERELEASE } from '../../lib/version';
+import { APP_CODENAME, APP_VERSION, APP_VERSION_LABEL, IS_PRERELEASE } from '../../lib/version';
 import { locale, tr } from '../../lib/i18n';
 
 const HIGHLIGHTS: Array<[string, string, string]> = [
@@ -50,7 +50,7 @@ export default function About() {
             <span className="grid place-items-center size-16 rounded-[20px] hero-surface"><LogoMark size={36} tone="light" /></span>
             <div>
               <h2 className="text-[26px] font-bold tracking-[-0.05em] leading-none">monto</h2>
-              <p className="text-[13px] text-ink-2 mt-1.5 flex flex-wrap items-center gap-2">{tr('Versión')}{' '}{APP_VERSION_LABEL}{' · '}{APP_CODENAME}{IS_PRERELEASE && <Badge tone="amber">{tr('Beta')}</Badge>}</p>
+              <p className="text-[13px] text-ink-2 mt-1.5 flex flex-wrap items-center gap-2">{tr('Versión')}{' '}{APP_VERSION_LABEL}{' · '}{APP_CODENAME}{IS_PRERELEASE && <Badge tone="amber">{APP_VERSION.includes('-rc') ? tr('Candidata') : tr('Beta')}</Badge>}</p>
             </div>
           </div>
           <p className="text-[14px] text-ink-2 mt-5 leading-relaxed max-w-[560px]">{tr('Monto te ayuda a saber cuánto ganas de verdad, en qué se va tu dinero y cuánto puedes ahorrar, sin hojas de cálculo ni cuentas en la nube.')}</p>
