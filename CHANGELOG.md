@@ -12,7 +12,7 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [1.0.1] - 2026-11-18 · Release Update
 
-Primera versión estable de Monto. Protege tus datos aunque no uses contraseña, endurece el acceso y se abre a Colombia y a los bancos en línea de EE. UU. Incluye todo lo que estaba preparado para la 0.8 RC 3, que no llegó a publicarse: el diseño «Cristal», el tema «Relieve», el menú expandible y lo planeado para la 0.9 «Calm Design».
+Primera versión estable de Monto. Protege tus datos aunque no uses contraseña, endurece el acceso y se abre a Colombia y a los bancos en línea de EE. UU. Incluye todo lo que estaba preparado para la 0.8 RC 3, que no llegó a publicarse: el diseño «Cristal», el tema «Relieve», el menú expandible y las funciones «Calm Design».
 
 ### Seguridad
 - **Base de datos protegida siempre**: sin contraseña, el archivo de datos y las copias automáticas se guardan cifrados (AES-256-GCM) con una llave aleatoria de este equipo, guardada en el Administrador de credenciales de Windows y nunca junto a los archivos.
@@ -53,10 +53,13 @@ Primera versión estable de Monto. Protege tus datos aunque no uses contraseña,
 - **Novedades**: quien ya usaba Monto ve una vez un panel con diapositivas horizontales y capturas de cada cambio. En la primera diapositiva puede elegir el tema nuevo, y la última cierra con «Usar Monto».
 - Los temas Violeta, Clásico y Windows 11 siguen disponibles en Configuración → Apariencia. Si ya habías elegido uno, se mantiene.
 
+### Cambiado
+- «Acerca de Monto» muestra la hoja de ruta nueva: 1.0.2 «Confianza», 1.1 «Conectado» y 1.2 «Juntos». La 0.9 ya no saldrá por separado: lo planeado para ella llegó en esta versión.
+
 ### Corregido
 - Las ventanas emergentes se dibujan siempre por encima de todo; el efecto de cristal de una tarjeta ya no puede encerrarlas.
 
-### Añadido (adelanto de la 0.9 «Calm Design»)
+### Añadido (Calm Design)
 - **Mica de Windows 11**: con el tema «Windows 11», la app de escritorio usa el material Mica del sistema detrás de la página.
 - **Modo compacto** (Configuración → Apariencia → Tamaño): todo un 10 % más pequeño para laptops o ventanas reducidas.
 - **Resumen personalizable**: en «Capas tranquilas», «Personalizar resumen» deja mostrar u ocultar cada tarjeta y cambiar su orden. Nueva tarjeta de objetivos de ahorro.

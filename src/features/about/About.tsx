@@ -8,30 +8,39 @@ import { APP_CODENAME, APP_VERSION, APP_VERSION_LABEL, IS_PRERELEASE } from '../
 import { locale, tr } from '../../lib/i18n';
 
 const HIGHLIGHTS: Array<[string, string, string]> = [
-  ['lock', tr('Privado y sin conexión'), tr('Tus datos se guardan solo en este equipo, cifrados si pones contraseña.')],
+  ['lock', tr('Privado y sin conexión'), tr('Tus datos se guardan solo en este equipo y siempre cifrados.')],
   ['bank', tr('Balboas y dólares'), tr('Pensado para Panamá: PAB y USD, salario quincenal o mensual y décimo tercer mes.')],
   ['family', tr('Para ti, tu pareja o tu hogar'), tr('Varios perfiles e integrantes, cada uno con su parte privada.')],
   ['reports', tr('Tus datos son tuyos'), tr('Exporta a Excel, PDF o Notion y haz copias de seguridad cuando quieras.')],
 ];
 
 /** Ideas for upcoming releases. Not promises: they can change or move. */
-const ROADMAP: Array<{ version: string; name: string; kind: string; items: string[] }> = [
+const ROADMAP: Array<{ version: string; name: string; kind: string; tone: 'blue' | 'green' | 'amber'; items: string[] }> = [
   {
-    version: '0.9', name: 'Calm Design', kind: tr('Ya disponible desde la 0.8 RC 3'),
+    version: '1.0.2', name: 'Confianza', kind: tr('Seguridad'), tone: 'blue',
     items: [
-      tr('Mica real de Windows 11 y un modo compacto para pantallas pequeñas.'),
-      tr('Resumen personalizable: elige y ordena tus tarjetas.'),
-      tr('«Tu mes en resumen»: un informe visual al cerrar cada mes.'),
-      tr('Más bancos de Panamá reconocidos al leer correos y estados de cuenta.'),
+      tr('Clave de recuperación: guarda la llave de tu equipo para abrir tus copias aunque cambies de computadora.'),
+      tr('Desbloqueo con Windows Hello: huella, rostro o el PIN de Windows.'),
+      tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
+      tr('Lectura afinada con correos y recibos reales de bancos de Panamá, Colombia y EE. UU.'),
     ],
   },
   {
-    version: '1.1', name: 'Siguiente', kind: tr('Funciones'),
+    version: '1.1', name: 'Conectado', kind: tr('Funciones'), tone: 'green',
     items: [
-      tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
-      tr('Sincronización cifrada entre tus equipos y una app de celular acompañante.'),
-      tr('Resumen anual listo para tu declaración de impuestos.'),
-      tr('Metas compartidas en pareja con aportes de cada uno.'),
+      tr('Pesos y dólares en el mismo perfil de Colombia, con la tasa de cambio que tú defines.'),
+      tr('Sincronización cifrada entre tus equipos a través de una carpeta tuya (OneDrive o Google Drive).'),
+      tr('Detecta suscripciones y pagos que se repiten a partir de tus movimientos.'),
+      tr('Más países: Costa Rica y República Dominicana, con sus bancos.'),
+    ],
+  },
+  {
+    version: '1.2', name: 'Juntos', kind: tr('Hogar'), tone: 'amber',
+    items: [
+      tr('Metas compartidas en pareja, con lo que aporta cada uno.'),
+      tr('Resumen anual para tu declaración de renta (DGI en Panamá, DIAN en Colombia).'),
+      tr('App de celular acompañante para anotar un gasto en el momento.'),
+      tr('Recordatorios de cobro entre los integrantes del hogar.'),
     ],
   },
 ];
@@ -79,12 +88,12 @@ export default function About() {
 
         <div className="col-span-12">
           <CardHeader className="!px-1 !pt-0" title={tr('Lo que viene')} subtitle={tr('Ideas para las próximas versiones. No tienen fecha y pueden cambiar.')} />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-4">
             {ROADMAP.map((r) => (
               <Card key={r.version} hover={false} className="p-6">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[17px] font-semibold tracking-[-0.02em]">{r.version}{' · '}{r.name}</p>
-                  <Badge tone={r.kind === tr('Diseño') ? 'blue' : 'green'}>{r.kind}</Badge>
+                  <Badge tone={r.tone}>{r.kind}</Badge>
                 </div>
                 <ul className="mt-4 space-y-2.5">
                   {r.items.map((it) => <li key={it} className="flex gap-2.5 text-[13px] text-ink-2"><Icon name="check" size={15} className="mt-0.5 shrink-0 text-brand" />{it}</li>)}

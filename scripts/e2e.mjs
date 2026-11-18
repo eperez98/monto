@@ -272,7 +272,7 @@ try {
   await page.getByText('Apoya el desarrollo').waitFor();
   assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.1 · Release Update'), 'acerca de: versión con nombre Release Update');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
-  assert(await page.getByText('0.9 · Calm Design').isVisible() && await page.getByText('1.1 · Siguiente').isVisible(), 'acerca de: dos versiones futuras con ideas');
+  assert(await page.getByText('1.0.2 · Confianza').isVisible() && await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
   await page.waitForTimeout(700);
   await shot('19b-about');
   await click('Resumen', { exact: true });
@@ -322,7 +322,7 @@ try {
   await page.waitForTimeout(1600);
   await shot('17-dashboard-dark');
 
-  step('Customizable summary (0.9 Calm Design)');
+  step('Customizable summary (Calm Design)');
   await click('Personalizar resumen');
   const cardsDlg = page.getByRole('dialog', { name: 'Personalizar el resumen' });
   await cardsDlg.getByRole('switch', { name: 'Accesos rápidos' }).click();
