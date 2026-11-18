@@ -162,7 +162,7 @@ export function TxEditor() {
       const ext = f.name.split('.').pop()?.toLowerCase() ?? 'png';
       const mime = ext === 'pdf' ? 'application/pdf' : `image/${ext === 'jpg' ? 'jpeg' : ext}`;
       if (f.data.length <= MAX_ATTACHMENT_BYTES) setFiles([{ name: f.name, mime, data: f.data }]);
-      setPhoto({ url: ext === 'pdf' ? null : URL.createObjectURL(new Blob([f.data], { type: mime })), name: f.name });
+      setPhoto({ url: ext === 'pdf' ? null : URL.createObjectURL(new Blob([new Uint8Array(f.data)], { type: mime })), name: f.name });
       setFromPhoto(true);
       setStep('form');
     } catch (err) {
