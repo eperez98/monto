@@ -9,11 +9,12 @@ import { FREQUENCY_LABEL } from '../../domain/salary';
 import { RECUR_LABEL } from '../../domain/recurrence';
 import { listTransactions, listCategories, listAccounts, TX_TYPE_LABEL, ACCOUNT_TYPE_LABEL, PAYMENT_METHOD_LABEL } from '../../db/repo/finance';
 import { Button, Card, CardHeader, Money, PageHeader, Stat, EmptyState } from '../../components/ui';
+import { MonthRecapModal } from '../dashboard/MonthRecap';
 import { IncomeExpenseBars, NetArea, CategoryDonut } from '../../components/charts';
 import { Icon } from '../../icons';
 import { exportCSV, exportNotion, exportPDF, exportXLSX, type Report } from '../../services/export';
 import { formatMoney, pct } from '../../lib/money';
-import { lastMonths, monthShort, formatMonth } from '../../lib/dates';
+import { addMonths, lastMonths, monthShort, formatMonth, startOfMonth, today } from '../../lib/dates';
 import type { Engine } from '../../db/engine';
 import type { ScopeFilter } from '../../db/types';
 import clsx from 'clsx';
@@ -116,6 +117,7 @@ export default function Reports() {
   // Settings → Data can open this page straight on "All data".
   const [kind, setKind] = useState<Kind>(() => { const k = sessionStorage.getItem('monto:report-kind') as Kind | null; sessionStorage.removeItem('monto:report-kind'); return k ?? 'expense'; });
   const [busy, setBusy] = useState<string | null>(null);
+  const [recap, setRecap] = useState(false);
   const cur = profile.primaryCurrency;
   const rev = useApp((s) => s.revision);
   const report = useMemo(() => buildReport(e, kind, sf, range, label, cur), [e, kind, sf, range, label, rev]);
@@ -137,12 +139,15 @@ export default function Reports() {
   const main = report.tables[0];
   return (
     <div>
-      <PageHeader title={tr('Informes')} subtitle={`${label}${sf.scope === 'family' ? ` · ${tr('Hogar')}` : ''}`} actions={canExport && <>
+      <PageHeader title={tr('Informes')} subtitle={`${label}${sf.scope === 'family' ? ` · ${tr('Hogar')}` : ''}`} actions={<>
+        <Button variant="secondary" icon="sparkle" onClick={() => setRecap(true)}>{tr('Tu mes en resumen')}</Button>
+        {canExport && <>
         <Button variant="secondary" icon="download" loading={busy === 'csv'} onClick={() => run('csv')}>{tr('CSV')}</Button>
         <Button variant="secondary" icon="download" loading={busy === 'xlsx'} onClick={() => run('xlsx')}>{tr('Excel')}</Button>
         <Button variant="secondary" icon="download" loading={busy === 'md'} onClick={() => run('md')}>{tr('Notion')}</Button>
         <Button icon="download" loading={busy === 'pdf'} onClick={() => run('pdf')}>{tr('PDF')}</Button>
-      </>} />
+      </>}</>} />
+      <MonthRecapModal open={recap} onClose={() => setRecap(false)} month={startOfMonth(addMonths(today(), -1))} sf={sf} currency={cur} />
       <div className="flex flex-wrap gap-2 mb-5">
         {KINDS.map((k) => <button key={k.k} onClick={() => setKind(k.k)} className={clsx('group inline-flex items-center gap-2 h-9 px-4 rounded-full text-[12.5px] font-medium border transition', kind === k.k ? 'bg-brand text-brand-ink border-brand' : 'bg-surface border-line text-ink-2 hover:bg-surface-2')}><Icon name={k.icon} size={15} active={kind === k.k} />{k.label}</button>)}
       </div>

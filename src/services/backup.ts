@@ -3,7 +3,6 @@ import { Engine } from '../db/engine';
 import { openFile, saveFile, stamp } from './files';
 import { getPrefs, setPrefs } from '../db/repo/core';
 import { createTransaction } from '../db/repo/finance';
-import { parseMoney } from '../lib/money';
 import { parseAmount } from '../domain/bankMail';
 import type { Actor } from '../db/types';
 import { tr } from '../lib/i18n';
@@ -88,17 +87,32 @@ export interface CsvImportResult { imported: number; skipped: number; errors: st
  * columns (categoria and tipo optional). Negative amounts, débitos or tipo=gasto are expenses. Without a
  * category column the automatic rules choose one; rows already in the account are skipped.
  */
+/** An amount as banks write it: "-45.80", "45.80-", "(45.80)" or "45.80 DB" are money out; both decimal styles. */
+export function signedAmount(raw: string): number {
+  const t = raw.trim();
+  const negative = /^-|-$|^\(.*\)$|\b(DB|D)$/i.test(t);
+  const v = parseAmount(t.replace(/[^\d.,]/g, ''));
+  return negative ? -v : v;
+}
+
 export function importTransactionsCSV(e: Engine, actor: Actor, text: string, accountId: string): CsvImportResult {
   const acc = e.get<{ currency: 'PAB' | 'USD' }>('SELECT currency FROM accounts WHERE id = ?', [accountId]);
   if (!acc) throw new Error(tr('Selecciona una cuenta válida'));
-  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim());
-  if (!lines.length) return { imported: 0, skipped: 0, errors: [tr('El archivo está vacío')] };
-  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : ',';
-  const head = parseCSVLine(lines[0], sep).map((h) => h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''));
-  const idx = (names: string[]) => head.findIndex((h) => names.some((n) => h.includes(n)));
-  const iDate = idx(['fecha', 'date']), iDesc = idx(['desc', 'concepto', 'detalle', 'transaccion', 'comercio']), iAmt = idx(['importe', 'monto', 'amount', 'valor']), iCat = idx(['categ']), iType = idx(['tipo', 'type']);
+  const all = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim());
+  if (!all.length) return { imported: 0, skipped: 0, errors: [tr('El archivo está vacío')] };
+  const norm = (h: string) => h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  // Statements from Panama banks start with a few rows about the account; the table begins at the first row that names a date column.
+  const start = Math.max(0, all.slice(0, 15).findIndex((l) => /fecha|date/.test(norm(l)) && /desc|concepto|detalle|transac|monto|importe|debito|credito/.test(norm(l))));
+  const lines = all.slice(start);
+  const sep = (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ';' : lines[0].includes('\t') ? '\t' : ',';
+  const head = parseCSVLine(lines[0], sep).map(norm);
+  // Names in priority order; a column already used for something else is not taken again.
+  const used = new Set<number>();
+  const idx = (names: string[]) => { for (const n of names) { const k = head.findIndex((h, j) => !used.has(j) && h.includes(n)); if (k >= 0) { used.add(k); return k; } } return -1; };
+  const iDate = idx(['fecha', 'date']), iDesc = idx(['descripcion', 'desc', 'concepto', 'detalle', 'comercio', 'narrativa', 'movimiento', 'transaccion', 'beneficiario']);
+  const iAmt = idx(['importe', 'monto', 'amount', 'valor']), iCat = idx(['categ']), iType = idx(['tipo', 'type']);
   // Bank statements often split the amount into "Débito" (money out) and "Crédito" (money in) columns.
-  const iDeb = idx(['debito', 'cargo', 'retiro']), iCred = idx(['credito', 'abono', 'deposito']);
+  const iDeb = idx(['debito', 'cargo', 'retiro', 'salida', 'egreso']), iCred = idx(['credito', 'abono', 'deposito', 'entrada']);
   const split = iAmt < 0 && (iDeb >= 0 || iCred >= 0);
   if (iDate < 0 || iDesc < 0 || (iAmt < 0 && !split)) throw new Error(tr('El CSV debe tener columnas fecha, descripción e importe (o débito y crédito).'));
   const exists = (date: string, amount: number, description: string) => !!e.get('SELECT 1 FROM transactions WHERE account_id = ? AND date = ? AND amount = ? AND description = ?', [accountId, date, amount, description]);
@@ -111,12 +125,11 @@ export function importTransactionsCSV(e: Engine, actor: Actor, text: string, acc
         let date = (c[iDate] ?? '').trim();
         const dm = date.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2}|\d{4})$/);
         if (dm) date = `${dm[3].length === 2 ? `20${dm[3]}` : dm[3]}-${dm[2].padStart(2, '0')}-${dm[1].padStart(2, '0')}`;
-        const num = (i: number) => (i >= 0 && c[i]?.trim() ? parseAmount(c[i].replace(/[^\d.,-]/g, '')) : 0);
-        // Both decimal styles: 1,234.56 and 1.234,56.
-        let amount = split ? num(iCred) - num(iDeb) : (Number.isNaN(parseMoney(c[iAmt])) ? parseAmount(c[iAmt].replace(/[^\d.,-]/g, '')) : parseMoney(c[iAmt]));
+        const num = (i: number) => (i >= 0 && c[i]?.trim() ? Math.abs(signedAmount(c[i])) : 0);
+        let amount = split ? num(iCred) - num(iDeb) : signedAmount(c[iAmt] ?? '');
         if (Number.isNaN(amount) || amount === 0) throw new Error(tr('importe no válido'));
-        const t = iType >= 0 ? c[iType].toLowerCase() : '';
-        const isExpense = t.startsWith('gas') || t.startsWith('exp') || (!t && amount < 0);
+        const t = iType >= 0 ? norm(c[iType] ?? '') : '';
+        const isExpense = /^(gas|exp|deb|db|cargo|retiro|compra|pago)/.test(t) || (!/^(ing|inc|cr|abono|deposito)/.test(t) && amount < 0);
         amount = Math.abs(amount);
         const kind = isExpense ? 'expense' : 'income';
         const cat = iCat >= 0 ? cats.find((x) => x.kind === kind && x.name.toLowerCase() === c[iCat]?.toLowerCase()) : undefined;

@@ -17,7 +17,7 @@ const HIGHLIGHTS: Array<[string, string, string]> = [
 /** Ideas for upcoming releases. Not promises: they can change or move. */
 const ROADMAP: Array<{ version: string; name: string; kind: string; items: string[] }> = [
   {
-    version: '0.9', name: 'Calm Design', kind: tr('Diseño'),
+    version: '0.9', name: 'Calm Design', kind: tr('Ya disponible desde la 0.8 RC 3'),
     items: [
       tr('Mica real de Windows 11 y un modo compacto para pantallas pequeñas.'),
       tr('Resumen personalizable: elige y ordena tus tarjetas.'),

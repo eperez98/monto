@@ -23,7 +23,8 @@
         "maximized": true,
         "resizable": true,
         "backgroundColor": "#0F241B",
-        "dragDropEnabled": false
+        "dragDropEnabled": false,
+        "transparent": true
       }
     ],
     "security": {

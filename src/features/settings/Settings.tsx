@@ -184,6 +184,11 @@ function AppearanceTab() {
         </div>
       </div>
       <div>
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Tamaño')}</p>
+        <Toggle checked={prefs.density === 'compact'} onChange={(v) => mutate((e) => setPrefs(e, { density: v ? 'compact' : 'comfortable' }))} label={tr('Modo compacto')}
+          description={tr('Todo un poco más pequeño para que quepa más en pantallas de laptop o ventanas reducidas.')} />
+      </div>
+      <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Estilo del resumen')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('Elige cuánta información ves al abrir Monto.')}</p>
         <StylePicker value={prefs.dashboardStyle ?? 'calm'} onChange={(v) => mutate((e) => setPrefs(e, { dashboardStyle: v }))} />

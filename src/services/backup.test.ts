@@ -46,4 +46,16 @@ describe('bank statement CSV import', () => {
     expect(txs.find((t) => t.description.includes('PLANILLA'))?.type).toBe('income');
     expect(importTransactionsCSV(e, actor, csv, acc.id)).toMatchObject({ imported: 0, skipped: 2 });
   });
+  it('finds the table after the account rows and reads signed amounts and DB/CR types', async () => {
+    const { freshEngine } = await import('../test/helpers');
+    const { createAccount, listTransactions } = await import('../db/repo/finance');
+    const { importTransactionsCSV, signedAmount } = await import('./backup');
+    expect([signedAmount('-45.80'), signedAmount('45.80-'), signedAmount('(45.80)'), signedAmount('45.80 DB'), signedAmount('1.250,00')]).toEqual([-4580, -4580, -4580, -4580, 125000]);
+    const { e, actor } = await freshEngine();
+    const acc = createAccount(e, actor, { name: 'Banco', type: 'checking', currency: 'PAB', initialBalance: 0 });
+    const csv = 'Cuenta,0400000000\nPeríodo,Noviembre 2026\nFecha de transacción,Referencia,Descripción,Tipo,Monto\n14/11/2026,991,CAFE EJEMPLO,DB,4.50\n15/11/2026,992,PLANILLA,CR,1500.00\n16/11/2026,993,FARMACIA EJEMPLO,,(8.25)\n';
+    expect(importTransactionsCSV(e, actor, csv, acc.id)).toMatchObject({ imported: 3, skipped: 0 });
+    const t = listTransactions(e, {});
+    expect(t.map((x) => [x.description, x.type, x.amount]).sort()).toEqual([['CAFE EJEMPLO', 'expense', 450], ['FARMACIA EJEMPLO', 'expense', 825], ['PLANILLA', 'income', 150000]]);
+  });
 });

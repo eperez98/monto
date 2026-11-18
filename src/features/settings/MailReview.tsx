@@ -39,7 +39,7 @@ export function MailReview({ result, accountId, onDone }: { result: MailSyncResu
               {c.duplicate
                 ? <span className="block text-[13px] font-medium truncate">{c.name}</span>
                 : <Input value={names[c.key] ?? ''} onChange={(ev) => setNames({ ...names, [c.key]: ev.target.value })} aria-label={tr('Nombre del movimiento')} className="!h-9" />}
-              <span className="block text-[11.5px] text-muted truncate mt-0.5">{formatDate(c.tx.date)} · {c.subject}</span>
+              <span className="block text-[11.5px] text-muted truncate mt-0.5">{formatDate(c.tx.date)}{c.tx.bank && ` · ${c.tx.bank}`} · {c.subject}</span>
             </span>
             {c.duplicate && <Badge tone="amber">{tr('Duplicado: ya está en tus movimientos')}</Badge>}
             <Money cents={c.tx.type === 'income' ? c.tx.amount : -c.tx.amount} currency={c.tx.currency} sign className={clsx('w-28 text-right text-[13px] font-semibold', c.tx.type === 'income' ? 'text-emerald' : 'text-ink')} />

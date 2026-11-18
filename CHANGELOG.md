@@ -12,7 +12,17 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [0.8.0-rc.3] - 2026-11-18 · Smart Money (Release Candidate 3)
 
-Tercera versión candidata de la 0.8: lectura de comprobantes más completa, más seguridad para tus datos y la vista de celular revisada pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
+Tercera versión candidata de la 0.8. Adelanta todo lo planeado para la 0.9 «Calm Design»: Mica de Windows 11, modo compacto, un resumen que tú ordenas y «Tu mes en resumen». También lee comprobantes en PDF, reconoce más bancos de Panamá y revisa la vista de celular pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
+
+### Añadido (adelanto de la 0.9 «Calm Design»)
+- **Mica de Windows 11**: con el tema «Windows 11», la app de escritorio usa el material Mica del sistema detrás de la página.
+- **Modo compacto** (Configuración → Apariencia → Tamaño): todo un 10 % más pequeño para laptops o ventanas reducidas.
+- **Resumen personalizable**: en «Capas tranquilas», «Personalizar resumen» deja mostrar u ocultar cada tarjeta y cambiar su orden. Nueva tarjeta de objetivos de ahorro.
+- **Tu mes en resumen**: ahorro del mes, ingresos frente a gastos, cambio frente al mes anterior, las 3 categorías con más gasto y el gasto más grande. Aparece en el Resumen los primeros 10 días de cada mes y siempre en Informes, con flechas para ver otros meses.
+- **Más bancos de Panamá**:
+  - Los correos de 16 bancos se reconocen por su remitente y el nombre del banco aparece al revisar: Banco General, Banistmo, BAC, Global Bank, Caja de Ahorros, Banco Nacional, Banesco, Multibank y otros.
+  - Se leen montos sin moneda («Monto: 45.80») y más formas de nombrar al comercio o al beneficiario.
+  - Los estados de cuenta en CSV se leen aunque traigan filas de la cuenta antes de la tabla, columnas «Tipo» con DB/CR o montos negativos entre paréntesis.
 
 ### Añadido
 - **Comprobantes en PDF**: además de fotos, Monto lee la primera página de un PDF, también con el reconocimiento de texto de Windows y sin conexión.

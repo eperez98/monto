@@ -226,3 +226,6 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.55; cursor: p
 /* A field the receipt photo did not fill in: amber, so the user knows to type it. */
 .field-warn :is(input, select) { border-color: var(--color-amber); background-color: color-mix(in srgb, var(--color-amber) 8%, transparent); }
 .field-warn > span:last-child { color: var(--color-amber); }
+
+/* Windows 11 Mica (desktop app): the page lets the system material through, tinted with the theme so text stays readable. */
+html.mica, html.mica body { background: color-mix(in srgb, var(--bg) 62%, transparent) !important; }

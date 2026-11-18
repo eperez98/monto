@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
-import { useActor, useCan, useProfile, useQuery, useScope } from '../../hooks/useDb';
+import { useActor, useCan, useMutate, useProfile, useQuery, useScope } from '../../hooks/useDb';
 import { useRange } from '../../hooks/useRange';
 import { alerts, balances, balancesByOwner, expensesByCategory, monthlySeries, totals, upcoming } from '../../db/repo/analytics';
-import { getPrefs, listMembers } from '../../db/repo/core';
+import { getPrefs, listMembers, setPrefs } from '../../db/repo/core';
 import { listAccounts, listTransactions } from '../../db/repo/finance';
 import { listGoals } from '../../db/repo/planning';
 import { Card, CardHeader, Money, EmptyState, Button, Segmented, useMotionOK } from '../../components/ui';
@@ -16,6 +16,10 @@ import { daysInMonth, diffDays, formatDate, today } from '../../lib/dates';
 import { buildStories, dailyAllowance, type StoryRoute } from '../../domain/overview';
 import { savingsRate } from '../../domain/insights';
 import { lang, tr } from '../../lib/i18n';
+import { resolveCards, type DashCard } from '../../domain/dashboardCards';
+import { showRecapCard } from '../../domain/monthRecap';
+import { MonthRecapCard } from './MonthRecap';
+import { CardsCustomizer } from './CardsCustomizer';
 
 export type DashboardStyle = 'today' | 'stories' | 'calm';
 
@@ -108,14 +112,35 @@ function PendingCard({ d, delay = 0 }: { d: Data; delay?: number }) {
 }
 
 // ------------------------------------------------------------------ Capas tranquilas
+function GoalsCard({ d, delay = 0 }: { d: Data; delay?: number }) {
+  const go = useApp((s) => s.go);
+  return (
+    <Card delay={delay} hover={false}>
+      <CardHeader title={tr('Objetivos de ahorro')} subtitle={tr('Lo que llevas de cada meta')} action={<Button variant="ghost" size="sm" onClick={() => go('goals')}>{tr('Ver todos')}</Button>} />
+      <ul className="px-5 pb-5 space-y-3">
+        {d.goals.slice(0, 3).map((g) => (
+          <li key={g.id}>
+            <div className="flex justify-between text-[13px] mb-1"><span className="font-medium truncate">{g.name}</span><span className="text-muted"><Money cents={g.saved} currency={g.currency} />{' / '}<Money cents={g.target} currency={g.currency} /></span></div>
+            <div className="h-2 rounded-full bg-surface-3 overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.min(100, pct(g.saved, g.target))}%`, background: g.color }} /></div>
+          </li>
+        ))}
+        {!d.goals.length && <li className="text-[12.5px] text-muted">{tr('No tienes objetivos activos.')}{' '}<button onClick={() => go('goals')} className="text-brand font-medium hover:underline">{tr('Crear uno')}</button></li>}
+      </ul>
+    </Card>
+  );
+}
+
 function CalmView({ d }: { d: Data }) {
   const go = useApp((s) => s.go);
+  const mutate = useMutate();
+  const [customize, setCustomize] = useState(false);
+  const cards = resolveCards(useQuery((e) => getPrefs(e).dashboardCards));
   const left = d.t.income - d.t.expense;
   // Without income recorded this period the balance is just minus the spending; say so instead of alarming in red.
   const noIncome = d.t.income === 0;
   const period = lang === 'es' ? d.label.toLowerCase() : d.label;
-  return (
-    <div className="space-y-5">
+  const render: Record<DashCard, (delay: number) => React.ReactNode> = {
+    balances: () => (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" data-tour="hero">
         {([[tr('Saldo disponible'), d.available, false], [tr('Gastado en {period}', { period }), d.t.expense, false], [tr('Balance de {period} (ingresos − gastos)', { period }), left, true]] as const).map(([l, v, sign], i) => (
           <Card key={i} delay={i * 0.05} hover={false} className={clsx('p-5', i === 0 && 'hero-surface text-white border-transparent')}>
@@ -129,11 +154,31 @@ function CalmView({ d }: { d: Data }) {
           </Card>
         ))}
       </div>
-      <QuickActions />
-      <div className="grid grid-cols-12 gap-5">
-        <div className="col-span-12 xl:col-span-8"><ChartCard d={d} delay={0.1} /></div>
-        <div className="col-span-12 xl:col-span-4"><PendingCard d={d} delay={0.15} /></div>
+    ),
+    recap: (delay) => (showRecapCard(Number(today().slice(8))) ? <MonthRecapCard sf={d.sf} currency={d.cur} delay={delay} /> : null),
+    quick: () => <QuickActions />,
+    chart: (delay) => <ChartCard d={d} delay={delay} />,
+    pending: (delay) => <PendingCard d={d} delay={delay} />,
+    goals: (delay) => <GoalsCard d={d} delay={delay} />,
+  };
+  const shown = cards.filter((c) => c.on);
+  const rows: React.ReactNode[] = [];
+  for (let i = 0; i < shown.length; i++) {
+    const [a, b] = [shown[i].key, shown[i + 1]?.key];
+    // The chart and the pending payments sit side by side on wide screens when they are next to each other.
+    if ((a === 'chart' && b === 'pending') || (a === 'pending' && b === 'chart')) {
+      rows.push(<div key={a + b} className="grid grid-cols-12 gap-5">{[a, b].map((k, j) => <div key={k} className={clsx('col-span-12', k === 'chart' ? 'xl:col-span-8' : 'xl:col-span-4')}>{render[k](0.1 + j * 0.05)}</div>)}</div>);
+      i++;
+    } else rows.push(<div key={a}>{render[a](0.1)}</div>);
+  }
+  return (
+    <div className="space-y-5">
+      {rows}
+      {!shown.length && <Card hover={false} className="p-6 text-[13px] text-muted">{tr('Ocultaste todas las tarjetas del resumen.')}</Card>}
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" icon="edit" onClick={() => setCustomize(true)}>{tr('Personalizar resumen')}</Button>
       </div>
+      <CardsCustomizer open={customize} onClose={() => setCustomize(false)} cards={cards} onChange={(c) => mutate((e) => setPrefs(e, { dashboardCards: c }))} />
     </div>
   );
 }

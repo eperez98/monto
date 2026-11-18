@@ -76,6 +76,14 @@ export default function App() {
     document.documentElement.classList.toggle('theme-classic', prefs.palette === 'classic');
     document.documentElement.classList.toggle('theme-win11', prefs.palette === 'win11');
     document.documentElement.classList.toggle('reduce-motion', reduce);
+    // Compact mode: the whole page 10 % smaller, like Ctrl + minus, so layouts that fill the window still fit.
+    const compact = 'density' in prefs && prefs.density === 'compact';
+    if (isTauri() && !IS_PREVIEW) void import('@tauri-apps/api/webview').then(({ getCurrentWebview }) => getCurrentWebview().setZoom(compact ? 0.9 : 1)).catch(() => undefined);
+    else document.documentElement.style.zoom = compact ? '0.9' : '';
+    // Windows 11 theme in the desktop app: the real Mica material of the system shows through the page background.
+    const mica = isTauri() && !IS_PREVIEW && prefs.palette === 'win11';
+    document.documentElement.classList.toggle('mica', mica);
+    void import('@tauri-apps/api/window').then(({ getCurrentWindow, Effect }) => (mica ? getCurrentWindow().setEffects({ effects: [Effect.Mica] }) : getCurrentWindow().clearEffects())).catch(() => document.documentElement.classList.remove('mica'));
     useApp.getState().setVisual({ dark, reducedMotion: reduce });
   }, []);
 

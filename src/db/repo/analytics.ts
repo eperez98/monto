@@ -1,7 +1,7 @@
 import { Engine } from '../engine';
 import { listAccounts, isLiability, isLiquid } from './finance';
 import { listBudgets, listDebts, listGoals, listIncomeSources, incomeSummary, listRecurring, recurringOccurrences, listReminders } from './planning';
-import { lastMonths, addDays, today, type ISODate, type Range, monthKey, formatMonth, monthShort } from '../../lib/dates';
+import { lastMonths, addDays, addMonths, startOfMonth, endOfMonth, today, type ISODate, type Range, monthKey, formatMonth, monthShort } from '../../lib/dates';
 import { zeroTotals, type Currency, type CurrencyTotals } from '../../lib/money';
 import { findDuplicates, highSpendCategories, projectSavings, savingsRate, type TxLite } from '../../domain/insights';
 import type { ScopeFilter, Transaction } from '../types';
@@ -162,3 +162,14 @@ export function savingsProjection(e: Engine, sf: ScopeFilter, ref: ISODate = tod
 export function goalsOverview(e: Engine, sf: ScopeFilter) { return listGoals(e, sf); }
 
 export type { Transaction };
+
+/** Everything "Tu mes en resumen" needs for one month (first day of the month as `month`). */
+export function monthRecapData(e: Engine, month: ISODate, sf?: ScopeFilter) {
+  const r = { from: startOfMonth(month), to: endOfMonth(month) };
+  const p = { from: startOfMonth(addMonths(month, -1)), to: endOfMonth(addMonths(month, -1)) };
+  const s = scopeSql(sf);
+  const cur = totals(e, r, sf), prev = totals(e, p, sf);
+  const biggest = e.get<{ description: string; amount: number; date: string }>(`SELECT description, amount, date FROM transactions WHERE type = 'expense' AND date BETWEEN ? AND ? AND ${s.sql} ORDER BY amount DESC LIMIT 1`, [r.from, r.to, ...s.p]) ?? null;
+  const count = e.get<{ n: number }>(`SELECT COUNT(*) AS n FROM transactions WHERE date BETWEEN ? AND ? AND ${s.sql}`, [r.from, r.to, ...s.p])?.n ?? 0;
+  return { income: cur.income, expense: cur.expense, prevIncome: prev.income, prevExpense: prev.expense, cats: expensesByCategory(e, r, sf), biggest, count };
+}

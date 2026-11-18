@@ -34,3 +34,16 @@ describe('bank emails', () => {
     expect(htmlToText('<style>x{}</style>Hola &amp; adiós')).toBe('Hola & adiós');
   });
 });
+
+describe('more Panama banks', () => {
+  const at = (from: string, subject: string, text: string) => parseBankEmail({ from, subject, text, date: '2026-11-14' });
+  it('names the bank from the sender and reads amounts written without a currency', () => {
+    expect(at('alertas@bgeneral.com', 'Notificación de consumo', 'Monto: 45.80\nComercio: SUPER 99 ALBROOK\nTarjeta terminada en 1234')).toMatchObject({ amount: 4580, currency: 'PAB', merchant: 'SUPER 99 ALBROOK', bank: 'Banco General', type: 'expense' });
+    expect(at('notificaciones@banistmo.com', 'Transferencia recibida', 'Te enviaron USD 120.00. Beneficiario: CUENTA PROPIA')).toMatchObject({ amount: 12000, currency: 'USD', type: 'income', bank: 'Banistmo' });
+    expect(at('alertas@baccredomatic.com', 'Compra aprobada', 'Importe de la transacción: 1.250,00\nEstablecimiento: TIENDA EJEMPLO')).toMatchObject({ amount: 125000, merchant: 'TIENDA EJEMPLO', bank: 'BAC Credomatic' });
+    expect(at('avisos@desconocido.com', 'Pago', 'Pagaste $9.99 en STREAMING EJEMPLO.')?.bank).toBeUndefined();
+  });
+  it('prefers the merchant label over a generic description', () => {
+    expect(at('a@globalbank.com.pa', 'Consumo', 'Descripción: Compra con tarjeta\nComercio: FARMACIA EJEMPLO\nMonto: B/. 8.25')?.merchant).toBe('FARMACIA EJEMPLO');
+  });
+});

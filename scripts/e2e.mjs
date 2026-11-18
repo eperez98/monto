@@ -291,6 +291,39 @@ try {
   await page.waitForTimeout(1600);
   await shot('17-dashboard-dark');
 
+  step('Customizable summary (0.9 Calm Design)');
+  await click('Personalizar resumen');
+  const cardsDlg = page.getByRole('dialog', { name: 'Personalizar el resumen' });
+  await cardsDlg.getByRole('switch', { name: 'Accesos rápidos' }).click();
+  await cardsDlg.getByRole('button', { name: 'Subir Gráfico de ingresos y gastos' }).click();
+  await page.waitForTimeout(500);
+  await shot('17d-customize-summary');
+  await cardsDlg.getByRole('button', { name: 'Listo' }).click();
+  await cardsDlg.waitFor({ state: 'detached' });
+  assert(!(await page.locator('[data-tour="quick"]').count()), 'resumen personalizable: ocultar los accesos rápidos');
+  assert(await page.getByText('Objetivos de ahorro').first().isVisible(), 'resumen personalizable: tarjeta de objetivos');
+  await click('Personalizar resumen');
+  await cardsDlg.getByRole('switch', { name: 'Accesos rápidos' }).click();
+  await cardsDlg.getByRole('button', { name: 'Listo' }).click();
+  await page.locator('[data-tour="quick"]').waitFor();
+  assert(true, 'resumen personalizable: volver a mostrar una tarjeta');
+
+  step('Your month in review + compact mode');
+  await click('Informes', { exact: true });
+  await click('Tu mes en resumen');
+  await page.getByRole('dialog', { name: 'Tu mes en resumen' }).waitFor();
+  await page.waitForTimeout(500);
+  await shot('17e-month-recap');
+  await page.getByRole('dialog', { name: 'Tu mes en resumen' }).getByRole('button', { name: 'Listo' }).click();
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Apariencia');
+  await page.getByRole('switch', { name: 'Modo compacto' }).click();
+  await page.waitForFunction(() => document.documentElement.style.zoom === '0.9');
+  await page.getByRole('switch', { name: 'Modo compacto' }).click();
+  await page.waitForFunction(() => document.documentElement.style.zoom === '');
+  assert(true, 'modo compacto se activa y desactiva');
+  await click('Resumen', { exact: true });
+
   step('Persistence after reload');
   await page.waitForTimeout(800);
   await page.reload();
@@ -349,7 +382,8 @@ try {
   await page.getByPlaceholder('Ej. Negocio').fill('Negocio');
   await dclick('Crear y abrir');
   await page.getByText('Bienvenido a Monto').waitFor({ timeout: 15000 });
-  assert(await page.getByRole('combobox').filter({ hasText: 'Negocio' }).isVisible(), 'selector de perfil visible en la configuración inicial');
+  await page.getByRole('combobox').filter({ hasText: 'Negocio' }).waitFor();
+  assert(true, 'selector de perfil visible en la configuración inicial');
   await click('Comenzar');
   await page.getByPlaceholder('Ej. Carlos').fill('Lucía');
   await click('Continuar');
