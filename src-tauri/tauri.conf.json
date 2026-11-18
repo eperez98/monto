@@ -28,7 +28,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self'",
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self'; upgrade-insecure-requests",
       "freezePrototype": false
     }
   },
@@ -50,7 +50,7 @@
         "installerIcon": "icons/icon.ico",
         "startMenuFolder": "Monto"
       },
-      "wix": { "language": ["es-ES", "en-US"], "version": "0.8.0.3" }
+      "wix": { "language": ["es-ES", "en-US"], "version": "1.0.1" }
     }
   }
 }

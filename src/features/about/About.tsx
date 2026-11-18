@@ -26,7 +26,7 @@ const ROADMAP: Array<{ version: string; name: string; kind: string; items: strin
     ],
   },
   {
-    version: '1.0', name: 'Estable', kind: tr('Funciones'),
+    version: '1.1', name: 'Siguiente', kind: tr('Funciones'),
     items: [
       tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
       tr('Sincronización cifrada entre tus equipos y una app de celular acompañante.'),

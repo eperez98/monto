@@ -15,7 +15,7 @@ import { formatMoney, type Currency } from '../../lib/money';
 import type { Actor, Transaction, Budget, Contribution, Debt, Goal, IncomeSource, Recurring, Reminder, Scope, ScopeFilter, Settlement } from '../types';
 import { tr } from '../../lib/i18n';
 
-const currency = z.enum(['PAB', 'USD']);
+const currency = z.enum(['PAB', 'USD', 'COP']);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, tr('Fecha no válida'));
 const cents = z.number().int(tr('Importe no válido'));
 

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Engine, nowISO, uid } from '../engine';
 import { camel } from '../map';
 import { assertCan, type Role } from '../../domain/permissions';
-import { sha256Hex } from '../crypto';
+import { hashSecret, sha256Hex, verifySecret } from '../crypto';
 import type { Activity, Actor, Member, Preferences, Profile, Scope } from '../types';
 import { tr } from '../../lib/i18n';
 
@@ -88,12 +88,16 @@ export function removeMember(e: Engine, actor: Actor, id: string) {
 export async function setMemberPin(e: Engine, actor: Actor, id: string, pin: string | null) {
   if (actor.id !== id) assertCan(actor.role, 'member.manage');
   if (pin !== null && !/^\d{4,6}$/.test(pin)) throw new Error(tr('El PIN debe tener de 4 a 6 dígitos.'));
-  e.run('UPDATE members SET pin_hash = ? WHERE id = ?', [pin ? await sha256Hex(`monto:${id}:${pin}`) : null, id]);
+  e.run('UPDATE members SET pin_hash = ? WHERE id = ?', [pin ? await hashSecret(pin) : null, id]);
 }
 export async function verifyMemberPin(e: Engine, id: string, pin: string): Promise<boolean> {
   const r = e.get<{ pin_hash: string | null }>('SELECT pin_hash FROM members WHERE id = ?', [id]);
   if (!r?.pin_hash) return true;
-  return r.pin_hash === (await sha256Hex(`monto:${id}:${pin}`));
+  if (r.pin_hash.startsWith('pbkdf2$')) return verifySecret(pin, r.pin_hash);
+  // PIN saved before 1.0.1 (fast SHA-256): accept it once and store it with the slow, salted hash.
+  if (r.pin_hash !== (await sha256Hex(`monto:${id}:${pin}`))) return false;
+  e.run('UPDATE members SET pin_hash = ? WHERE id = ?', [await hashSecret(pin), id]);
+  return true;
 }
 
 // ---------------------------------------------------------------- sessions

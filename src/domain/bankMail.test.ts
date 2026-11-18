@@ -47,3 +47,15 @@ describe('more Panama banks', () => {
     expect(at('a@globalbank.com.pa', 'Consumo', 'Descripción: Compra con tarjeta\nComercio: FARMACIA EJEMPLO\nMonto: B/. 8.25')?.merchant).toBe('FARMACIA EJEMPLO');
   });
 });
+
+describe('Colombia and US online banks', () => {
+  const at = (from: string, subject: string, text: string, sign: 'COP' | 'USD' = 'USD') => parseBankEmail({ from, subject, text, date: '2026-11-14' }, sign);
+  it('reads Colombian alerts in pesos with dots for thousands', () => {
+    expect(at('alertasynotificaciones@notificacionesbancolombia.com', 'Compra', 'Bancolombia le informa compra por $45.000 en EXITO COLINA 14/11/2026.', 'COP')).toMatchObject({ amount: 4500000, currency: 'COP', merchant: 'EXITO COLINA 14/11/2026', bank: 'Bancolombia', type: 'expense' });
+    expect(at('notificaciones@nequi.com.co', 'Te enviaron plata', 'Te enviaron $1.250.000 a tu Nequi.', 'COP')).toMatchObject({ amount: 125000000, currency: 'COP', type: 'income', bank: 'Nequi' });
+  });
+  it('reads US online bank alerts in English', () => {
+    expect(at('alerts@chime.com', 'Purchase', 'You spent $12.34 at STARBUCKS on your Chime card.')).toMatchObject({ amount: 1234, currency: 'USD', merchant: 'STARBUCKS', bank: 'Chime', type: 'expense' });
+    expect(at('no-reply@sofi.org', 'Direct deposit', 'Direct deposit of $1,500.00 received from ACME PAYROLL.')).toMatchObject({ amount: 150000, type: 'income', bank: 'SoFi' });
+  });
+});

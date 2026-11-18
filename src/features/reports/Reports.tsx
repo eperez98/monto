@@ -13,7 +13,7 @@ import { MonthRecapModal } from '../dashboard/MonthRecap';
 import { IncomeExpenseBars, NetArea, CategoryDonut } from '../../components/charts';
 import { Icon } from '../../icons';
 import { exportCSV, exportNotion, exportPDF, exportXLSX, type Report } from '../../services/export';
-import { formatMoney, pct } from '../../lib/money';
+import { formatMoney, pct, type Currency } from '../../lib/money';
 import { addMonths, lastMonths, monthShort, formatMonth, startOfMonth, today } from '../../lib/dates';
 import type { Engine } from '../../db/engine';
 import type { ScopeFilter } from '../../db/types';
@@ -28,7 +28,7 @@ const KINDS: Array<{ k: Kind; label: string; icon: string }> = [
   { k: 'monthly', label: tr('Evolución mensual'), icon: 'reports' }, { k: 'annual', label: tr('Comparación anual'), icon: 'calendar' },
 ];
 
-function buildReport(e: Engine, kind: Kind, sf: ScopeFilter, range: { from: string; to: string }, label: string, cur: 'PAB' | 'USD'): Report {
+function buildReport(e: Engine, kind: Kind, sf: ScopeFilter, range: { from: string; to: string }, label: string, cur: Currency): Report {
   const cats = listCategories(e, undefined, true);
   const accs = listAccounts(e, { includeArchived: true });
   const cname = (id: string | null) => { const c = cats.find((x) => x.id === id); const p = c?.parentId ? cats.find((x) => x.id === c.parentId) : null; return c ? (p ? `${p.name} › ${c.name}` : c.name) : tr('Sin categoría'); };

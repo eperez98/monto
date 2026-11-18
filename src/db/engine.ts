@@ -4,7 +4,7 @@
  */
 import initSqlJs, { type Database, type SqlJsStatic, type SqlValue } from 'sql.js';
 import { MIGRATIONS } from './schema';
-import { decrypt, encrypt, isEncrypted, newKey, type KeyMaterial } from './crypto';
+import { decrypt, decryptDevice, deviceKey, encrypt, encryptDevice, isDeviceEncrypted, isEncrypted, newKey, type KeyMaterial } from './crypto';
 import type { StorageAdapter } from './adapters';
 import { tr } from '../lib/i18n';
 
@@ -27,6 +27,8 @@ export class Engine {
   db!: Database;
   revision = 0;
   private key: KeyMaterial | null = null;
+  /** This computer's key (Windows Credential Manager); used when there is no password. */
+  private deviceKey: CryptoKey | null = null;
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private saving: Promise<void> = Promise.resolve();
   private listeners = new Set<() => void>();
@@ -40,17 +42,21 @@ export class Engine {
     const lib = await loadSqlJs(opts.wasmUrl);
     const e = new Engine(adapter, lib);
     const bytes = await adapter.load();
+    e.deviceKey = await deviceKey();
     if (bytes && isEncrypted(bytes)) {
       if (!opts.password) throw new LockedError();
       const { plain, km } = await decrypt(bytes, opts.password);
       e.key = km;
       e.db = new lib.Database(plain);
+    } else if (bytes && isDeviceEncrypted(bytes)) {
+      e.db = new lib.Database(await decryptDevice(bytes, e.deviceKey));
     } else {
       e.db = bytes ? new lib.Database(bytes) : new lib.Database();
     }
     e.db.run('PRAGMA foreign_keys = ON;');
     e.migrate();
-    if (!bytes) await e.flush();
+    // New file, or one still saved in the clear (or with the old 310k format): write it protected right away.
+    if (!bytes || (e.deviceKey && !isDeviceEncrypted(bytes) && !isEncrypted(bytes)) || (e.key && bytes && bytes[8] !== 0x32)) await e.flush();
     return e;
   }
 
@@ -59,14 +65,19 @@ export class Engine {
     return !!b && isEncrypted(b);
   }
 
+  /** Protected by the user's password (lock screen, auto-lock). */
   get encrypted() { return this.key !== null; }
+  /** Protected at rest at all: by password or by this computer's key. */
+  get protectedAtRest() { return this.key !== null || this.deviceKey !== null; }
 
   migrate() {
     const v = Number(this.get<{ user_version: number }>('PRAGMA user_version')?.user_version ?? 0);
     for (let i = v; i < MIGRATIONS.length; i++) {
       this.db.run('BEGIN');
       try {
-        this.db.run(MIGRATIONS[i]);
+        const m = MIGRATIONS[i];
+        if (typeof m === 'string') this.db.run(m);
+        else m({ run: (sql) => this.db.run(sql), get: (sql) => Number(this.db.exec(sql)[0]?.values[0]?.[0] ?? 0) });
         this.db.run(`PRAGMA user_version = ${i + 1}`);
         this.db.run('COMMIT');
       } catch (err) {
@@ -141,7 +152,14 @@ export class Engine {
     const plain = this.db.export();
     // export() resets pragmas on some builds; re-enable FK enforcement.
     this.db.run('PRAGMA foreign_keys = ON;');
-    return this.key ? encrypt(plain, this.key) : plain;
+    if (this.key) return encrypt(plain, this.key);
+    return this.deviceKey ? encryptDevice(plain, this.deviceKey) : plain;
+  }
+
+  /** Encrypt other database bytes the same way this file is saved (password, else this computer's key). */
+  async protect(plain: Uint8Array): Promise<Uint8Array> {
+    if (this.key) return encrypt(plain, this.key);
+    return this.deviceKey ? encryptDevice(plain, this.deviceKey) : plain;
   }
 
   /** Unencrypted copy of the database, for the in-app phone preview (never written to disk). */
@@ -188,6 +206,8 @@ export class Engine {
       if (isEncrypted(bytes)) {
         if (!password) return { ok: false, version: 0, error: tr('La copia está cifrada; introduce la contraseña.') };
         plain = (await decrypt(bytes, password)).plain;
+      } else if (isDeviceEncrypted(bytes)) {
+        plain = await decryptDevice(bytes, await deviceKey());
       }
       const db = new lib.Database(plain);
       const ic = db.exec('PRAGMA integrity_check')[0]?.values[0]?.[0];

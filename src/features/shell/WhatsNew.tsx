@@ -11,7 +11,7 @@ import { IS_PREVIEW } from '../../lib/preview';
 import { tr } from '../../lib/i18n';
 
 /** Bump when a release brings changes worth a tour; users who already saw this one don't see it again. */
-export const WHATS_NEW_ID = '0.8-glass';
+export const WHATS_NEW_ID = '1.0.1';
 const KEY = 'monto:whats-new';
 export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); } catch { /* private mode: it may show again, harmless */ } };
 const seen = () => { try { return localStorage.getItem(KEY) === WHATS_NEW_ID; } catch { return true; } };
@@ -23,6 +23,8 @@ const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`];
 interface Slide { key: string; icon: string; title: () => string; body: () => string; image: string; theme?: boolean }
 const SLIDES: Slide[] = [
   { key: 'design', icon: 'sparkle', image: 'glass', theme: true, title: () => tr('Un diseño nuevo: Cristal'), body: () => tr('Paneles translúcidos sobre color suave, más luz y menos ruido. Si prefieres algo con más textura, prueba «Relieve»: papel, cuero y botones con volumen. Elígelo aquí mismo.') },
+  { key: 'security', icon: 'shield', image: 'security', title: () => tr('Tus datos, cifrados siempre'), body: () => tr('Aunque no uses contraseña, tus datos y copias se guardan cifrados con una llave de este equipo que vive en Windows. Otra app que mire la carpeta solo ve datos ilegibles. Los PIN usan un hash lento y, tras varios intentos fallidos, Monto hace esperar.') },
+  { key: 'country', icon: 'home', image: 'country', title: () => tr('Colombia y bancos de EE. UU.'), body: () => tr('Elige el país de tus cuentas: Panamá o Colombia, con pesos y sus bancos. En Panamá también puedes añadir bancos en línea de EE. UU. como Chime, SoFi o Ally, en dólares.') },
   { key: 'menu', icon: 'menu', image: 'menu', title: () => tr('Un menú que se aparta'), body: () => tr('El menú ahora es una barra de íconos que te deja más espacio. Pasa el cursor y se despliega encima del contenido; fíjalo abierto si lo prefieres. Los grupos se pliegan para ver solo lo que usas.') },
   { key: 'receipt', icon: 'upload', image: 'receipt', title: () => tr('Registra con la foto del comprobante'), body: () => tr('Sube, arrastra o pega la foto o el PDF de un recibo. Monto lee el comercio, la fecha y el total, y tú revisas antes de guardar. La foto no sale de tu computadora.') },
   { key: 'summary', icon: 'dashboard', image: 'summary', title: () => tr('Un resumen a tu medida'), body: () => tr('Elige qué tarjetas ves y en qué orden. Al empezar cada mes, «Tu mes en resumen» te cuenta cuánto ahorraste y en qué se fue tu dinero.') },

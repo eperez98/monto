@@ -12,6 +12,8 @@ import { LogoMark } from '../../brand/Logo';
 import type { ProfileMode } from '../../db/types';
 import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/version';
 import { ThemePicker, ModePicker } from '../../components/ThemePicker';
+import { countryOf } from '../../domain/countries';
+import { passwordProblem } from '../../domain/auth';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
 import { lang, locale, setLang, tr } from '../../lib/i18n';
 import { activeProfileId, listProfiles, type ProfileEntry } from '../../db/adapters';
@@ -97,8 +99,8 @@ function ProfileTab() {
       </Modal>
       <div>
         <p className="text-[12px] font-medium text-ink-2 mb-2">{tr('Moneda principal')}</p>
-        <Segmented value={profile.primaryCurrency} onChange={(v) => canManage && mutate((e) => setProfile(e, { primaryCurrency: v }), tr('Moneda principal actualizada'))} options={[{ value: 'PAB', label: 'B/. Balboa (PAB)' }, { value: 'USD', label: tr('$ Dólar (USD)') }]} />
-        <p className="text-[11.5px] text-muted mt-2">{tr('Paridad fija PAB:USD 1:1. Las cuentas conservan su propia moneda.')}</p>
+        <Segmented value={profile.primaryCurrency} onChange={(v) => canManage && mutate((e) => setProfile(e, { primaryCurrency: v }), tr('Moneda principal actualizada'))} options={countryOf(profile.country).currencies.map((c) => ({ value: c, label: c === 'PAB' ? 'B/. Balboa (PAB)' : c === 'USD' ? tr('$ Dólar (USD)') : tr('$ Peso colombiano (COP)') }))} />
+        <p className="text-[11.5px] text-muted mt-2">{tr('País de las cuentas: {country}.', { country: countryOf(profile.country).name() })}{' '}{profile.country === 'CO' ? tr('Todas las cuentas van en pesos (COP).') : tr('Paridad fija PAB:USD 1:1. Las cuentas conservan su propia moneda.')}</p>
       </div>
       {canManage && <div className="flex justify-end"><Button onClick={() => { mutate((e) => setProfile(e, { name: name.trim() || profile.name, householdName: household.trim() || undefined }), tr('Perfil guardado')); }}>{tr('Guardar')}</Button></div>}
     </Card>
@@ -232,14 +234,15 @@ function SecurityTab() {
     setErr('');
     if (e.encrypted && !(await verifyCurrent())) return setErr(tr('La contraseña actual no es correcta.'));
     if (open === 'set') {
-      if (pw.length < 8) return setErr(tr('Mínimo 8 caracteres.'));
+      const weak = passwordProblem(pw);
+      if (weak) return setErr(weak);
       if (pw !== pw2) return setErr(tr('Las contraseñas no coinciden.'));
     }
     setBusy(true);
     try {
       await e.setPassword(open === 'set' ? pw : null);
       if (open === 'set' && !prefs.autoLockMinutes) setPrefs(e, { autoLockMinutes: 5 });
-      toast({ kind: 'success', title: open === 'set' ? tr('Contraseña establecida') : tr('Contraseña eliminada'), body: open === 'set' ? tr('Tus datos se guardan cifrados con AES-256.') : tr('Tus datos ya no están cifrados.') });
+      toast({ kind: 'success', title: open === 'set' ? tr('Contraseña establecida') : tr('Contraseña eliminada'), body: open === 'set' ? tr('Tus datos se guardan cifrados con AES-256.') : (e.protectedAtRest ? tr('Tus datos siguen cifrados con la llave de este equipo.') : tr('Tus datos ya no están cifrados.')) });
       setOpen(null); setCur(''); setPw(''); setPw2('');
     } catch (x) { setErr(errorMessage(x)); }
     setBusy(false);
@@ -249,10 +252,14 @@ function SecurityTab() {
     <>
       <Card hover={false} className="p-6 space-y-5">
         <div className="flex items-start gap-4">
-          <IconTile name="lock" color={e.encrypted ? 'var(--emerald)' : 'var(--amber)'} size={44} />
+          <IconTile name="lock" color={e.protectedAtRest ? 'var(--emerald)' : 'var(--amber)'} size={44} />
           <div className="flex-1">
-            <p className="text-[14px] font-semibold flex items-center gap-2">{tr('Contraseña de la aplicación')}{' '}{e.encrypted ? <Badge tone="green">{tr('Cifrado activo')}</Badge> : <Badge tone="amber">{tr('Sin cifrar')}</Badge>}</p>
-            <p className="text-[12.5px] text-muted mt-1">{tr('Cifra la base de datos local con AES-256-GCM (clave derivada con PBKDF2). Sin la contraseña nadie puede leer tus datos, ni siquiera copiando el archivo.')}</p>
+            <p className="text-[14px] font-semibold flex items-center gap-2">{tr('Contraseña de la aplicación')}{' '}{e.encrypted ? <Badge tone="green">{tr('Cifrado con contraseña')}</Badge> : e.protectedAtRest ? <Badge tone="green">{tr('Cifrado con la llave del equipo')}</Badge> : <Badge tone="amber">{tr('Sin cifrar')}</Badge>}</p>
+            <p className="text-[12.5px] text-muted mt-1">{e.encrypted
+              ? tr('Tus datos se guardan cifrados con AES-256-GCM y una clave derivada de tu contraseña (PBKDF2, 600 000 iteraciones). Sin ella nadie puede leerlos, ni copiando el archivo.')
+              : e.protectedAtRest
+                ? tr('Tus datos y copias ya se guardan cifrados con una llave de este equipo, guardada en el Administrador de credenciales de Windows. Añade una contraseña para que además nadie pueda abrir Monto en esta cuenta de Windows sin ella.')
+                : tr('Cifra la base de datos local con AES-256-GCM (clave derivada con PBKDF2). Sin la contraseña nadie puede leer tus datos, ni siquiera copiando el archivo.')}</p>
           </div>
         </div>
         {canSec ? <div className="flex gap-2"><Button icon="lock" onClick={() => setOpen('set')}>{e.encrypted ? tr('Cambiar contraseña') : tr('Establecer contraseña')}</Button>{e.encrypted && <Button variant="ghost" onClick={() => setOpen('remove')}>{tr('Quitar contraseña')}</Button>}</div> : <p className="text-[12px] text-muted">{tr('Solo un administrador puede cambiar la seguridad.')}</p>}
@@ -281,7 +288,7 @@ function SecurityTab() {
         footer={<><Button variant="ghost" onClick={() => setOpen(null)}>{tr('Cancelar')}</Button><Button loading={busy} variant={open === 'remove' ? 'danger' : 'primary'} onClick={() => void submit()}>{open === 'remove' ? tr('Quitar') : tr('Guardar')}</Button></>}>
         <div className="space-y-3">
           {e.encrypted && <Field label={tr('Contraseña actual')}><Input type="password" autoFocus value={cur} onChange={(ev) => setCur(ev.target.value)} /></Field>}
-          {open === 'set' && <><Field label={tr('Nueva contraseña')}><Input type="password" value={pw} onChange={(ev) => setPw(ev.target.value)} placeholder={tr('Mínimo 8 caracteres')} /></Field><Field label={tr('Confirmar')}><Input type="password" value={pw2} onChange={(ev) => setPw2(ev.target.value)} /></Field></>}
+          {open === 'set' && <><Field label={tr('Nueva contraseña')}><Input type="password" value={pw} onChange={(ev) => setPw(ev.target.value)} placeholder={tr('Mínimo 10, con letras y números')} /></Field><Field label={tr('Confirmar')}><Input type="password" value={pw2} onChange={(ev) => setPw2(ev.target.value)} /></Field></>}
           {err && <p className="text-[12px] text-coral">{err}</p>}
           <p className="text-[11.5px] text-amber flex gap-2"><Icon name="alert" size={15} />{tr('Si olvidas la contraseña, tus datos no podrán recuperarse. Guarda una copia de seguridad.')}</p>
         </div>
@@ -299,6 +306,16 @@ function DataTab() {
   const [location, setLocation] = useState('');
   const [integrity, setIntegrity] = useState<{ ok: boolean; messages: string[] } | null>(null);
   const [restorePw, setRestorePw] = useState<{ bytes: Uint8Array } | null>(null);
+  const [exp, setExp] = useState<{ pw: string; pw2: string; err: string } | null>(null);
+  const doExport = () => {
+    if (!exp) return;
+    const weak = passwordProblem(exp.pw);
+    if (weak) return setExp({ ...exp, err: weak });
+    if (exp.pw !== exp.pw2) return setExp({ ...exp, err: tr('Las contraseñas no coinciden.') });
+    const pw = exp.pw;
+    setExp(null);
+    void run(() => exportBackupFile(e, pw), tr('Respaldo exportado'));
+  };
   const [pw, setPw] = useState('');
   const refresh = async () => { setBackups(await e.adapter.listBackups()); setLocation(await e.adapter.location()); };
   useEffect(() => { void refresh(); }, []);
@@ -340,12 +357,12 @@ function DataTab() {
           <p className="text-[14px] font-semibold mb-1">{tr('Exportar e importar')}</p>
           <p className="text-[12.5px] text-muted mb-4">{tr('Mueve tus datos a otro equipo o guarda una copia externa (USB, disco).')}</p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" icon="download" onClick={() => void run(() => exportBackupFile(e), tr('Respaldo exportado'))}>{tr('Exportar respaldo (.monto)')}</Button>
+            <Button variant="secondary" icon="download" onClick={() => setExp({ pw: '', pw2: '', err: '' })}>{tr('Exportar respaldo (.monto)')}</Button>
             <Button variant="secondary" icon="upload" onClick={async () => { const f = await pickBackupFile(); if (f) tryRestore(f.data); }}>{tr('Importar respaldo')}</Button>
             <Button variant="secondary" icon="download" onClick={() => void run(() => exportJSON(e), tr('Datos exportados en JSON'))}>{tr('Exportar JSON')}</Button>
             <Button icon="reports" onClick={() => { sessionStorage.setItem('monto:report-kind', 'all'); useApp.getState().go('reports'); }}>{tr('Exportar tablas (Excel, PDF, Notion)')}</Button>
           </div>
-          <p className="text-[11.5px] text-muted mt-3">{tr('Si tienes contraseña, el respaldo .monto se exporta cifrado.')}</p>
+          <p className="text-[11.5px] text-muted mt-3">{tr('El respaldo .monto se exporta siempre cifrado con una contraseña que eliges; la necesitarás para abrirlo en otro equipo. Las copias automáticas usan la llave de este equipo y solo se abren aquí.')}</p>
         </Card>
       )}
       <Card hover={false} className="p-6 flex items-center gap-4">
@@ -353,6 +370,14 @@ function DataTab() {
         <div className="flex-1"><p className="text-[14px] font-semibold">{tr('Integridad de la base de datos')}</p><p className="text-[12.5px] text-muted">{integrity ? (integrity.ok ? tr('Todo en orden: el archivo no está dañado y no hay datos sueltos.') : `${tr('Encontramos problemas. Restaura una copia de seguridad reciente o exporta tus datos.')} ${integrity.messages.join(' · ')}`) : tr('Revisa que tu base de datos esté sana: que el archivo no esté dañado y que no haya datos sueltos.')}</p></div>
         <Button variant="secondary" onClick={() => setIntegrity(e.integrityCheck())}>{tr('Verificar')}</Button>
       </Card>
+      <Modal open={!!exp} onClose={() => setExp(null)} title={tr('Contraseña del respaldo')} icon="lock" width={440}
+        footer={<><Button variant="ghost" onClick={() => setExp(null)}>{tr('Cancelar')}</Button><Button onClick={doExport}>{tr('Exportar')}</Button></>}>
+        <div className="space-y-3">
+          <p className="text-[12.5px] text-muted">{tr('El archivo quedará cifrado con AES-256. Sin esta contraseña no se puede abrir: guárdala en un lugar seguro.')}</p>
+          <Field label={tr('Contraseña')}><Input type="password" autoFocus value={exp?.pw ?? ''} onChange={(ev) => exp && setExp({ ...exp, pw: ev.target.value, err: '' })} placeholder={tr('Mínimo 10, con letras y números')} /></Field>
+          <Field label={tr('Confirmar')} error={exp?.err || undefined}><Input type="password" value={exp?.pw2 ?? ''} onChange={(ev) => exp && setExp({ ...exp, pw2: ev.target.value, err: '' })} /></Field>
+        </div>
+      </Modal>
       <Modal open={!!restorePw} onClose={() => setRestorePw(null)} title={tr('Copia cifrada')} icon="lock" width={420} footer={<><Button variant="ghost" onClick={() => setRestorePw(null)}>{tr('Cancelar')}</Button><Button onClick={() => restore(restorePw!.bytes, pw)}>{tr('Continuar')}</Button></>}>
         <Field label={tr('Contraseña de la copia')}><Input type="password" autoFocus value={pw} onChange={(ev) => setPw(ev.target.value)} /></Field>
       </Modal>

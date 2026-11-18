@@ -21,6 +21,12 @@ const shot = async (name) => { if (SHOTS) await page.screenshot({ path: `${out}/
 const click = (text, opts = {}) => page.getByRole('button', { name: text, exact: opts.exact ?? false }).first().click();
 const dclick = (text) => page.getByRole('dialog').getByRole('button', { name: text, exact: true }).last().click();
 
+// WHATSNEW_SHOTS=1 also saves the pictures of the What's New panel (fictional data) into src/assets/whatsnew.
+// Saved outside src/ first: a new file there makes Vite reload the page mid-test. They are copied in at the end.
+const WN = process.env.WHATSNEW_SHOTS ? `${out}/whatsnew` : null;
+if (WN) mkdirSync(WN, { recursive: true });
+const wn = async (name) => { if (WN) { await page.waitForTimeout(700); await page.screenshot({ path: `${WN}/${name}.jpg`, type: 'jpeg', quality: 72 }); } };
+
 try {
   step('Splash');
   await page.goto(URL);
@@ -58,7 +64,15 @@ try {
   await page.getByPlaceholder('Ej. Familia Rodríguez').fill('Familia Rodríguez');
   await page.getByPlaceholder('Nombre 1').fill('Ana');
   await click('Continuar');
-  step('Onboarding: currency');
+  step('Onboarding: country and currency');
+  await page.getByText('¿Dónde están tus cuentas?').waitFor();
+  await click('Colombia');
+  await page.getByText('todas las cuentas van en pesos (COP)').waitFor();
+  assert(true, 'país de las cuentas: Colombia con pesos');
+  await click('Panamá');
+  await page.getByText('Moneda principal', { exact: true }).waitFor();
+  await wn('country');
+  assert(true, 'país de las cuentas: Panamá con balboa y dólar');
   await click('Continuar');
   step('Onboarding: income');
   await page.getByPlaceholder('Ej. Empresa Ejemplo, S.A.').fill('Empresa Ejemplo, S.A.');
@@ -88,6 +102,8 @@ try {
   await shot('03b-onboarding-expenses');
   await click('Continuar');
   step('Onboarding: account');
+  await page.locator('optgroup[label="Bancos en línea de EE. UU. (USD)"]').waitFor({ state: 'attached' });
+  assert(true, 'bancos en línea de EE. UU. disponibles en Panamá');
   await page.getByRole('textbox', { name: 'Saldo inicial' }).fill('2500');
   await click('Continuar');
   step('Onboarding: security (skip)');
@@ -246,17 +262,17 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 0.8.0 Release Candidate 3').waitFor();
-  assert(true, 'versión 0.8.0 Release Candidate 3 visible en Actualizaciones');
+  await page.getByText('Monto 1.0.1').waitFor();
+  assert(true, 'versión 1.0.1 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('0.8.0 Release Candidate 3 · Smart Money'), 'acerca de: versión con nombre Smart Money');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.1 · Release Update'), 'acerca de: versión con nombre Release Update');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
-  assert(await page.getByText('0.9 · Calm Design').isVisible() && await page.getByText('1.0 · Estable').isVisible(), 'acerca de: dos versiones futuras con ideas');
+  assert(await page.getByText('0.9 · Calm Design').isVisible() && await page.getByText('1.1 · Siguiente').isVisible(), 'acerca de: dos versiones futuras con ideas');
   await page.waitForTimeout(700);
   await shot('19b-about');
   await click('Resumen', { exact: true });
@@ -369,7 +385,7 @@ try {
   await page.getByRole('button', { name: 'Configuración' }).click();
   await click('Seguridad', { exact: true });
   await click('Establecer contraseña');
-  await page.getByPlaceholder('Mínimo 8 caracteres').fill('clave-segura-123');
+  await page.getByPlaceholder('Mínimo 10, con letras y números').fill('clave-segura-123');
   await page.getByRole('dialog').locator('input[type=password]').nth(1).fill('clave-segura-123');
   await dclick('Guardar');
   await page.getByText('Contraseña establecida').waitFor();
@@ -388,7 +404,7 @@ try {
   await page.getByText('Saldo disponible').waitFor();
   assert(true, 'desbloqueo con contraseña correcta');
   const raw = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('monto', 1); r.onsuccess = () => { const g = r.result.transaction('files').objectStore('files').get('monto.db'); g.onsuccess = () => res(new TextDecoder().decode(g.result.slice(0, 9))); }; }));
-  assert(raw === 'MONTOENC1', 'base de datos cifrada en reposo');
+  assert(raw === 'MONTOENC2', 'base de datos cifrada en reposo (formato de 600 000 iteraciones)');
 
   step('Second profile: monthly salary + payment order');
   await page.getByRole('button', { name: 'Configuración' }).click();
@@ -564,11 +580,6 @@ try {
   assert(!(await page.locator('iframe').count()), 'salir de la vista de celular');
 
   step('New design: glass, skeuomorphic theme, expandable menu');
-  // WHATSNEW_SHOTS=1 also saves the pictures of the What's New panel (fictional data) into src/assets/whatsnew.
-  // Saved outside src/ first: a new file there makes Vite reload the page mid-test. They are copied in at the end.
-  const WN = process.env.WHATSNEW_SHOTS ? `${out}/whatsnew` : null;
-  if (WN) mkdirSync(WN, { recursive: true });
-  const wn = async (name) => { if (WN) { await page.waitForTimeout(700); await page.screenshot({ path: `${WN}/${name}.jpg`, type: 'jpeg', quality: 72 }); } };
   const look = async (theme, mode) => {
     await page.getByRole('button', { name: 'Configuración' }).click();
     await click('Apariencia');
@@ -611,6 +622,8 @@ try {
   await page.getByRole('button', { name: 'Configuración' }).click();
   await click('Correo del banco');
   await wn('banks');
+  await click('Seguridad');
+  await wn('security');
   await look('Cristal', 'Oscuro');
   await wn('done');
   await shot('26-glass-dark');
@@ -637,12 +650,12 @@ try {
   assert(true, 'novedades: elegir el nuevo tema desde la diapositiva del diseño');
   await page.waitForTimeout(600);
   await shot('23-whats-new');
-  for (let k = 0; k < 5; k++) { await news.getByRole('button', { name: 'Siguiente' }).click(); await page.waitForTimeout(450); }
+  for (let k = 0; k < 7; k++) { await news.getByRole('button', { name: 'Siguiente' }).click(); await page.waitForTimeout(450); }
   await shot('23b-whats-new-last');
   assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });
-  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '0.8-glass'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.1'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
   await page.setViewportSize({ width: 1440, height: 900 });
 
   step('Phone size, light and dark: every screen');

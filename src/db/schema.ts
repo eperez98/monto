@@ -2,7 +2,10 @@
  * Versioned migrations. Each entry runs once, inside a transaction, and bumps
  * PRAGMA user_version. Never edit a released migration — append a new one.
  */
-export const MIGRATIONS: string[] = [
+/** A migration is SQL, or a function for the rare change that needs values read at run time. */
+export type Migration = string | ((db: { run: (sql: string) => void; get: (sql: string) => number }) => void);
+
+export const MIGRATIONS: Migration[] = [
   /* v1 — initial schema */ `
   CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 
@@ -225,6 +228,16 @@ export const MIGRATIONS: string[] = [
   CREATE INDEX IF NOT EXISTS ix_activity_created ON activity_log(created_at);
   CREATE INDEX IF NOT EXISTS ix_sessions_member ON sessions(member_id);
   `,
+  // v3 (1.0.1): Colombian pesos. The currency CHECK rules widen from ('PAB','USD') to ('PAB','USD','COP').
+  // SQLite can't ALTER a CHECK, so the stored table definitions are edited in place, as the SQLite docs describe for
+  // loosening a constraint: no row is copied or rewritten, and integrity_check runs right after.
+  (db) => {
+    db.run('PRAGMA writable_schema = ON');
+    db.run("UPDATE sqlite_master SET sql = replace(sql, 'currency IN (''PAB'',''USD'')', 'currency IN (''PAB'',''USD'',''COP'')') WHERE type = 'table'");
+    db.run(`PRAGMA schema_version = ${db.get('PRAGMA schema_version') + 1}`);
+    db.run('PRAGMA writable_schema = OFF');
+    if (db.get("SELECT count(*) FROM pragma_integrity_check WHERE integrity_check <> 'ok'") > 0) throw new Error('integrity_check');
+  },
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

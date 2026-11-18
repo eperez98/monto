@@ -7,6 +7,8 @@
 //! opt-in updates from GitHub Releases verified with SHA-256 (see `updater`).
 
 mod mail;
+mod net;
+mod vault;
 mod ocr;
 mod updater;
 
@@ -48,7 +50,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, mail::mail_connect, mail::mail_sync, mail::mail_disconnect, ocr::read_receipt])
+        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, mail::mail_connect, mail::mail_sync, mail::mail_disconnect, ocr::read_receipt, vault::vault_device_key, vault::vault_create_device_key])
         .setup(|app| {
             // Make sure the data folder exists before the UI asks for it.
             if let Ok(dir) = app.path().app_data_dir() {

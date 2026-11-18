@@ -2083,7 +2083,7 @@ dependencies = [
 
 [[package]]
 name = "monto"
-version = "0.8.0-rc.3"
+version = "1.0.1"
 dependencies = [
  "keyring",
  "semver",

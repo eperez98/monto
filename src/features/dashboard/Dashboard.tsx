@@ -11,7 +11,7 @@ import { listGoals } from '../../db/repo/planning';
 import { Card, CardHeader, Money, EmptyState, Button, Segmented, useMotionOK } from '../../components/ui';
 import { IncomeExpenseBars, CategoryDonut } from '../../components/charts';
 import { Icon } from '../../icons';
-import { combined, formatMoney, pct } from '../../lib/money';
+import { combined, formatMoney, pct, zeroTotals } from '../../lib/money';
 import { daysInMonth, diffDays, formatDate, today } from '../../lib/dates';
 import { buildStories, dailyAllowance, type StoryRoute } from '../../domain/overview';
 import { savingsRate } from '../../domain/insights';
@@ -263,8 +263,8 @@ function CoupleBalances({ d }: { d: Data }) {
   const partner = useQuery((e) => listMembers(e).find((m) => m.id !== actor.id), [actor.id]);
   const shared = combined(b.shared, d.cur);
   const cards: Array<[string, number, string | null]> = [
-    [tr('Mi saldo'), combined(b.byMember[actor.id] ?? { PAB: 0, USD: 0 }, d.cur), null],
-    [partner ? tr('Saldo de {name}', { name: partner.name.split(' ')[0] }) : tr('Saldo de tu pareja'), partner ? combined(b.byMember[partner.id] ?? { PAB: 0, USD: 0 }, d.cur) : 0, null],
+    [tr('Mi saldo'), combined(b.byMember[actor.id] ?? zeroTotals(), d.cur), null],
+    [partner ? tr('Saldo de {name}', { name: partner.name.split(' ')[0] }) : tr('Saldo de tu pareja'), partner ? combined(b.byMember[partner.id] ?? zeroTotals(), d.cur) : 0, null],
     [tr('En conjunto'), combined(b.total, d.cur), shared ? tr('Incluye {amount} en cuentas compartidas', { amount: formatMoney(shared, d.cur) }) : null],
   ];
   return (

@@ -10,6 +10,9 @@ import { Button, Card, EmptyState, Field, Input, Modal, Money, MoneyInput, PageH
 import { Icon } from '../../icons';
 import { TxRow } from '../transactions/TxRow';
 import { centsToInput, combined, parseMoney, type Currency } from '../../lib/money';
+import { bankGroups, countryOf, currencyForBank } from '../../domain/countries';
+
+const CURRENCY_LABEL: Record<Currency, () => string> = { PAB: () => tr('Balboa (PAB)'), USD: () => tr('Dólar (USD)'), COP: () => tr('Peso colombiano (COP)') };
 import type { Account, AccountType } from '../../db/types';
 import { tr } from '../../lib/i18n';
 
@@ -27,6 +30,7 @@ function AccountForm({ open, onClose, account }: { open: boolean; onClose: () =>
   const [initial, setInitial] = useState(account ? centsToInput(Math.abs(account.initialBalance)) : '');
   const [limit, setLimit] = useState(account?.creditLimit ? centsToInput(account.creditLimit) : '');
   const [institution, setInstitution] = useState(account?.institution ?? '');
+  const country = countryOf(profile.country);
   const [color, setColor] = useState(account?.color ?? COLORS[0]);
   const [owner, setOwner] = useState<string>(account ? account.ownerMemberId ?? '' : profile.mode === 'individual' ? '' : actor.id);
   const [err, setErr] = useState('');
@@ -43,8 +47,11 @@ function AccountForm({ open, onClose, account }: { open: boolean; onClose: () =>
       <div className="grid grid-cols-2 gap-3">
         <Field label={tr('Nombre')} className="col-span-2" error={err}><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={tr('Ej. Banco General Ahorros')} /></Field>
         <Field label={tr('Tipo')}><Select value={type} onChange={(e) => setType(e.target.value as AccountType)}>{Object.entries(ACCOUNT_TYPE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select></Field>
-        <Field label={tr('Moneda')}><Select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}><option value="PAB">{tr('Balboa (PAB)')}</option><option value="USD">{tr('Dólar (USD)')}</option></Select></Field>
-        <Field label={tr('Institución')}><Input value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder={tr('Ej. Banistmo')} /></Field>
+        <Field label={tr('Moneda')}><Select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}>{country.currencies.map((c) => <option key={c} value={c}>{CURRENCY_LABEL[c]()}</option>)}</Select></Field>
+        <Field label={tr('Institución')}>
+          <Input value={institution} list="monto-banks" onChange={(e) => { setInstitution(e.target.value); if (country.currencies.includes('USD')) setCurrency((c) => currencyForBank(e.target.value, c)); }} placeholder={tr('Ej. {bank}', { bank: country.banks[1] })} />
+          <datalist id="monto-banks">{bankGroups(profile.country).flatMap((g) => g.banks).map((b) => <option key={b} value={b} />)}</datalist>
+        </Field>
         <Field label={type === 'credit_card' ? tr('Saldo adeudado actual') : tr('Saldo inicial')}><MoneyInput currency={currency} value={initial} onChange={setInitial} aria-label={tr('Saldo inicial')} /></Field>
         {type === 'credit_card' && <Field label={tr('Límite de crédito')}><MoneyInput currency={currency} value={limit} onChange={setLimit} aria-label={tr('Límite')} /></Field>}
         {profile.mode !== 'individual' && (
@@ -106,10 +113,9 @@ export default function Accounts() {
     <div>
       <PageHeader title={tr('Cuentas y tarjetas')} subtitle={tr('Saldos por moneda, siempre al día')} actions={canManage && <Button icon="plus" onClick={() => { setEditing(null); setFormOpen(true); }}>{tr('Nueva cuenta')}</Button>} />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mb-6">
-        <Card className="p-5"><Stat label={tr('Disponible (PAB)')} value={<Money animated cents={bal.available.PAB} currency="PAB" />} /></Card>
-        <Card className="p-5" delay={0.04}><Stat label={tr('Disponible (USD)')} value={<Money animated cents={bal.available.USD} currency="USD" />} /></Card>
+        {countryOf(profile.country).currencies.map((c, i) => <Card key={c} className="p-5" delay={i * 0.04}><Stat label={tr('Disponible ({currency})', { currency: c })} value={<Money animated cents={bal.available[c]} currency={c} />} /></Card>)}
         <Card className="p-5" delay={0.08}><Stat label={tr('Deuda en tarjetas')} value={<Money animated cents={combined(bal.cardDebt, cur)} currency={cur} className="text-coral" />} /></Card>
-        <Card className="p-5" delay={0.12}><Stat label={tr('Patrimonio neto')} value={<Money animated cents={combined(bal.netWorth, cur)} currency={cur} />} sub={tr('Paridad PAB:USD 1:1')} /></Card>
+        <Card className="p-5" delay={0.12}><Stat label={tr('Patrimonio neto')} value={<Money animated cents={combined(bal.netWorth, cur)} currency={cur} />} sub={cur === 'COP' ? undefined : tr('Paridad PAB:USD 1:1')} /></Card>
       </div>
       {accounts.length ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5" style={{ perspective: 1000 }}>

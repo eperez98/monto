@@ -20,7 +20,8 @@ export function totals(e: Engine, r: Range, sf?: ScopeFilter): Totals {
      FROM transactions WHERE date BETWEEN ? AND ? AND ${s.sql} GROUP BY currency`, [r.from, r.to, ...s.p]);
   const inc = zeroTotals(), exp = zeroTotals();
   rows.forEach((x) => { inc[x.currency] += x.income; exp[x.currency] += x.expense; });
-  const income = inc.PAB + inc.USD, expense = exp.PAB + exp.USD;
+  // A profile's currencies never mix pesos with balboas/dollars (see domain/countries), so a plain sum is right.
+  const income = inc.PAB + inc.USD + inc.COP, expense = exp.PAB + exp.USD + exp.COP;
   return { income, expense, net: income - expense, byCurrency: { income: inc, expense: exp } };
 }
 

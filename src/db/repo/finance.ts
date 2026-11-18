@@ -8,7 +8,7 @@ import { formatMoney } from '../../lib/money';
 import type { Account, Actor, Attachment, Category, ScopeFilter, Transaction, TxType } from '../types';
 import { tr } from '../../lib/i18n';
 
-const currency = z.enum(['PAB', 'USD']);
+const currency = z.enum(['PAB', 'USD', 'COP']);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, tr('Fecha no válida'));
 const cents = z.number().int(tr('Importe no válido'));
 

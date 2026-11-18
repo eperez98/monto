@@ -5,7 +5,10 @@ import { getPrefs, setPrefs } from '../db/repo/core';
 import { createTransaction } from '../db/repo/finance';
 import { parseAmount } from '../domain/bankMail';
 import type { Actor } from '../db/types';
+import type { Currency } from '../lib/money';
 import { tr } from '../lib/i18n';
+import { encrypt, newKey } from '../db/crypto';
+import { passwordProblem } from '../domain/auth';
 
 export async function createBackup(e: Engine, label = 'manual'): Promise<string> {
   await e.flush();
@@ -43,10 +46,34 @@ export async function autoBackup(e: Engine): Promise<string | null> {
   return p;
 }
 
-export async function exportBackupFile(e: Engine) {
+/**
+ * A portable copy for another computer or a USB drive: always encrypted with a password the user picks, because the
+ * automatic backups use this computer's key and only open here.
+ */
+export async function exportBackupFile(e: Engine, password: string) {
+  const weak = passwordProblem(password);
+  if (weak) throw new Error(weak);
   await e.flush();
-  return saveFile(`monto-respaldo-${stamp()}.monto`, await e.serialize(), [{ name: tr('Respaldo de Monto'), extensions: ['monto'] }]);
+  const bytes = await encrypt(e.plainBytes(), await newKey(password));
+  return saveFile(`monto-respaldo-${stamp()}.monto`, bytes, [{ name: tr('Respaldo de Monto'), extensions: ['monto'] }]);
 }
+
+/** Backups made before 1.0.1 were saved in the clear: encrypt them in place with this computer's key. */
+export async function protectOldBackups(e: Engine): Promise<number> {
+  if (!e.protectedAtRest) return 0;
+  let n = 0;
+  for (const b of await e.adapter.listBackups()) {
+    const bytes = await e.adapter.readBackup(b.name);
+    if (!isPlainSqlite(bytes)) continue;
+    const v = await Engine.validateBytes(bytes);
+    if (!v.ok || !v.plain) continue;
+    await e.adapter.backup(await e.protect(v.plain), b.name);
+    n++;
+  }
+  return n;
+}
+const SQLITE = new TextEncoder().encode('SQLite format 3');
+const isPlainSqlite = (b: Uint8Array) => SQLITE.every((x, i) => b[i] === x);
 
 export async function pickBackupFile() { return openFile([{ name: tr('Respaldo de Monto'), extensions: ['monto', 'db', 'sqlite'] }]); }
 
@@ -96,7 +123,7 @@ export function signedAmount(raw: string): number {
 }
 
 export function importTransactionsCSV(e: Engine, actor: Actor, text: string, accountId: string): CsvImportResult {
-  const acc = e.get<{ currency: 'PAB' | 'USD' }>('SELECT currency FROM accounts WHERE id = ?', [accountId]);
+  const acc = e.get<{ currency: Currency }>('SELECT currency FROM accounts WHERE id = ?', [accountId]);
   if (!acc) throw new Error(tr('Selecciona una cuenta válida'));
   const all = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => l.trim());
   if (!all.length) return { imported: 0, skipped: 0, errors: [tr('El archivo está vacío')] };

@@ -81,9 +81,7 @@ fn json(r: ureq::Response) -> Result<serde_json::Value, String> {
     serde_json::from_str(&r.into_string().map_err(|e| e.to_string())?).map_err(|e| e.to_string())
 }
 
-fn agent() -> ureq::Agent {
-    ureq::AgentBuilder::new().timeout_connect(Duration::from_secs(15)).timeout_read(Duration::from_secs(60)).build()
-}
+use crate::net::agent;
 
 fn open_browser(url: &str) -> Result<(), String> {
     #[cfg(windows)]

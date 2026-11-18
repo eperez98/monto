@@ -6,7 +6,7 @@
  */
 import type { Engine } from '../db/engine';
 import { isTauri } from '../db/adapters';
-import { getSetting, setSetting } from '../db/repo/core';
+import { getProfile, getSetting, setSetting } from '../db/repo/core';
 import { createTransaction } from '../db/repo/finance';
 import { categoryFor, getCategoryRules } from '../db/repo/rules';
 import { assertCan } from '../domain/permissions';
@@ -85,7 +85,7 @@ export async function syncMail(e: Engine): Promise<MailSyncResult> {
     const msg = p.provider === 'google' ? fromGmail(m as Parameters<typeof fromGmail>[0]) : fromGraph(m as Parameters<typeof fromGraph>[0]);
     const key = await sha(msg.id);
     if (done.has(key)) { res.alreadyImported++; continue; }
-    const tx = parseBankEmail(msg);
+    const tx = parseBankEmail(msg, getProfile(e).country === 'CO' ? 'COP' : 'USD');
     if (!tx) { res.noAmount++; continue; }
     // Two emails for the same purchase (same merchant, amount and day) count once.
     const sig = `${norm(tx.merchant)}|${tx.amount}|${tx.date}`;

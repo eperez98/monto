@@ -125,9 +125,7 @@ pub fn expected_hash(sums: &str, file: &str) -> Option<String> {
     })
 }
 
-fn agent() -> ureq::Agent {
-    ureq::AgentBuilder::new().timeout_connect(std::time::Duration::from_secs(15)).timeout_read(std::time::Duration::from_secs(60)).build()
-}
+use crate::net::agent;
 
 /// Unzip the package with Windows' tar.exe and return the verified installer path.
 fn extract_installer(zip: &std::path::Path, dir: &std::path::Path) -> Result<std::path::PathBuf, String> {

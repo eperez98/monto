@@ -5,7 +5,7 @@ import { listAccounts } from '../../db/repo/finance';
 import { Button, Card, EmptyState, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, Progress, Stat, useConfirm, Segmented } from '../../components/ui';
 import { IconTile } from '../../icons';
 import { amortizationSchedule, monthlyPayment, totalInterest } from '../../domain/amortization';
-import { centsToInput, combined, formatMoney, parseMoney, type Currency } from '../../lib/money';
+import { centsToInput, combined, formatMoney, parseMoney, zeroTotals, type Currency } from '../../lib/money';
 import { addMonths, formatDate, today } from '../../lib/dates';
 import type { DebtKind } from '../../db/types';
 import { tr } from '../../lib/i18n';
@@ -74,7 +74,7 @@ export default function Debts() {
   const [payDate, setPayDate] = useState(today());
   const det = debts.find((d) => d.id === detail?.id) ?? null;
   const schedule = useMemo(() => (det ? amortizationSchedule(det.principal, det.annualRate, det.termMonths, det.startDate) : []), [det]);
-  const owed = { PAB: 0, USD: 0 };
+  const owed = zeroTotals();
   debts.filter((d) => d.direction === 'owe' && !d.closed).forEach((d) => { owed[d.currency] += d.status.balance; });
   const monthly = debts.filter((d) => !d.closed && d.direction === 'owe').reduce((a, d) => a + monthlyPayment(d.principal, d.annualRate, d.termMonths), 0);
   const cur = profile.primaryCurrency;

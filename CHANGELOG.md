@@ -10,9 +10,37 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-## [0.8.0-rc.3] - 2026-11-18 · Smart Money (Release Candidate 3)
+## [1.0.1] - 2026-11-18 · Release Update
 
-Tercera versión candidata de la 0.8. Trae un diseño nuevo, «Cristal», y adelanta todo lo planeado para la 0.9 «Calm Design»: Mica de Windows 11, modo compacto, un resumen que tú ordenas y «Tu mes en resumen». También lee comprobantes en PDF, reconoce más bancos de Panamá y revisa la vista de celular pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
+Primera versión estable de Monto. Protege tus datos aunque no uses contraseña, endurece el acceso y se abre a Colombia y a los bancos en línea de EE. UU. Incluye todo lo que estaba preparado para la 0.8 RC 3, que no llegó a publicarse: el diseño «Cristal», el tema «Relieve», el menú expandible y lo planeado para la 0.9 «Calm Design».
+
+### Seguridad
+- **Base de datos protegida siempre**: sin contraseña, el archivo de datos y las copias automáticas se guardan cifrados (AES-256-GCM) con una llave aleatoria de este equipo, guardada en el Administrador de credenciales de Windows y nunca junto a los archivos.
+  - Otra app que lea la carpeta de Monto (de notas, de sincronización, un editor) solo ve datos cifrados.
+  - Los archivos y copias guardados en claro por versiones anteriores se cifran solos la primera vez que abres esta versión.
+- **Contraseña**: los archivos nuevos usan PBKDF2-SHA256 con 600 000 iteraciones (antes 310 000). Los archivos anteriores se vuelven a guardar con el formato nuevo al desbloquear.
+- **Contraseñas nuevas más fuertes**: mínimo 10 caracteres, con letras y números, y sin palabras comunes. Las contraseñas que ya tienes siguen funcionando.
+- **PIN con hash lento y sal**: los PIN de los integrantes se guardan con PBKDF2 y una sal aleatoria en lugar de SHA-256. Los PIN antiguos se actualizan solos la próxima vez que se usan.
+- **Intentos limitados**: después de 5 intentos fallidos de contraseña o PIN, Monto hace esperar 30 s, luego 1 min, 2 min… hasta 15 min. La espera se mantiene aunque cierres la app.
+- **HTTPS forzado**: todas las conexiones (actualizaciones y correo del banco) usan un cliente que rechaza `http://` y cualquier redirección insegura antes de enviar nada. La ventana de la app añade `upgrade-insecure-requests` a su política de contenido.
+- **Sin claves en el código**: un chequeo nuevo en CI (`npm run secrets:check`) falla si alguien sube una clave de API, un token o una llave privada.
+- **Respaldo portátil**: «Exportar respaldo» pide siempre una contraseña y genera un archivo cifrado que se puede abrir en otro equipo. Las copias automáticas solo se abren en este.
+
+### Base de datos
+- **Esquema v3**: las monedas admiten pesos colombianos (COP). Las reglas de moneda de 6 tablas se amplían sin copiar ni reescribir ningún dato, y se verifica la integridad justo después.
+
+### Países y bancos
+- **País de las cuentas**: la configuración inicial pregunta dónde están tus cuentas, Panamá o Colombia, y con eso elige la moneda y los bancos que ves.
+- **Colombia**:
+  - Perfiles en pesos (COP) con el formato local «$ 45.000».
+  - 20 bancos y billeteras: Bancolombia, Banco de Bogotá, Davivienda, BBVA, Occidente, Nequi, Daviplata, Nu, Lulo y más.
+  - Sus correos de aviso se reconocen.
+  - Para que los totales no mezclen monedas, en un perfil de Colombia todas las cuentas van en pesos.
+- **Bancos en línea de EE. UU.**:
+  - Chime, SoFi, Ally, Capital One 360, Discover, Varo, Current, Marcus, Schwab, Revolut, Wise, PayPal, Venmo, Cash App y Zelle.
+  - Las cuentas en estos bancos van siempre en dólares.
+  - Sus correos de aviso en inglés se leen («You spent $12.34 at…»).
+- Los montos con puntos de miles («45.000», «1.250.000») se leen bien en correos, estados de cuenta y al escribirlos.
 
 ### Diseño nuevo
 - **Cristal** es el diseño base: paneles translúcidos con desenfoque sobre un fondo de color suave, en modo claro y oscuro.

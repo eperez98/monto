@@ -7,7 +7,7 @@ import { defaultAdapter, isTauri, MemoryAdapter, type StorageAdapter } from './d
 import { WrongPasswordError } from './db/crypto';
 import { endSession, getMember, getPrefs, getProfile, listMembers, seedCategories, startSession, verifyMemberPin } from './db/repo/core';
 import { runAutoPost } from './db/repo/planning';
-import { autoBackup } from './services/backup';
+import { autoBackup, protectOldBackups } from './services/backup';
 import { notifyBillsDue } from './services/billAlerts';
 import { getMailPrefs, mailSupported, syncMail } from './services/mail';
 import { MailReviewHost } from './features/settings/MailReviewHost';
@@ -19,6 +19,8 @@ import { LockScreen } from './features/shell/LockScreen';
 import { MemberPicker } from './features/shell/MemberPicker';
 import { Onboarding } from './features/onboarding/Onboarding';
 import { Sidebar } from './components/layout/Sidebar';
+import { guarded } from './services/attempts';
+import { installDeviceKey } from './services/vault';
 import { WhatsNewHost } from './features/shell/WhatsNew';
 import { Topbar } from './components/layout/Topbar';
 import { NotificationsPanel } from './components/layout/Notifications';
@@ -32,6 +34,9 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { DEFAULT_PALETTE, type Member, type Palette } from './db/types';
 import { tr } from './lib/i18n';
 import { IS_PREVIEW } from './lib/preview';
+
+// Desktop: the database and backups are encrypted with this computer's key unless the user sets a password.
+installDeviceKey();
 
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard'));
 const Transactions = lazy(() => import('./features/transactions/Transactions'));
@@ -108,7 +113,8 @@ export default function App() {
     useApp.getState().setScope('personal');
     const posted = runAutoPost(e, { id: m.id, role: m.role });
     if (posted) useApp.getState().toast({ kind: 'info', title: tr('{posted} movimiento(s) programado(s) registrado(s)', { posted }), body: tr('Se registraron automáticamente los pagos recurrentes vencidos.') });
-    void autoBackup(e).catch(() => undefined);
+    // Daily copy, then encrypt any backup still saved in the clear by a version before 1.0.1.
+    void autoBackup(e).then(() => protectOldBackups(e)).catch(() => undefined);
     void notifyBillsDue(e, m.id).catch(() => undefined);
     // Bank email (optional): when connected, read new alerts and ask the user what to add.
     if (getMailPrefs(e).connected && mailSupported()) {
@@ -190,8 +196,12 @@ export default function App() {
 
   const unlock = async (password: string): Promise<string | null> => {
     try {
-      const e = await Engine.open(adapterRef.current, { password, wasmUrl: sqlWasmUrl });
-      afterOpen(e);
+      let opened: Engine | null = null;
+      await guarded('password', async () => {
+        try { opened = await Engine.open(adapterRef.current, { password, wasmUrl: sqlWasmUrl }); return true; } catch (x) { if (x instanceof WrongPasswordError) return false; throw x; }
+      });
+      if (!opened) throw new WrongPasswordError();
+      afterOpen(opened);
       return null;
     } catch (err) {
       if (err instanceof WrongPasswordError) return tr('Contraseña incorrecta');

@@ -20,14 +20,15 @@ import { ProfileSwitcher } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
 import type { DashboardStyle } from '../dashboard/Dashboard';
 import { parseMoney, type Currency } from '../../lib/money';
+import { COUNTRIES, bankGroups, currencyForBank, type Country } from '../../domain/countries';
+import { passwordProblem } from '../../domain/auth';
 import { today } from '../../lib/dates';
 import type { Engine } from '../../db/engine';
 import type { AccountType, Member, ProfileMode } from '../../db/types';
 import { errorMessage } from '../../hooks/useDb';
 import { tr } from '../../lib/i18n';
 
-const BANKS = ['Banco General', 'Banistmo', 'BAC Credomatic', 'Banco Nacional de Panamá', 'Caja de Ahorros', 'Global Bank', 'Multibank', 'Banesco', 'St. Georges Bank', 'Credicorp Bank', tr('Otro')];
-const STEPS = [tr('Bienvenida'), tr('Apariencia'), tr('Perfil'), tr('Moneda'), tr('Ingresos'), tr('Gastos'), tr('Cuenta'), tr('Seguridad'), tr('Listo')];
+const STEPS = [tr('Bienvenida'), tr('Apariencia'), tr('Perfil'), tr('País'), tr('Ingresos'), tr('Gastos'), tr('Cuenta'), tr('Seguridad'), tr('Listo')];
 
 export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner: Member) => void }) {
   const ok = useMotionOK();
@@ -37,7 +38,11 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
   const [mode, setMode] = useState<ProfileMode>('individual');
   const [household, setHousehold] = useState('');
   const [others, setOthers] = useState<string[]>(['']);
+  const [country, setCountry] = useState<Country>('PA');
   const [currency, setCurrency] = useState<Currency>('PAB');
+  const groups = bankGroups(country);
+  const BANKS = [...groups.flatMap((g) => g.banks), tr('Otro')];
+  const pickCountry = (c: Country) => { setCountry(c); setCurrency(COUNTRIES[c].currencies[0]); setAccName(COUNTRIES[c].banks[0]); };
   const [skipIncome, setSkipIncome] = useState(false);
   const [income, setIncome] = useState<IncomeDraft>(() => emptyDraft(today()));
   const [employer, setEmployer] = useState('');
@@ -45,6 +50,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
   const monthlyNet = useMemo(() => (skipIncome ? 0 : estimateIncome(draftToConfig(income)).monthlyNet), [skipIncome, income]);
   const [accName, setAccName] = useState('Banco General');
   const [accType, setAccType] = useState<AccountType>('savings');
+  const accCurrency = currencyForBank(accName, currency);
   const [accBalance, setAccBalance] = useState('');
   const [usePw, setUsePw] = useState(false);
   const [pw, setPw] = useState('');
@@ -66,7 +72,8 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
     }
     if (step === 6 && Number.isNaN(parseMoney(accBalance || '0'))) return tr('El saldo inicial no es válido.');
     if (step === 7 && usePw) {
-      if (pw.length < 8) return tr('La contraseña debe tener al menos 8 caracteres.');
+      const weak = passwordProblem(pw);
+      if (weak) return weak;
       if (pw !== pw2) return tr('Las contraseñas no coinciden.');
     }
     return null;
@@ -81,11 +88,11 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
         owner = createMember(engine, null, { name: name.trim(), role: 'admin' }, true);
         const actor = { id: owner.id, role: owner.role };
         if (mode !== 'individual') others.filter((o) => o.trim()).forEach((o) => createMember(engine, null, { name: o.trim(), role: 'adult' }));
-        const acc = createAccount(engine, actor, { name: accName.trim() || tr('Cuenta principal'), type: accType, currency, initialBalance: parseMoney(accBalance || '0'), institution: BANKS.includes(accName) ? accName : null, ownerMemberId: mode === 'individual' ? null : owner.id });
+        const acc = createAccount(engine, actor, { name: accName.trim() || tr('Cuenta principal'), type: accType, currency: accCurrency, initialBalance: parseMoney(accBalance || '0'), institution: BANKS.includes(accName) && accName !== tr('Otro') ? accName : null, ownerMemberId: mode === 'individual' ? null : owner.id });
         if (plan.length) saveExpensePlan(engine, actor, plan);
         if (!skipIncome) createIncomeSource(engine, actor, { name: employer.trim() || tr('Salario'), config: draftToConfig(income), currency, accountId: acc.id, startDate: today() });
         setPrefs(engine, { theme: getPrefs(engine).theme, reducedMotion: 'system', autoLockMinutes: usePw ? 5 : 0, showBothCurrencies: true, dashboardStyle: dashStyle });
-        setProfile(engine, { name: name.trim(), mode, primaryCurrency: currency, onboarded: true, householdName: household.trim() || undefined });
+        setProfile(engine, { name: name.trim(), mode, primaryCurrency: currency, country, onboarded: true, householdName: household.trim() || undefined });
       });
       markWhatsNewSeen(); // a brand-new user has nothing to catch up on
       if (usePw) await engine.setPassword(pw);
@@ -176,13 +183,25 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
               )}
               {step === 3 && (
                 <div>
-                  <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Moneda principal')}</h2>
-                  <p className="serif text-[18px] text-ink-2">{tr('El balboa y el dólar circulan a la par (1:1). Monto conserva ambos códigos.')}</p>
+                  <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('¿Dónde están tus cuentas?')}</h2>
+                  <p className="serif text-[18px] text-ink-2">{tr('Tu país de residencia o el de tus cuentas. Define la moneda y los bancos que verás.')}</p>
                   <div className="grid grid-cols-2 gap-3 mt-8">
-                    <ChoiceCard selected={currency === 'PAB'} onClick={() => setCurrency('PAB')} title={<span className="flex items-baseline gap-2"><span className="text-[28px] font-bold tracking-[-0.04em]">{tr('B/.')}</span>{' '}{tr('Balboa · PAB')}</span>} description={tr('Panamá. Recomendado para tus cuentas locales.')} />
-                    <ChoiceCard selected={currency === 'USD'} onClick={() => setCurrency('USD')} title={<span className="flex items-baseline gap-2"><span className="text-[28px] font-bold tracking-[-0.04em]">$</span>{' '}{tr('Dólar · USD')}</span>} description={tr('Estados Unidos y cuentas en dólares.')} />
+                    {(Object.values(COUNTRIES)).map((c) => (
+                      <ChoiceCard key={c.code} selected={country === c.code} onClick={() => pickCountry(c.code)} title={c.name()} description={c.code === 'PA' ? tr('Balboa y dólar a la par.') : tr('Pesos colombianos (COP).')} />
+                    ))}
                   </div>
-                  <p className="text-[12px] text-muted mt-5 flex gap-2"><Icon name="info" size={16} />{tr('Podrás tener cuentas en ambas monedas; los totales se muestran por separado y combinados a la par.')}</p>
+                  {country === 'PA' ? (
+                    <>
+                      <p className="text-[13px] font-semibold mt-6 mb-2">{tr('Moneda principal')}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <ChoiceCard selected={currency === 'PAB'} onClick={() => setCurrency('PAB')} title={<span className="flex items-baseline gap-2"><span className="text-[24px] font-bold tracking-[-0.04em]">{tr('B/.')}</span>{' '}{tr('Balboa · PAB')}</span>} description={tr('Recomendado para tus cuentas locales.')} />
+                        <ChoiceCard selected={currency === 'USD'} onClick={() => setCurrency('USD')} title={<span className="flex items-baseline gap-2"><span className="text-[24px] font-bold tracking-[-0.04em]">$</span>{' '}{tr('Dólar · USD')}</span>} description={tr('También para bancos en línea de EE. UU.')} />
+                      </div>
+                      <p className="text-[12px] text-muted mt-4 flex gap-2"><Icon name="info" size={16} />{tr('Podrás tener cuentas en ambas monedas; los totales se muestran por separado y combinados a la par.')}</p>
+                    </>
+                  ) : (
+                    <p className="text-[12px] text-muted mt-5 flex gap-2"><Icon name="info" size={16} />{tr('En un perfil de Colombia todas las cuentas van en pesos (COP), para que los totales no mezclen monedas.')}</p>
+                  )}
                 </div>
               )}
               {step === 4 && (
@@ -210,10 +229,10 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Tu cuenta principal')}</h2>
                   <p className="serif text-[18px] text-ink-2">{tr('Donde recibes tu salario. Podrás añadir más cuentas y tarjetas.')}</p>
                   <div className="grid grid-cols-2 gap-4 mt-8">
-                    <Field label={tr('Banco o nombre')}><Select value={BANKS.includes(accName) ? accName : tr('Otro')} onChange={(e) => setAccName(e.target.value === tr('Otro') ? '' : e.target.value)}>{BANKS.map((b) => <option key={b}>{b}</option>)}</Select></Field>
+                    <Field label={tr('Banco o nombre')}><Select value={BANKS.includes(accName) ? accName : tr('Otro')} onChange={(e) => setAccName(e.target.value === tr('Otro') ? '' : e.target.value)}>{groups.map((g) => <optgroup key={g.label} label={g.label}>{g.banks.map((b) => <option key={b}>{b}</option>)}</optgroup>)}<option>{tr('Otro')}</option></Select></Field>
                     <Field label={tr('Tipo')}><Select value={accType} onChange={(e) => setAccType(e.target.value as AccountType)}><option value="savings">{tr('Cuenta de ahorros')}</option><option value="checking">{tr('Cuenta corriente')}</option><option value="cash">{tr('Efectivo')}</option></Select></Field>
                     {!BANKS.includes(accName) && <Field label={tr('Nombre de la cuenta')} className="col-span-2"><Input value={accName} onChange={(e) => setAccName(e.target.value)} placeholder={tr('Ej. Cooperativa')} /></Field>}
-                    <Field label={tr('Saldo actual ({currency})', { currency })} className="col-span-2" hint={tr('El dinero que tienes hoy en esta cuenta.')}><MoneyInput currency={currency} value={accBalance} onChange={setAccBalance} aria-label={tr('Saldo inicial')} /></Field>
+                    <Field label={tr('Saldo actual ({currency})', { currency: accCurrency })} className="col-span-2" hint={tr('El dinero que tienes hoy en esta cuenta.')}><MoneyInput currency={accCurrency} value={accBalance} onChange={setAccBalance} aria-label={tr('Saldo inicial')} /></Field>
                   </div>
                 </div>
               )}

@@ -30,7 +30,7 @@ describe('database engine', () => {
     const e2 = await Engine.open(adapter, { wasmUrl: wasmPath, password: 'secreto123' });
     expect(getProfile(e2).name).toBe('Carlos');
     const raw = await adapter.load();
-    expect(new TextDecoder().decode(raw!.slice(0, 9))).toBe('MONTOENC1');
+    expect(new TextDecoder().decode(raw!.slice(0, 9))).toBe('MONTOENC2');
   });
 
   it('validates backup bytes before restoring', async () => {
@@ -53,7 +53,7 @@ describe('transactions & accounts', () => {
     createTransaction(e, actor, { type: 'transfer', description: 'Envío', amount: 5000, currency: 'PAB', date: '2026-11-03', accountId: pab.id, toAccountId: usd.id });
     expect(getAccount(e, usd.id)!.balance).toBe(25000);
     const b = balances(e);
-    expect(b.available).toEqual({ PAB: 60000, USD: 25000 });
+    expect(b.available).toEqual({ PAB: 60000, USD: 25000, COP: 0 });
     deleteTransaction(e, actor, t.id);
     expect(getAccount(e, pab.id)!.balance).toBe(45000);
     expect(() => createTransaction(e, actor, { type: 'expense', description: 'x', amount: 100, currency: 'USD', date: '2026-11-03', accountId: pab.id })).toThrow(/misma moneda/);
@@ -232,5 +232,26 @@ describe('automatic categories on new transactions', () => {
     saveCategoryRules(e, actor, [{ match: 'super 99', categoryId: shop, kind: 'expense' }]);
     expect(createTransaction(e, actor, { type: 'expense', description: 'Super 99', amount: 1000, currency: 'PAB', date: '2026-11-15', accountId: acc.id }).categoryId).toBe(shop);
     expect(createTransaction(e, actor, { type: 'expense', description: 'Super 99', amount: 1000, currency: 'PAB', date: '2026-11-15', accountId: acc.id, categoryId: food }).categoryId).toBe(food);
+  });
+});
+
+describe('schema v3: Colombian pesos', () => {
+  it('upgrades a v2 file in place, keeps its data and then accepts COP but not other currencies', async () => {
+    const { loadSqlJs } = await import('./engine');
+    const { MIGRATIONS } = await import('./schema');
+    const SQL = await loadSqlJs();
+    const old = new SQL.Database();
+    old.run(MIGRATIONS[0] as string); old.run(MIGRATIONS[1] as string); old.run('PRAGMA user_version = 2');
+    old.run("INSERT INTO accounts (id, name, type, currency, created_at) VALUES ('a1', 'Banco', 'savings', 'PAB', '2026-01-01')");
+    const { Engine } = await import('./engine');
+    const { MemoryAdapter } = await import('./adapters');
+    const adapter = new MemoryAdapter();
+    await adapter.save(old.export());
+    const e = await Engine.open(adapter);
+    expect(Number(e.get<{ user_version: number }>('PRAGMA user_version')?.user_version)).toBe(MIGRATIONS.length);
+    expect(e.get<{ currency: string }>("SELECT currency FROM accounts WHERE id = 'a1'")?.currency).toBe('PAB');
+    e.run("INSERT INTO accounts (id, name, type, currency, created_at) VALUES ('a2', 'Bancolombia', 'savings', 'COP', '2026-01-01')");
+    expect(() => e.run("INSERT INTO accounts (id, name, type, currency, created_at) VALUES ('a3', 'X', 'savings', 'EUR', '2026-01-01')")).toThrow();
+    expect(e.integrityCheck().ok).toBe(true);
   });
 });

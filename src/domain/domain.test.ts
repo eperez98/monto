@@ -18,7 +18,17 @@ describe('money', () => {
     expect(parseMoney('1,500.50')).toBe(150050);
     expect(parseMoney('B/. 20')).toBe(2000);
     expect(parseMoney('abc')).toBeNaN();
-    expect(parseMoney('1.234')).toBeNaN();
+    expect(parseMoney('1.23.4')).toBeNaN();
+  });
+  it('reads and writes Colombian pesos', () => {
+    expect(parseMoney('1.234')).toBe(123400);
+    expect(parseMoney('$ 45.000')).toBe(4500000);
+    expect(parseMoney('45.000,50')).toBe(4500050);
+    expect(parseMoney('12,5')).toBe(1250);
+    expect(formatMoney(4500000, 'COP')).toBe('$ 45.000');
+    expect(formatMoney(4500050, 'COP')).toBe('$ 45.000,5');
+    expect(combined({ PAB: 1000, USD: 500, COP: 9000 }, 'COP')).toBe(9000);
+    expect(combined({ PAB: 1000, USD: 500, COP: 9000 }, 'PAB')).toBe(1500);
   });
   it('PAB:USD parity is 1:1', () => {
     expect(convert(12345, 'PAB', 'USD')).toBe(12345);
