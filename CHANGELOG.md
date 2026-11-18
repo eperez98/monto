@@ -10,7 +10,7 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-## [0.8.0-rc.2] - 2026-11-16 · Smart Money (Release Candidate 2)
+## [0.8.0-rc.2] - 2026-11-18 · Smart Money (Release Candidate 2)
 
 Segunda versión candidata de la 0.8: puedes registrar un gasto con la foto del comprobante. En Windows aparece como versión 0.8.0.2.
 
