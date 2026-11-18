@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, animate, motion, useReducedMotion } from 'motion/react';
 import clsx from 'clsx';
 import { Icon } from '../../icons';
@@ -280,7 +281,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [open, onClose]);
-  return (
+  // Rendered at the document root: a glass card (backdrop-filter) would otherwise trap the fixed overlay inside it.
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-50 grid place-items-center p-3 sm:p-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
@@ -309,7 +311,8 @@ export function Modal({ open, onClose, title, subtitle, children, footer, width 
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
 

@@ -229,3 +229,107 @@ input[type='date']::-webkit-calendar-picker-indicator { opacity: 0.55; cursor: p
 
 /* Windows 11 Mica (desktop app): the page lets the system material through, tinted with the theme so text stays readable. */
 html.mica, html.mica body { background: color-mix(in srgb, var(--bg) 62%, transparent) !important; }
+
+/* ===================================================================== Glass (base design since 0.8 RC 3)
+   Frosted panels over a soft colour mesh: translucent surfaces, blur, and a thin light edge. */
+.theme-glass {
+  --bg: #EEF0FA; --surface: rgb(255 255 255 / 0.58); --surface-2: rgb(255 255 255 / 0.44); --surface-3: rgb(40 34 110 / 0.07); --border: rgb(255 255 255 / 0.7);
+  --ink: #16142A; --ink-2: #48455F; --muted: #7D7996;
+  --brand: #6C5CE7; --brand-2: #5A4AD6; --brand-ink: #FFFFFF; --brand-soft: rgb(108 92 231 / 0.14); --lavender: #C9C2FF;
+  --emerald-soft: rgb(31 169 113 / 0.14); --coral-soft: rgb(229 84 107 / 0.13); --amber-soft: rgb(217 146 15 / 0.15); --blue-soft: rgb(63 142 219 / 0.14); --sage-soft: rgb(108 92 231 / 0.10);
+  --shadow: inset 0 1px 0 rgb(255 255 255 / 0.75), 0 10px 30px -14px rgb(60 45 140 / 0.28);
+  --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 30px 70px -24px rgb(40 28 110 / 0.45);
+}
+.dark.theme-glass {
+  --bg: #0C0B18; --surface: rgb(34 31 58 / 0.55); --surface-2: rgb(44 40 74 / 0.5); --surface-3: rgb(255 255 255 / 0.07); --border: rgb(255 255 255 / 0.11);
+  --ink: #F3F2FA; --ink-2: #BDB9D2; --muted: #8783A0;
+  --brand: #8B7CFF; --brand-2: #9D90FF; --brand-soft: rgb(139 124 255 / 0.18);
+  --emerald-soft: rgb(61 214 140 / 0.14); --coral-soft: rgb(255 111 134 / 0.14); --amber-soft: rgb(255 197 61 / 0.13); --blue-soft: rgb(79 179 240 / 0.14); --sage-soft: rgb(139 124 255 / 0.12);
+  --shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 14px 34px -14px rgb(0 0 0 / 0.7);
+  --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 34px 80px -24px rgb(0 0 0 / 0.8);
+}
+.theme-glass body {
+  background:
+    radial-gradient(42% 52% at 12% 18%, rgb(139 124 255 / 0.42) 0%, transparent 70%),
+    radial-gradient(38% 48% at 88% 12%, rgb(94 200 242 / 0.38) 0%, transparent 70%),
+    radial-gradient(46% 55% at 78% 92%, rgb(244 166 215 / 0.38) 0%, transparent 70%),
+    radial-gradient(40% 45% at 18% 88%, rgb(120 220 190 / 0.28) 0%, transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+.dark.theme-glass body {
+  background:
+    radial-gradient(42% 52% at 12% 18%, rgb(108 80 255 / 0.32) 0%, transparent 70%),
+    radial-gradient(38% 48% at 88% 12%, rgb(30 140 210 / 0.26) 0%, transparent 70%),
+    radial-gradient(46% 55% at 78% 92%, rgb(190 60 150 / 0.24) 0%, transparent 70%),
+    radial-gradient(40% 45% at 18% 88%, rgb(20 150 120 / 0.18) 0%, transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+.theme-glass :is(.card, .acrylic, .glass) { backdrop-filter: blur(22px) saturate(170%); -webkit-backdrop-filter: blur(22px) saturate(170%); }
+.theme-glass .field { background: rgb(255 255 255 / 0.5); backdrop-filter: blur(10px); }
+.dark.theme-glass .field { background: rgb(255 255 255 / 0.06); }
+.theme-glass .hero-surface {
+  background:
+    radial-gradient(70% 90% at 85% 10%, rgb(255 255 255 / 0.35) 0%, transparent 55%),
+    linear-gradient(135deg, rgb(123 92 255 / 0.92) 0%, rgb(91 63 224 / 0.9) 50%, rgb(60 40 170 / 0.92) 100%);
+  border: 1px solid rgb(255 255 255 / 0.35);
+}
+
+/* ===================================================================== Skeuomorphic (extra theme)
+   Real materials: warm paper, leather and brass; raised buttons, recessed fields, stitched hero. */
+.theme-skeuo {
+  --bg: #E7E0D2; --surface: #FBF7EF; --surface-2: #F4EEE2; --surface-3: #E6DDCC; --border: #CDBFA6;
+  --ink: #2B2218; --ink-2: #5A4B3A; --muted: #8C7B66;
+  --brand: #8A5A2B; --brand-2: #774B21; --brand-ink: #FFF8EC; --brand-soft: #F1E2CC; --lavender: #D8B98F;
+  --emerald: #3E7D3A; --emerald-soft: #E1ECD6; --sage: #B9A27E; --sage-soft: #EFE6D6;
+  --coral: #B4432F; --coral-soft: #F6DED6; --amber: #B07A12; --amber-soft: #F6E8C6; --blue: #3B6A8F; --blue-soft: #DCE6EE;
+  --shadow: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 1px 0 rgb(120 95 60 / 0.25), 0 6px 14px -6px rgb(70 50 25 / 0.35);
+  --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.9), 0 24px 50px -18px rgb(60 40 20 / 0.55);
+  --font-serif: 'Instrument Serif', Georgia, serif;
+}
+.dark.theme-skeuo {
+  --bg: #1E1A16; --surface: #2E2822; --surface-2: #282320; --surface-3: #3A332B; --border: #4A4035;
+  --ink: #F2E9DA; --ink-2: #CDBFA9; --muted: #9A8B76;
+  --brand: #D49A5A; --brand-2: #E0AA6C; --brand-ink: #24180C; --brand-soft: #4A3622; --lavender: #A07A4E;
+  --emerald: #7FB86F; --emerald-soft: #24331F; --coral: #E3836C; --coral-soft: #3E241C; --amber: #E2B04A; --amber-soft: #3B2E14; --blue: #7FA9CC; --blue-soft: #1F2C38; --sage-soft: #332B22;
+  --shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 1px 0 rgb(0 0 0 / 0.5), 0 8px 18px -8px rgb(0 0 0 / 0.7);
+  --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 28px 60px -18px rgb(0 0 0 / 0.8);
+}
+.theme-skeuo body {
+  /* fine paper grain made of two crossed hairline patterns */
+  background:
+    repeating-linear-gradient(0deg, rgb(120 95 60 / 0.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgb(120 95 60 / 0.03) 0 1px, transparent 1px 4px),
+    radial-gradient(120% 90% at 50% 0%, #EFE9DD 0%, var(--bg) 70%);
+}
+.dark.theme-skeuo body {
+  background:
+    repeating-linear-gradient(0deg, rgb(0 0 0 / 0.12) 0 1px, transparent 1px 3px),
+    radial-gradient(120% 90% at 50% 0%, #2A241E 0%, var(--bg) 70%);
+}
+.theme-skeuo .card { background-image: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 40%); }
+.dark.theme-skeuo .card { background-image: linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0) 40%); }
+.theme-skeuo .btn.bg-brand {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--brand) 78%, white) 0%, var(--brand) 55%, var(--brand-2) 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 -2px 0 rgb(0 0 0 / 0.18), 0 2px 4px rgb(60 40 20 / 0.35);
+  text-shadow: 0 -1px 0 rgb(0 0 0 / 0.25);
+}
+.theme-skeuo .btn.bg-surface { background-image: linear-gradient(180deg, #FFFDF8, #EFE7D8); box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgb(70 50 25 / 0.3); }
+.dark.theme-skeuo .btn.bg-surface { background-image: linear-gradient(180deg, #3A332B, #2B251F); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 1px 2px rgb(0 0 0 / 0.6); }
+.theme-skeuo .btn:active { box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.3); }
+.theme-skeuo .field { box-shadow: inset 0 2px 4px rgb(70 50 25 / 0.18), 0 1px 0 rgb(255 255 255 / 0.8); background: #FFFCF6; }
+.dark.theme-skeuo .field { box-shadow: inset 0 2px 5px rgb(0 0 0 / 0.5), 0 1px 0 rgb(255 255 255 / 0.05); background: #221D18; }
+.theme-skeuo .nav-pill.bg-brand, .theme-skeuo .nav-pill .bg-brand { box-shadow: inset 0 2px 6px rgb(0 0 0 / 0.35), 0 1px 0 rgb(255 255 255 / 0.5); }
+.theme-skeuo .hero-surface {
+  background:
+    radial-gradient(90% 120% at 15% 0%, rgb(255 255 255 / 0.18) 0%, transparent 55%),
+    repeating-linear-gradient(45deg, rgb(0 0 0 / 0.04) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, #8F5E30 0%, #6E4321 55%, #4E2E15 100%);
+  box-shadow: inset 0 0 0 6px rgb(0 0 0 / 0.0), inset 0 0 0 7px rgb(255 235 200 / 0.35), inset 0 2px 0 rgb(255 255 255 / 0.2), 0 14px 30px -12px rgb(60 35 15 / 0.6);
+  outline: 1.5px dashed rgb(255 230 190 / 0.45); outline-offset: -11px;
+}
+.theme-skeuo .acrylic { background-image: linear-gradient(90deg, rgb(0 0 0 / 0.03), transparent 30%); }
+/* Dialogs stay readable over busy pages: frosted, but almost opaque. */
+.theme-glass [role='dialog'].card { background-color: rgb(250 250 255 / 0.86); }
+.dark.theme-glass [role='dialog'].card { background-color: rgb(26 24 44 / 0.88); }

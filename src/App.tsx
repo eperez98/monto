@@ -19,6 +19,7 @@ import { LockScreen } from './features/shell/LockScreen';
 import { MemberPicker } from './features/shell/MemberPicker';
 import { Onboarding } from './features/onboarding/Onboarding';
 import { Sidebar } from './components/layout/Sidebar';
+import { WhatsNewHost } from './features/shell/WhatsNew';
 import { Topbar } from './components/layout/Topbar';
 import { NotificationsPanel } from './components/layout/Notifications';
 import { GuideTour } from './components/layout/GuideTour';
@@ -28,7 +29,7 @@ import { PartnerSetupHost } from './features/family/PartnerWizard';
 import { TxEditor } from './features/transactions/TxEditor';
 import { Toaster, Button, useMotionOK, ease } from './components/ui';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import type { Member } from './db/types';
+import { DEFAULT_PALETTE, type Member, type Palette } from './db/types';
 import { tr } from './lib/i18n';
 import { IS_PREVIEW } from './lib/preview';
 
@@ -67,21 +68,21 @@ export default function App() {
 
   // ------------------------------------------------------------ theme & motion
   const applyVisual = useCallback((e: Engine | null) => {
-    const prefs = e ? getPrefs(e) : { theme: 'system', reducedMotion: 'system', palette: 'violet' };
+    const prefs: { theme: string; reducedMotion: string; palette?: Palette; density?: string } = e ? getPrefs(e) : { theme: 'system', reducedMotion: 'system' };
     const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const dark = prefs.theme === 'dark' || (prefs.theme === 'system' && sysDark);
     const sysReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const reduce = prefs.reducedMotion === 'on' || (prefs.reducedMotion === 'system' && sysReduce);
     document.documentElement.classList.toggle('dark', dark);
-    document.documentElement.classList.toggle('theme-classic', prefs.palette === 'classic');
-    document.documentElement.classList.toggle('theme-win11', prefs.palette === 'win11');
+    const palette = prefs.palette ?? DEFAULT_PALETTE;
+    for (const p of ['glass', 'skeuo', 'classic', 'win11'] as const) document.documentElement.classList.toggle(`theme-${p}`, palette === p);
     document.documentElement.classList.toggle('reduce-motion', reduce);
     // Compact mode: the whole page 10 % smaller, like Ctrl + minus, so layouts that fill the window still fit.
-    const compact = 'density' in prefs && prefs.density === 'compact';
+    const compact = prefs.density === 'compact';
     if (isTauri() && !IS_PREVIEW) void import('@tauri-apps/api/webview').then(({ getCurrentWebview }) => getCurrentWebview().setZoom(compact ? 0.9 : 1)).catch(() => undefined);
     else document.documentElement.style.zoom = compact ? '0.9' : '';
     // Windows 11 theme in the desktop app: the real Mica material of the system shows through the page background.
-    const mica = isTauri() && !IS_PREVIEW && prefs.palette === 'win11';
+    const mica = isTauri() && !IS_PREVIEW && palette === 'win11';
     document.documentElement.classList.toggle('mica', mica);
     void import('@tauri-apps/api/window').then(({ getCurrentWindow, Effect }) => (mica ? getCurrentWindow().setEffects({ effects: [Effect.Mica] }) : getCurrentWindow().clearEffects())).catch(() => document.documentElement.classList.remove('mica'));
     useApp.getState().setVisual({ dark, reducedMotion: reduce });
@@ -298,6 +299,7 @@ export default function App() {
             <GuideTour />
             <PartnerSetupHost />
             <MailReviewHost />
+            <WhatsNewHost />
           </motion.div>
         )}
       </AnimatePresence>

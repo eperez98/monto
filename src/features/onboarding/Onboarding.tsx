@@ -13,6 +13,9 @@ import type { PlanItem } from '../../domain/plan';
 import { createAccount } from '../../db/repo/finance';
 import { createMember, getPrefs, seedCategories, setPrefs, setProfile } from '../../db/repo/core';
 import { QuickPrefs } from '../../components/layout/QuickPrefs';
+import { ThemePicker, ModePicker } from '../../components/ThemePicker';
+import { markWhatsNewSeen } from '../shell/WhatsNew';
+import { useApp } from '../../store/app';
 import { ProfileSwitcher } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
 import type { DashboardStyle } from '../dashboard/Dashboard';
@@ -24,7 +27,7 @@ import { errorMessage } from '../../hooks/useDb';
 import { tr } from '../../lib/i18n';
 
 const BANKS = ['Banco General', 'Banistmo', 'BAC Credomatic', 'Banco Nacional de Panamá', 'Caja de Ahorros', 'Global Bank', 'Multibank', 'Banesco', 'St. Georges Bank', 'Credicorp Bank', tr('Otro')];
-const STEPS = [tr('Bienvenida'), tr('Perfil'), tr('Moneda'), tr('Ingresos'), tr('Gastos'), tr('Cuenta'), tr('Seguridad'), tr('Listo')];
+const STEPS = [tr('Bienvenida'), tr('Apariencia'), tr('Perfil'), tr('Moneda'), tr('Ingresos'), tr('Gastos'), tr('Cuenta'), tr('Seguridad'), tr('Listo')];
 
 export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner: Member) => void }) {
   const ok = useMotionOK();
@@ -49,18 +52,20 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [dashStyle, setDashStyle] = useState<DashboardStyle>('calm');
+  useApp((st) => st.revision); // re-render when the theme chosen in step 2 is saved
+  const prefs = getPrefs(engine);
 
   const next = () => { setErr(null); setDir(1); setStep((s) => s + 1); };
   const back = () => { setErr(null); setDir(-1); setStep((s) => s - 1); };
 
   const validate = (): string | null => {
-    if (step === 1 && !name.trim()) return tr('Escribe tu nombre para personalizar Monto.');
-    if (step === 3 && !skipIncome) {
+    if (step === 2 && !name.trim()) return tr('Escribe tu nombre para personalizar Monto.');
+    if (step === 4 && !skipIncome) {
       const r = incomeConfigSchema.safeParse(draftToConfig(income));
       if (!r.success) return r.error.issues[0].message;
     }
-    if (step === 5 && Number.isNaN(parseMoney(accBalance || '0'))) return tr('El saldo inicial no es válido.');
-    if (step === 6 && usePw) {
+    if (step === 6 && Number.isNaN(parseMoney(accBalance || '0'))) return tr('El saldo inicial no es válido.');
+    if (step === 7 && usePw) {
       if (pw.length < 8) return tr('La contraseña debe tener al menos 8 caracteres.');
       if (pw !== pw2) return tr('Las contraseñas no coinciden.');
     }
@@ -82,6 +87,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
         setPrefs(engine, { theme: getPrefs(engine).theme, reducedMotion: 'system', autoLockMinutes: usePw ? 5 : 0, showBothCurrencies: true, dashboardStyle: dashStyle });
         setProfile(engine, { name: name.trim(), mode, primaryCurrency: currency, onboarded: true, householdName: household.trim() || undefined });
       });
+      markWhatsNewSeen(); // a brand-new user has nothing to catch up on
       if (usePw) await engine.setPassword(pw);
       else await engine.flush();
       if (ok) confetti({ particleCount: 140, spread: 80, origin: { y: 0.65 }, colors: ['#2FBF85', '#12291F', '#A8C2A3', '#F5F3EE', '#C98A1E'] });
@@ -138,6 +144,16 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
               )}
               {step === 1 && (
                 <div>
+                  <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('¿Cómo quieres ver Monto?')}</h2>
+                  <p className="serif text-[18px] text-ink-2">{tr('Elige un tema y el modo. Lo verás aplicado al instante y podrás cambiarlo en Configuración.')}</p>
+                  <p className="text-[13px] font-semibold mt-8 mb-2">{tr('Tema')}</p>
+                  <ThemePicker value={prefs.palette} onChange={(v) => setPrefs(engine, { palette: v })} />
+                  <p className="text-[13px] font-semibold mt-6 mb-2">{tr('Modo')}</p>
+                  <ModePicker value={prefs.theme} onChange={(v) => setPrefs(engine, { theme: v })} />
+                </div>
+              )}
+              {step === 2 && (
+                <div>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Cuéntanos sobre ti')}</h2>
                   <p className="serif text-[18px] text-ink-2">{tr('¿Cómo vas a usar Monto?')}</p>
                   <Field label={tr('Tu nombre')} className="mt-8"><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={tr('Ej. Carlos')} /></Field>
@@ -158,7 +174,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   )}
                 </div>
               )}
-              {step === 2 && (
+              {step === 3 && (
                 <div>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Moneda principal')}</h2>
                   <p className="serif text-[18px] text-ink-2">{tr('El balboa y el dólar circulan a la par (1:1). Monto conserva ambos códigos.')}</p>
@@ -169,7 +185,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   <p className="text-[12px] text-muted mt-5 flex gap-2"><Icon name="info" size={16} />{tr('Podrás tener cuentas en ambas monedas; los totales se muestran por separado y combinados a la par.')}</p>
                 </div>
               )}
-              {step === 3 && (
+              {step === 4 && (
                 <div>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('¿Cómo recibes tus ingresos?')}</h2>
                   <p className="serif text-[18px] text-ink-2 mb-6">{tr('Escribe lo que recibes, ya con los descuentos aplicados.')}</p>
@@ -182,14 +198,14 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   )}
                 </div>
               )}
-              {step === 4 && (
+              {step === 5 && (
                 <div>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Tus gastos del mes')}</h2>
                   <p className="serif text-[18px] text-ink-2 mb-6">{tr('Te preguntaremos uno por uno y veremos cuánto te queda para ahorrar.')}</p>
                   <ExpensePlanner income={monthlyNet} currency={currency} initial={plan} onChange={setPlan} />
                 </div>
               )}
-              {step === 5 && (
+              {step === 6 && (
                 <div>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Tu cuenta principal')}</h2>
                   <p className="serif text-[18px] text-ink-2">{tr('Donde recibes tu salario. Podrás añadir más cuentas y tarjetas.')}</p>
@@ -201,7 +217,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   </div>
                 </div>
               )}
-              {step === 6 && (
+              {step === 7 && (
                 <div>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">{tr('Protege tu información')}</h2>
                   <p className="serif text-[18px] text-ink-2">{tr('Opcional: cifra la base de datos con una contraseña.')}</p>
@@ -217,7 +233,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   </div>
                 </div>
               )}
-              {step === 7 && (
+              {step === 8 && (
                 <div className="pt-4 text-center">
                   <motion.div initial={ok ? { scale: 0 } : false} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 15 }} className="mx-auto grid place-items-center size-20 rounded-full bg-emerald text-white"><Icon name="check" size={38} strokeWidth={2.4} /></motion.div>
                   <h2 className="text-[34px] font-semibold tracking-[-0.04em] mt-6">{tr('¡Todo listo,')}{' '}{name.split(' ')[0]}!</h2>

@@ -1,7 +1,7 @@
 // End-to-end smoke test against the Vite dev server (browser mode, IndexedDB storage).
 // Usage: npm run dev (in another terminal) && node scripts/e2e.mjs [--shots]
 import { createRequire } from 'node:module';
-import { mkdirSync } from 'node:fs';
+import { cpSync, mkdirSync } from 'node:fs';
 const { chromium } = createRequire(import.meta.url)('playwright');
 
 const URL = process.env.E2E_URL ?? 'http://127.0.0.1:1420/';
@@ -37,6 +37,21 @@ try {
   assert(await page.getByRole('tab', { name: 'EN', exact: true }).isVisible(), 'selector de idioma visible desde el primer arranque');
   assert(true, 'cambio rápido de modo claro/oscuro');
   await click('Comenzar');
+  step('Onboarding: theme and mode');
+  await page.getByText('¿Cómo quieres ver Monto?').waitFor();
+  assert(await page.evaluate(() => document.documentElement.classList.contains('theme-glass')), 'cristal es el diseño base para cuentas nuevas');
+  await click('Relieve');
+  await page.waitForFunction(() => document.documentElement.classList.contains('theme-skeuo'));
+  await page.waitForTimeout(500);
+  await shot('02b-onboarding-theme-skeuo');
+  await click('Cristal');
+  await page.waitForFunction(() => document.documentElement.classList.contains('theme-glass'));
+  await click('Oscuro', { exact: true });
+  await page.waitForFunction(() => document.documentElement.classList.contains('dark'));
+  await click('Claro', { exact: true });
+  await page.waitForFunction(() => !document.documentElement.classList.contains('dark'));
+  assert(true, 'la configuración inicial pregunta el tema y el modo claro u oscuro');
+  await click('Continuar');
   step('Onboarding: profile');
   await page.getByPlaceholder('Ej. Carlos').fill('Carlos');
   await click('Familia');
@@ -385,6 +400,7 @@ try {
   await page.getByRole('combobox').filter({ hasText: 'Negocio' }).waitFor();
   assert(true, 'selector de perfil visible en la configuración inicial');
   await click('Comenzar');
+  await click('Continuar');
   await page.getByPlaceholder('Ej. Carlos').fill('Lucía');
   await click('Continuar');
   await click('Continuar');
@@ -547,6 +563,88 @@ try {
   await click('Salir de la vista de celular');
   assert(!(await page.locator('iframe').count()), 'salir de la vista de celular');
 
+  step('New design: glass, skeuomorphic theme, expandable menu');
+  // WHATSNEW_SHOTS=1 also saves the pictures of the What's New panel (fictional data) into src/assets/whatsnew.
+  // Saved outside src/ first: a new file there makes Vite reload the page mid-test. They are copied in at the end.
+  const WN = process.env.WHATSNEW_SHOTS ? `${out}/whatsnew` : null;
+  if (WN) mkdirSync(WN, { recursive: true });
+  const wn = async (name) => { if (WN) { await page.waitForTimeout(700); await page.screenshot({ path: `${WN}/${name}.jpg`, type: 'jpeg', quality: 72 }); } };
+  const look = async (theme, mode) => {
+    await page.getByRole('button', { name: 'Configuración' }).click();
+    await click('Apariencia');
+    await click(theme);
+    await click(mode, { exact: true });
+    await click('Resumen', { exact: true });
+    await page.waitForTimeout(1200);
+  };
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await look('Cristal', 'Claro');
+  assert(await page.evaluate(() => document.documentElement.classList.contains('theme-glass') && !document.documentElement.classList.contains('dark')), 'tema cristal en modo claro');
+  await wn('glass');
+  await shot('24-glass-light');
+  assert(!(await page.getByRole('button', { name: 'Gestionar cuentas' }).count()), 'menú compacto: solo íconos al empezar');
+  await page.mouse.move(900, 450);
+  await page.mouse.move(36, 320, { steps: 5 });
+  await page.getByRole('button', { name: 'Gestionar cuentas' }).waitFor();
+  assert(true, 'menú progresivo: se despliega al pasar el cursor');
+  await wn('menu');
+  await shot('25-menu-peek');
+  await page.mouse.move(900, 450);
+  await page.getByRole('button', { name: 'Gestionar cuentas' }).waitFor({ state: 'detached' });
+  await page.getByRole('button', { name: 'Fijar el menú abierto' }).first().click();
+  await page.mouse.move(900, 450);
+  await page.waitForTimeout(500);
+  assert(await page.getByRole('button', { name: 'Gestionar cuentas' }).isVisible(), 'menú fijado abierto');
+  await page.getByRole('button', { name: 'Contraer el menú' }).click();
+  await page.mouse.move(900, 450);
+  await page.getByRole('button', { name: 'Gestionar cuentas' }).waitFor({ state: 'detached' });
+  assert(true, 'menú se contrae de nuevo');
+  await click('Movimiento', { exact: true });
+  await page.getByText('Subir foto del comprobante').waitFor();
+  if (WN) await page.evaluate(() => { const b = [...document.querySelectorAll('[role=dialog] button')].find((x) => x.textContent.includes('Subir foto')); b.disabled = false; b.querySelector('p:last-child').textContent = 'Elige, arrastra aquí o pega (Ctrl+V) una foto o un PDF. Monto lee el comercio, la fecha y el total y tú revisas antes de registrar.'; });
+  await wn('receipt');
+  await dclick('Cancelar');
+  await click('Personalizar resumen');
+  await page.getByRole('dialog', { name: 'Personalizar el resumen' }).waitFor();
+  await wn('summary');
+  await page.getByRole('dialog', { name: 'Personalizar el resumen' }).getByRole('button', { name: 'Listo' }).click();
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Correo del banco');
+  await wn('banks');
+  await look('Cristal', 'Oscuro');
+  await wn('done');
+  await shot('26-glass-dark');
+  await look('Relieve', 'Claro');
+  assert(await page.evaluate(() => document.documentElement.classList.contains('theme-skeuo')), 'tema extra de relieve (skeuomorphism)');
+  await wn('skeuo');
+  await shot('27-skeuo-light');
+  await look('Relieve', 'Oscuro');
+  await shot('28-skeuo-dark');
+  await look('Violeta', 'Claro');
+
+  step('What\'s New panel for people upgrading');
+  await page.evaluate(() => localStorage.removeItem('monto:whats-new'));
+  await page.reload();
+  await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
+  await click('Desbloquear');
+  await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: /Carlos/ }).first().click();
+  const news = page.getByRole('dialog', { name: 'Novedades de Monto' });
+  await news.waitFor();
+  assert(true, 'quien ya usaba Monto ve el panel de novedades');
+  await news.getByRole('button', { name: /^Cristal/ }).click();
+  await page.waitForFunction(() => document.documentElement.classList.contains('theme-glass'));
+  assert(true, 'novedades: elegir el nuevo tema desde la diapositiva del diseño');
+  await page.waitForTimeout(600);
+  await shot('23-whats-new');
+  for (let k = 0; k < 5; k++) { await news.getByRole('button', { name: 'Siguiente' }).click(); await page.waitForTimeout(450); }
+  await shot('23b-whats-new-last');
+  assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
+  await news.getByRole('button', { name: 'Usar Monto' }).click();
+  await news.waitFor({ state: 'detached' });
+  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '0.8-glass'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  await page.setViewportSize({ width: 1440, height: 900 });
+
   step('Phone size, light and dark: every screen');
   await page.setViewportSize({ width: 390, height: 844 });
   const sections = ['Movimientos', 'Cuentas y tarjetas', 'Ingresos y salario', 'Plan mensual', 'Presupuestos', 'Objetivos', 'Préstamos y deudas', 'Calendario', 'Informes', 'Análisis', 'Configuración', 'Acerca de Monto', 'Resumen'];
@@ -571,6 +669,7 @@ try {
   }
   await page.setViewportSize({ width: 1440, height: 900 });
 
+  if (process.env.WHATSNEW_SHOTS) cpSync(`${out}/whatsnew`, 'src/assets/whatsnew', { recursive: true });
   console.log('\nE2E OK');
 } catch (e) {
   console.error('\nE2E FAILED:', e.message);

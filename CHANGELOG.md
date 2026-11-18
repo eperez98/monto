@@ -12,7 +12,21 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [0.8.0-rc.3] - 2026-11-18 · Smart Money (Release Candidate 3)
 
-Tercera versión candidata de la 0.8. Adelanta todo lo planeado para la 0.9 «Calm Design»: Mica de Windows 11, modo compacto, un resumen que tú ordenas y «Tu mes en resumen». También lee comprobantes en PDF, reconoce más bancos de Panamá y revisa la vista de celular pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
+Tercera versión candidata de la 0.8. Trae un diseño nuevo, «Cristal», y adelanta todo lo planeado para la 0.9 «Calm Design»: Mica de Windows 11, modo compacto, un resumen que tú ordenas y «Tu mes en resumen». También lee comprobantes en PDF, reconoce más bancos de Panamá y revisa la vista de celular pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
+
+### Diseño nuevo
+- **Cristal** es el diseño base: paneles translúcidos con desenfoque sobre un fondo de color suave, en modo claro y oscuro.
+- **Relieve** es un tema extra con materiales reales: papel, cuero con costura, botones con volumen y campos hundidos.
+- **Menú expandible**:
+  - Ahora es una barra compacta de íconos que deja más espacio a tus datos.
+  - Al pasar el cursor se despliega encima del contenido como un panel de cristal y se cierra al elegir una sección.
+  - Se puede fijar abierto, y los grupos se pliegan para ver solo lo que usas.
+- **Configuración inicial**: un paso nuevo, «Apariencia», pregunta el tema y si quieres modo claro, oscuro o el del sistema, y lo aplica al instante.
+- **Novedades**: quien ya usaba Monto ve una vez un panel con diapositivas horizontales y capturas de cada cambio. En la primera diapositiva puede elegir el tema nuevo, y la última cierra con «Usar Monto».
+- Los temas Violeta, Clásico y Windows 11 siguen disponibles en Configuración → Apariencia. Si ya habías elegido uno, se mantiene.
+
+### Corregido
+- Las ventanas emergentes se dibujan siempre por encima de todo; el efecto de cristal de una tarjeta ya no puede encerrarlas.
 
 ### Añadido (adelanto de la 0.9 «Calm Design»)
 - **Mica de Windows 11**: con el tema «Windows 11», la app de escritorio usa el material Mica del sistema detrás de la página.

@@ -11,6 +11,7 @@ import { Icon, IconTile, ICON_NAMES } from '../../icons';
 import { LogoMark } from '../../brand/Logo';
 import type { ProfileMode } from '../../db/types';
 import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/version';
+import { ThemePicker, ModePicker } from '../../components/ThemePicker';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
 import { lang, locale, setLang, tr } from '../../lib/i18n';
 import { activeProfileId, listProfiles, type ProfileEntry } from '../../db/adapters';
@@ -163,25 +164,12 @@ function AppearanceTab() {
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Modo claro u oscuro')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('“Sistema” sigue automáticamente el modo claro u oscuro de Windows.')}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {([['system', 'monitor', tr('Sistema')], ['light', 'sun', tr('Claro')], ['dark', 'moon', tr('Oscuro')]] as const).map(([v, i, l]) => <ChoiceCard key={v} selected={prefs.theme === v} onClick={() => mutate((e) => setPrefs(e, { theme: v }))} icon={i} title={l} />)}
-        </div>
+        <ModePicker value={prefs.theme} onChange={(v) => mutate((e) => setPrefs(e, { theme: v }))} />
       </div>
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Tema de color')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('Elige el estilo de color. Funciona tanto en modo claro como oscuro.')}</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {([['violet', tr('Violeta'), tr('El diseño nuevo'), 'linear-gradient(135deg,#7B5CFF,#5B3FE0 45%,#2E1D86)'], ['classic', tr('Clásico'), tr('El verde original de Monto'), 'linear-gradient(145deg,#1D4636,#0F241B 55%,#0B1A14)'], ['win11', tr('Windows 11'), tr('Acrílico, Mica y el azul de Windows'), 'linear-gradient(135deg,#0067C0,#004A99 55%,#003070)']] as const).map(([v, l, d, bg]) => {
-            const sel = (prefs.palette ?? 'violet') === v;
-            return (
-              <button key={v} type="button" aria-pressed={sel} onClick={() => mutate((e) => setPrefs(e, { palette: v }))}
-                className={clsx('flex items-center gap-3 rounded-[18px] border p-3 text-left transition', sel ? 'border-brand ring-4 ring-brand/12 bg-brand-soft/40' : 'border-line bg-surface hover:bg-surface-2')}>
-                <span className="h-12 w-20 shrink-0 rounded-[12px]" style={{ background: bg }} />
-                <span className="min-w-0"><span className="block text-[13px] font-semibold text-ink">{l}</span><span className="block text-[11.5px] text-muted">{d}</span></span>
-              </button>
-            );
-          })}
-        </div>
+        <ThemePicker value={prefs.palette} onChange={(v) => mutate((e) => setPrefs(e, { palette: v }))} />
       </div>
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Tamaño')}</p>
