@@ -238,6 +238,8 @@ export const MIGRATIONS: Migration[] = [
     db.run('PRAGMA writable_schema = OFF');
     if (db.get("SELECT count(*) FROM pragma_integrity_check WHERE integrity_check <> 'ok'") > 0) throw new Error('integrity_check');
   },
+  // v4 (1.0.1): profile photo per member, a small JPEG as a data URL (≤ 256×256). Encrypted with the rest of the file.
+  `ALTER TABLE members ADD COLUMN photo TEXT;`,
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

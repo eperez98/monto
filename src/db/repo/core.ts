@@ -85,6 +85,12 @@ export function removeMember(e: Engine, actor: Actor, id: string) {
   e.run('UPDATE members SET active = 0 WHERE id = ?', [id]);
   log(e, actor, 'delete', 'member', id, tr('Retiró a {name} del hogar', { name: m.name }), 'family');
 }
+/** A JPEG data URL made by services/photo (≤ 256×256), or null to go back to initials/emoji. */
+export function setMemberPhoto(e: Engine, actor: Actor, id: string, photo: string | null) {
+  if (actor.id !== id) assertCan(actor.role, 'member.manage');
+  if (photo !== null && (!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(photo) || photo.length > 200_000)) throw new Error(tr('La foto no es válida.'));
+  e.run('UPDATE members SET photo = ? WHERE id = ?', [photo, id]);
+}
 export async function setMemberPin(e: Engine, actor: Actor, id: string, pin: string | null) {
   if (actor.id !== id) assertCan(actor.role, 'member.manage');
   if (pin !== null && !/^\d{4,6}$/.test(pin)) throw new Error(tr('El PIN debe tener de 4 a 6 dígitos.'));

@@ -21,7 +21,8 @@ const jobs = [
   ['assets/brand/logo-mark.svg', 'assets/brand/logo-mark.png', 512, 512],
 ];
 
-const browser = await chromium.launch();
+// E2E_CHANNEL=chrome uses the installed Chrome, like scripts/e2e.mjs, instead of downloading Playwright's browser.
+const browser = await chromium.launch({ channel: process.env.E2E_CHANNEL || undefined });
 const page = await browser.newPage();
 for (const [src, out, w, h] of jobs) {
   const svg = readFileSync(resolve(root, src), 'utf8').replace('<svg ', `<svg width="${w}" height="${h}" `);

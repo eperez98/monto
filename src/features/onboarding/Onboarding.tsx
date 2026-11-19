@@ -116,7 +116,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
   return (
     <motion.div key="onboarding" className="fixed inset-0 flex bg-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <aside className="hidden lg:flex w-[360px] shrink-0 flex-col justify-between hero-surface text-[#F5F3EE] p-10">
-        <div className="flex items-center gap-2.5"><LogoMark size={30} tone="light" /><span className="text-[20px] font-bold tracking-[-0.05em]">monto</span></div>
+        <div className="flex items-center gap-2.5"><LogoMark size={32} /><span className="text-[20px] font-bold tracking-[-0.05em]">monto</span></div>
         <div>
           <p className="serif text-[30px] leading-tight text-white/90">{tr('Saber cuánto ganas de verdad y cuánto puedes ahorrar.')}</p>
           <ol className="mt-10 space-y-3">
@@ -139,7 +139,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
             <motion.div key={step} custom={dir} initial={ok ? { opacity: 0, x: 40 * dir } : false} animate={{ opacity: 1, x: 0 }} exit={ok ? { opacity: 0, x: -40 * dir } : { opacity: 0 }} transition={{ duration: 0.35, ease }} className="flex-1">
               {step === 0 && (
                 <div className="pt-10">
-                  <LogoMark size={64} animated={ok} className="text-brand dark:text-ink" />
+                  <LogoMark size={72} animated={ok} />
                   <h1 className="text-[44px] font-semibold tracking-[-0.05em] leading-[1.05] mt-8">{tr('Bienvenido a Monto')}</h1>
                   <p className="serif text-[22px] text-ink-2 mt-2">{tr('Ingresos, gastos, ahorros y deudas bajo control, en balboas y dólares.')}</p>
                   <div className="grid grid-cols-3 gap-3 mt-10">

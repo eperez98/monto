@@ -28,6 +28,20 @@ Primera versión estable de Monto. Protege tus datos aunque no uses contraseña,
 
 ### Base de datos
 - **Esquema v3**: las monedas admiten pesos colombianos (COP). Las reglas de moneda de 6 tablas se amplían sin copiar ni reescribir ningún dato, y se verifica la integridad justo después.
+- **Esquema v4**: cada integrante puede tener foto de perfil. Se guarda dentro de la base de datos, así que también va cifrada.
+
+### Identidad y bienvenida
+- **Logo renovado**: una insignia violeta redondeada con una «M» blanca trazada como línea de gráfico y una moneda de oro que sube junto a su pico. Es el mismo en la app, el ícono de Windows, el instalador y el favicon.
+- **Animación de inicio nueva**:
+  - Manchas de color que aparecen y flotan.
+  - El logo se arma solo: la insignia entra, la «M» se dibuja y la moneda cae.
+  - «monto» aparece letra por letra, con el lema «tus finanzas, en orden».
+  - Respeta la opción de reducir movimiento.
+- **Sonido al iniciar**: tres notas suaves que suben, como una moneda que cae. Se genera en la app, sin archivo de audio, y se apaga en Configuración → Apariencia → Inicio.
+- **Foto de perfil**: cada integrante puede poner su foto, que se recorta en cuadrado y se reduce a 256 × 256.
+  - Se elige en Configuración → Perfil, o desde Familia al editar a un integrante.
+  - Se ve en el menú, al elegir quién usa Monto, en Familia y al repartir gastos.
+  - Cada quien cambia la suya; para cambiar la de otro hace falta permiso para gestionar integrantes.
 
 ### Países y bancos
 - **País de las cuentas**: la configuración inicial pregunta dónde están tus cuentas, Panamá o Colombia, y con eso elige la moneda y los bancos que ves.

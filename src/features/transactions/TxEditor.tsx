@@ -314,7 +314,7 @@ export function TxEditor() {
                   return (
                     <div key={m.id} className="flex items-center gap-3">
                       <button type="button" onClick={() => { setSplitMembers(on ? splitMembers.filter((x) => x !== m.id) : [...splitMembers, m.id]); setCustomSplit({}); }} className={clsx('flex items-center gap-2 flex-1 rounded-[12px] px-2 py-1.5 transition', on ? 'bg-emerald-soft/60' : 'opacity-50')}>
-                        <Avatar name={m.name} color={m.color} emoji={m.emoji} size={24} /><span className="text-[13px] font-medium">{m.name}</span>{m.id === memberId && <Badge tone="dark" className="!h-5">{tr('Pagó')}</Badge>}
+                        <Avatar name={m.name} color={m.color} emoji={m.emoji} photo={m.photo} size={24} /><span className="text-[13px] font-medium">{m.name}</span>{m.id === memberId && <Badge tone="dark" className="!h-5">{tr('Pagó')}</Badge>}
                       </button>
                       {on && <div className="w-32"><MoneyInput currency={currency} value={customSplit[m.id] ?? (Number.isNaN(cents) ? '' : centsToInput(eq))} onChange={(v) => setCustomSplit({ ...Object.fromEntries(splitMembers.map((id) => [id, customSplit[id] ?? centsToInput(equalSplit.find((s) => s.memberId === id)?.amount ?? 0)])), [m.id]: v })} aria-label={tr('Parte de {name}', { name: m.name })} /></div>}
                     </div>

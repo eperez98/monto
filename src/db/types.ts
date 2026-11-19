@@ -6,7 +6,7 @@ import type { RecurFrequency } from '../domain/recurrence';
 export type Scope = 'personal' | 'family';
 export type ProfileMode = 'individual' | 'couple' | 'family';
 
-export interface Member { id: string; name: string; color: string; emoji: string | null; role: Role; isOwner: boolean; hasPin: boolean; active: boolean; createdAt: string }
+export interface Member { id: string; name: string; color: string; emoji: string | null; photo: string | null; role: Role; isOwner: boolean; hasPin: boolean; active: boolean; createdAt: string }
 
 export type AccountType = 'savings' | 'checking' | 'cash' | 'credit_card' | 'debit_card' | 'investment';
 export interface Account {

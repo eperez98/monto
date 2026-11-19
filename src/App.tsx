@@ -172,7 +172,8 @@ export default function App() {
   useEffect(() => {
     if (IS_PREVIEW) return;
     let cancelled = false;
-    const minSplash = new Promise((r) => setTimeout(r, ok ? 900 : 200));
+    // Long enough for the start animation (mark, name, tagline) to finish.
+    const minSplash = new Promise((r) => setTimeout(r, ok ? 1500 : 200));
     (async () => {
       try {
         setStatus(tr('Cargando motor de base de datos…'));

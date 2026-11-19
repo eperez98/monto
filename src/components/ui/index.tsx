@@ -217,8 +217,9 @@ export function Money({ cents, currency = 'PAB', className, animated, sign, comp
   return <span className={clsx('num', className)}>{f(cents)}</span>;
 }
 
-export function Avatar({ name, color, emoji, size = 32, className }: { name: string; color: string; emoji?: string | null; size?: number; className?: string }) {
+export function Avatar({ name, color, emoji, photo, size = 32, className }: { name: string; color: string; emoji?: string | null; photo?: string | null; size?: number; className?: string }) {
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+  if (photo) return <img src={photo} alt={name} width={size} height={size} className={clsx('inline-block rounded-full object-cover shrink-0 ring-2 ring-surface', className)} style={{ width: size, height: size }} />;
   return (
     <span className={clsx('inline-grid place-items-center rounded-full font-semibold text-white shrink-0 ring-2 ring-surface', className)} style={{ width: size, height: size, background: color, fontSize: size * 0.38 }}>
       {emoji || initials}

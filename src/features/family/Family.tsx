@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { useActor, useCan, useEngine, useMutate, useProfile, useQuery } from '../../hooks/useDb';
-import { listMembers, createMember, updateMember, removeMember, setMemberPin, listActivity, setProfile } from '../../db/repo/core';
+import { listMembers, createMember, updateMember, setMemberPhoto, removeMember, setMemberPin, listActivity, setProfile } from '../../db/repo/core';
 import { familyBalances, createSettlement, listGoals } from '../../db/repo/planning';
 import { totals, monthlySeries } from '../../db/repo/analytics';
 import { Avatar, Button, Card, CardHeader, EmptyState, Field, Input, Modal, Money, PageHeader, Select, Stat, useConfirm, MoneyInput, Progress, useMotionOK } from '../../components/ui';
@@ -12,6 +12,7 @@ import { formatMoney, parseMoney, pct } from '../../lib/money';
 import { formatDate, periodRange, today } from '../../lib/dates';
 import type { Member } from '../../db/types';
 import { tr } from '../../lib/i18n';
+import { PhotoField } from '../../components/PhotoField';
 
 const EMOJIS = ['', '👩', '👨', '👧', '👦', '👵', '👴', '🐶', '🐱', '⭐'];
 const ACTION_LABEL: Partial<Record<Action, string>> = { 'tx.create': tr('Registrar movimientos'), 'tx.editAny': tr('Editar movimientos de otros'), 'account.manage': tr('Gestionar cuentas'), 'budget.manage': tr('Presupuestos'), 'goal.manage': tr('Gestionar objetivos'), 'goal.contribute': tr('Aportar a objetivos'), 'debt.manage': tr('Préstamos y deudas'), 'member.manage': tr('Integrantes y roles'), 'security.manage': tr('Seguridad'), 'backup.manage': tr('Copias de seguridad'), 'report.export': tr('Exportar informes') };
@@ -40,14 +41,20 @@ export default function Family() {
   const [role, setRole] = useState<Role>('adult');
   const [emoji, setEmoji] = useState('');
   const [pin, setPin] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
   const [settle, setSettle] = useState<{ fromId: string; toId: string; amount: string } | null>(null);
   const cur = profile.primaryCurrency;
   const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? '—';
   const colorOf = (id: string) => members.find((m) => m.id === id)?.color ?? '#999';
+  const photoOf = (id: string) => members.find((m) => m.id === id)?.photo ?? null;
 
-  const openForm = (m?: Member) => { setName(m?.name ?? ''); setRole(m?.role ?? 'adult'); setEmoji(m?.emoji ?? ''); setPin(''); setForm({ open: true, m }); };
+  const openForm = (m?: Member) => { setName(m?.name ?? ''); setRole(m?.role ?? 'adult'); setEmoji(m?.emoji ?? ''); setPhoto(m?.photo ?? null); setPin(''); setForm({ open: true, m }); };
   const save = async () => {
-    const r = mutate((e, a) => (form.m ? (updateMember(e, a, form.m.id, { name, role, emoji: emoji || null }), form.m) : createMember(e, a, { name, role, emoji: emoji || null })), form.m ? tr('Integrante actualizado') : tr('Integrante añadido'));
+    const r = mutate((e, a) => {
+      const m = form.m ? (updateMember(e, a, form.m.id, { name, role, emoji: emoji || null }), form.m) : createMember(e, a, { name, role, emoji: emoji || null });
+      if (photo !== (form.m?.photo ?? null)) setMemberPhoto(e, a, m.id, photo);
+      return m;
+    }, form.m ? tr('Integrante actualizado') : tr('Integrante añadido'));
     if (!r) return;
     if (pin) {
       try { await setMemberPin(engine, actor, r.id, pin); } catch (err) { return void mutate(() => { throw err; }); }
@@ -71,7 +78,7 @@ export default function Family() {
         <Card className="p-5"><Stat label={tr('Ingresos del hogar (mes)')} value={<Money animated cents={t.income} currency={cur} className="text-emerald" />} /></Card>
         <Card className="p-5" delay={0.04}><Stat label={tr('Gastos compartidos (mes)')} value={<Money animated cents={t.expense} currency={cur} />} /></Card>
         <Card className="p-5" delay={0.08}><Stat label={tr('Balance del hogar')} value={<Money animated cents={t.net} currency={cur} sign />} /></Card>
-        <Card className="p-5" delay={0.12}><Stat label={tr('Integrantes')} value={members.length} sub={<span className="flex -space-x-2 mt-1">{members.map((m) => <Avatar key={m.id} name={m.name} color={m.color} emoji={m.emoji} size={24} />)}</span>} /></Card>
+        <Card className="p-5" delay={0.12}><Stat label={tr('Integrantes')} value={members.length} sub={<span className="flex -space-x-2 mt-1">{members.map((m) => <Avatar key={m.id} name={m.name} color={m.color} emoji={m.emoji} photo={m.photo} size={24} />)}</span>} /></Card>
       </div>
       <div className="grid grid-cols-12 gap-5">
         <Card className="col-span-7" delay={0.1}><CardHeader title={tr('Ingresos y gastos del hogar')} subtitle={tr('Solo movimientos marcados como Hogar')} /><div className="px-3 pb-3"><IncomeExpenseBars data={series} currency={cur} height={200} /></div></Card>
@@ -89,7 +96,7 @@ export default function Family() {
           <div className="p-3 space-y-2">
             {bal.transfers.map((xfer, i) => (
               <div key={i} className="flex items-center gap-3 rounded-[14px] bg-surface-2 px-3 py-2.5">
-                <Avatar name={nameOf(xfer.fromId)} color={colorOf(xfer.fromId)} size={28} />
+                <Avatar name={nameOf(xfer.fromId)} color={colorOf(xfer.fromId)} photo={photoOf(xfer.fromId)} size={28} />
                 <p className="flex-1 text-[12.5px]"><b>{nameOf(xfer.fromId)}</b>{' '}{tr('debe a')}{' '}<b>{nameOf(xfer.toId)}</b></p>
                 <Money cents={xfer.amount} currency={cur} className="font-semibold text-[13px]" />
                 {canSettle && <Button size="sm" variant="secondary" onClick={() => setSettle({ fromId: xfer.fromId, toId: xfer.toId, amount: (xfer.amount / 100).toFixed(2) })}>{tr('Saldar')}</Button>}
@@ -103,7 +110,7 @@ export default function Family() {
           <div className="p-3 grid grid-cols-2 gap-2">
             {members.map((m) => (
               <div key={m.id} className="flex items-center gap-3 rounded-[16px] border border-line/70 p-3">
-                <Avatar name={m.name} color={m.color} emoji={m.emoji} size={38} />
+                <Avatar name={m.name} color={m.color} emoji={m.emoji} photo={m.photo} size={38} />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13.5px] font-semibold truncate">{m.name} {m.id === actor.id && <span className="text-muted font-normal">{tr('(tú)')}</span>}</p>
                   <p className="text-[11.5px] text-muted">{ROLE_LABEL[m.role]}{m.isOwner ? ' · Titular' : ''}{m.hasPin ? ' · PIN' : ''}</p>
@@ -142,6 +149,7 @@ export default function Family() {
           <Field label={tr('Nombre')}><Input autoFocus value={name} onChange={(e) => setName(e.target.value)} /></Field>
           <Field label={tr('Rol')}><Select value={role} disabled={form.m?.isOwner} onChange={(e) => setRole(e.target.value as Role)}>{ALL_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</Select></Field>
           <p className="text-[12px] text-muted -mt-1">{ROLE_DESCRIPTION[role]}</p>
+          <PhotoField name={name || tr('Integrante')} color={form.m?.color ?? '#6C5CE7'} emoji={emoji} photo={photo} onChange={setPhoto} />
           <div><p className="text-[12px] font-medium text-ink-2 mb-1.5">{tr('Avatar')}</p><div className="flex gap-1.5">{EMOJIS.map((em) => <button key={em || 'none'} type="button" onClick={() => setEmoji(em)} className={`grid place-items-center size-9 rounded-full border text-[16px] ${emoji === em ? 'border-brand ring-4 ring-brand/15' : 'border-line'}`}>{em || <Icon name="user" size={14} />}</button>)}</div></div>
           <Field label={tr('PIN de acceso (opcional, 4-6 dígitos)')} hint={tr('Protege el cambio de integrante en este equipo.')}><Input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} /></Field>
         </div>

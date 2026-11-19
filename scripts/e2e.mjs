@@ -30,7 +30,7 @@ const wn = async (name) => { if (WN) { await page.waitForTimeout(700); await pag
 try {
   step('Splash');
   await page.goto(URL);
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(1300);
   await shot('01-splash');
   await page.getByText('Bienvenido a Monto').waitFor({ timeout: 15000 });
   await page.waitForTimeout(1200);
@@ -277,6 +277,15 @@ try {
   await shot('19b-about');
   await click('Resumen', { exact: true });
   await page.getByText('Apoya el desarrollo').waitFor({ state: 'detached' });
+
+  step('Profile photo');
+  await page.getByRole('button', { name: 'Configuración' }).click();
+  await click('Perfil', { exact: true });
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), click('Elegir foto de perfil')]);
+  await chooser.setFiles('src-tauri/fixtures/receipt.png');
+  await page.getByText('Foto actualizada').waitFor();
+  assert((await page.locator('img[alt="Carlos"]').count()) >= 2, 'foto de perfil en Configuración y en el menú');
+  await shot('18a-profile-photo');
 
   step('Settings → dark mode');
   await page.getByRole('button', { name: 'Configuración' }).click();

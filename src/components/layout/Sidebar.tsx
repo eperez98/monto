@@ -138,7 +138,7 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
           </button>
           <button onClick={onSwitchMember} title={tr('Cambiar de integrante')} aria-label={tr('Cambiar de integrante')}
             className={clsx('flex items-center gap-2.5 rounded-[16px] hover:bg-surface-3/70 transition', open ? 'w-full px-2 py-2' : 'size-11 justify-center')}>
-            {me && <Avatar name={me.name} color={me.color} emoji={me.emoji} size={30} />}
+            {me && <Avatar name={me.name} color={me.color} emoji={me.emoji} photo={me.photo} size={30} />}
             {open && (
               <span className="min-w-0 text-left">
                 <span className="block text-[12.5px] font-semibold text-ink truncate">{me?.name}</span>

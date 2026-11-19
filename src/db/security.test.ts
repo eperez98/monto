@@ -100,3 +100,20 @@ describe('PINs and passwords', () => {
     expect(afterTry(s, true, 2000)).toEqual({ failures: 0, until: 0 });
   });
 });
+
+describe('profile photos', () => {
+  it('stores a small JPEG for yourself, rejects anything else, and needs permission for other members', async () => {
+    const { setMemberPhoto, getMember } = await import('./repo/core');
+    const { e, actor } = await freshEngine();
+    const ana = createMember(e, actor, { name: 'Ana', role: 'member' });
+    const jpeg = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQ==';
+    setMemberPhoto(e, actor, actor.id, jpeg);
+    expect(getMember(e, actor.id)?.photo).toBe(jpeg);
+    expect(() => setMemberPhoto(e, actor, actor.id, 'data:image/svg+xml;base64,PHN2Zz4=')).toThrow();
+    expect(() => setMemberPhoto(e, actor, actor.id, 'javascript:alert(1)')).toThrow();
+    expect(() => setMemberPhoto(e, { id: ana.id, role: 'member' }, actor.id, jpeg)).toThrow();
+    setMemberPhoto(e, { id: ana.id, role: 'member' }, ana.id, jpeg);
+    setMemberPhoto(e, actor, actor.id, null);
+    expect(getMember(e, actor.id)?.photo).toBeNull();
+  });
+});

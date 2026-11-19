@@ -27,7 +27,7 @@ export function LockScreen({ onUnlock, title = tr('Monto está bloqueado'), subt
       <div className="absolute inset-0 grid place-items-center p-4">
       <motion.form onSubmit={submit} key={shake} animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : undefined} transition={{ duration: 0.4 }}
         className="acrylic card w-full max-w-[360px] rounded-[26px] bg-surface/85 backdrop-blur-xl border border-line/70 shadow-pop p-8 text-center">
-        <span className="mb-5 inline-flex items-center gap-2.5"><LogoMark size={28} className="text-ink" /><span className="text-[20px] font-bold tracking-[-0.05em] text-ink">monto</span></span>
+        <span className="mb-5 inline-flex items-center gap-2.5"><LogoMark size={30} /><span className="text-[20px] font-bold tracking-[-0.05em] text-ink">monto</span></span>
         <h1 className="text-[18px] font-semibold tracking-[-0.03em] text-ink">{title}</h1>
         <p className="text-[12.5px] text-muted mt-1 mb-6">{subtitle}</p>
         <div className="relative">

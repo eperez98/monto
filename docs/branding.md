@@ -35,7 +35,7 @@ Otros conceptos de referencia evaluados: *CashFlow* (genérico, en inglés), *Sa
 *“Monto — tus finanzas, en orden.”*
 
 - Funciona igual en PAB y USD y no depende de una moneda concreta.
-- Se convierte en logotipo con naturalidad: una **M** trazada como una línea de gráfico, cuyo trazo derecho sube en oro (crecimiento y valor).
+- Se convierte en logotipo con naturalidad: una **M** blanca trazada como una línea de gráfico, dentro de una insignia violeta redondeada, con una moneda de oro que sube junto a su pico derecho (crecimiento y valor). Renovado en la 1.0.1 para el diseño Cristal; antes era una M azul marino con el trazo derecho en oro.
 - 5 letras, pronunciación inequívoca en español e inglés y un sonido seguro y moderno.
 
 ## 4. Identidad visual

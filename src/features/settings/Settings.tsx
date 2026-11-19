@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
 import { useActor, useCan, useEngine, useMutate, useProfile, useQuery, errorMessage } from '../../hooks/useDb';
-import { getPrefs, setPrefs, setProfile, listSessions, setMemberPin } from '../../db/repo/core';
+import { getPrefs, setPrefs, setProfile, listSessions, setMemberPin, setMemberPhoto, getMember } from '../../db/repo/core';
+import { PhotoField } from '../../components/PhotoField';
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../../db/repo/finance';
 import { createBackup, deleteOldBackups, exportBackupFile, exportJSON, oldBackups, pickBackupFile, restoreFromBytes } from '../../services/backup';
 import { decrypt, isEncrypted } from '../../db/crypto';
@@ -12,6 +13,7 @@ import { LogoMark } from '../../brand/Logo';
 import type { ProfileMode } from '../../db/types';
 import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/version';
 import { ThemePicker, ModePicker } from '../../components/ThemePicker';
+import { bootSoundOn, playBootChime, setBootSound } from '../../lib/bootSound';
 import { countryOf } from '../../domain/countries';
 import { passwordProblem } from '../../domain/auth';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
@@ -59,6 +61,8 @@ export default function Settings() {
 
 function ProfileTab() {
   const profile = useProfile();
+  const actorId = useActor().id;
+  const me = useQuery((e) => getMember(e, actorId), [actorId]);
   const canManage = useCan('member.manage');
   const mutate = useMutate();
   const [name, setName] = useState(profile.name);
@@ -70,6 +74,13 @@ function ProfileTab() {
   const [copyName, setCopyName] = useState('');
   return (
     <>
+    {me && (
+      <Card hover={false} className="p-6">
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Tu foto de perfil')}</p>
+        <p className="text-[12px] text-muted mb-4">{tr('Se ve en el menú, al elegir integrante y en el hogar. Se guarda cifrada junto a tus datos.')}</p>
+        <PhotoField name={me.name} color={me.color} emoji={me.emoji} photo={me.photo} onChange={(p) => mutate((e, a) => setMemberPhoto(e, a, a.id, p), p ? tr('Foto actualizada') : tr('Foto quitada'))} />
+      </Card>
+    )}
     <Card hover={false} className="p-6 space-y-5">
       <div className="grid grid-cols-2 gap-4">
         <Field label={tr('Nombre del perfil')}><Input value={name} onChange={(e) => setName(e.target.value)} disabled={!canManage} /></Field>
@@ -161,6 +172,7 @@ function AppearanceTab() {
   const engine = useEngine();
   const prefs = useQuery((e) => getPrefs(e));
   const mutate = useMutate();
+  const [bootSound, setBootSoundState] = useState(bootSoundOn);
   return (
     <Card hover={false} className="p-6 space-y-6">
       <div>
@@ -172,6 +184,11 @@ function AppearanceTab() {
         <p className="text-[13.5px] font-semibold mb-1">{tr('Tema de color')}</p>
         <p className="text-[12px] text-muted mb-3">{tr('Elige el estilo de color. Funciona tanto en modo claro como oscuro.')}</p>
         <ThemePicker value={prefs.palette} onChange={(v) => mutate((e) => setPrefs(e, { palette: v }))} />
+      </div>
+      <div>
+        <p className="text-[13.5px] font-semibold mb-1">{tr('Inicio')}</p>
+        <Toggle checked={bootSound} onChange={(v) => { setBootSound(v); setBootSoundState(v); if (v) playBootChime(); }} label={tr('Sonido al iniciar')}
+          description={tr('Un toque corto y suave mientras Monto se abre.')} />
       </div>
       <div>
         <p className="text-[13.5px] font-semibold mb-1">{tr('Tamaño')}</p>
@@ -489,7 +506,7 @@ function UpdatesTab() {
     <>
       <Card hover={false} className="p-6">
         <div className="flex items-center gap-4">
-          <div className="grid place-items-center size-14 rounded-[18px] hero-surface"><LogoMark size={30} tone="light" /></div>
+          <LogoMark size={56} />
           <div className="flex-1">
             <p className="text-[12px] text-muted">{tr('Versión instalada')}</p>
             <p className="text-[20px] font-semibold tracking-[-0.03em] flex items-center gap-2">Monto{' '}{APP_VERSION_LABEL} {IS_PRERELEASE && <Badge tone="amber">{tr('Beta')}</Badge>}</p>

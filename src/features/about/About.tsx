@@ -56,7 +56,7 @@ export default function About() {
       <div className="grid grid-cols-12 gap-5">
         <Card hover={false} className="col-span-12 xl:col-span-7 p-7">
           <div className="flex items-center gap-4">
-            <span className="grid place-items-center size-16 rounded-[20px] hero-surface"><LogoMark size={36} tone="light" /></span>
+            <LogoMark size={64} />
             <div>
               <h2 className="text-[26px] font-bold tracking-[-0.05em] leading-none">monto</h2>
               <p className="text-[13px] text-ink-2 mt-1.5 flex flex-wrap items-center gap-2">{tr('Versión')}{' '}{APP_VERSION_LABEL}{' · '}{APP_CODENAME}{IS_PRERELEASE && <Badge tone="amber">{APP_VERSION.includes('-rc') ? tr('Candidata') : tr('Beta')}</Badge>}</p>
