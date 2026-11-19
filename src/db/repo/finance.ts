@@ -64,6 +64,24 @@ export function updateAccount(e: Engine, actor: Actor, id: string, input: Partia
     [v.name, v.type, v.currency, v.initialBalance, v.creditLimit ?? null, v.institution ?? null, v.color ?? cur.color, v.ownerMemberId ?? null, id]);
   log(e, actor, 'update', 'account', id, tr('Editó la cuenta {name}', { name: v.name }));
 }
+export type BalanceAdjust = 'subtract' | 'add' | 'set';
+/**
+ * Correct an account's current balance — subtract, add, or set it — without inventing a movement: the starting
+ * balance moves by the difference, so spending and income reports stay true. For a credit card the amount is the debt.
+ */
+export function adjustAccountBalance(e: Engine, actor: Actor, id: string, mode: BalanceAdjust, amount: number): Account {
+  assertCan(actor.role, 'account.manage');
+  const a = getAccount(e, id);
+  if (!a) throw new Error(tr('Cuenta no encontrada'));
+  if (!Number.isInteger(amount) || amount < 0 || (mode !== 'set' && amount === 0)) throw new Error(tr('Indica un monto válido.'));
+  const liab = isLiability(a);
+  const shown = liab ? -a.balance : a.balance;
+  const target = mode === 'set' ? amount : mode === 'add' ? shown + amount : shown - amount;
+  const delta = (liab ? -target : target) - a.balance;
+  e.run('UPDATE accounts SET initial_balance = initial_balance + ? WHERE id = ?', [delta, id]);
+  log(e, actor, 'update', 'account', id, tr('Ajustó el saldo de {name}', { name: a.name }));
+  return getAccount(e, id)!;
+}
 export function archiveAccount(e: Engine, actor: Actor, id: string, archived = true) {
   assertCan(actor.role, 'account.manage');
   e.run('UPDATE accounts SET archived = ? WHERE id = ?', [archived ? 1 : 0, id]);

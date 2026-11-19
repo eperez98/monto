@@ -15,6 +15,7 @@ export const DEFAULT_RULES: CategoryRule[] = [
   ...['farmacia', 'arrocha', 'metro plus', 'felipe rodriguez', 'clinica', 'hospital'].map((match) => ({ match, categoryName: 'Salud', kind: 'expense' as const })),
   ...['amazon', 'aliexpress', 'shein', 'multiplaza', 'albrook', 'conway', 'zara'].map((match) => ({ match, categoryName: 'Compras', kind: 'expense' as const })),
   ...['salario', 'nomina', 'planilla', 'payroll'].map((match) => ({ match, categoryName: 'Salario', kind: 'income' as const })),
+  ...['deposito', 'yappy recibido', 'transferencia recibida', 'ach recibido'].map((match) => ({ match, categoryName: 'Otros ingresos', kind: 'income' as const })),
 ];
 
 /** The first rule whose text appears in the description (user rules first), for the given kind. */

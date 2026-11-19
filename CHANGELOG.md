@@ -43,6 +43,14 @@ Primera versión estable de Monto. Protege tus datos aunque no uses contraseña,
   - Se ve en el menú, al elegir quién usa Monto, en Familia y al repartir gastos.
   - Cada quien cambia la suya; para cambiar la de otro hace falta permiso para gestionar integrantes.
 
+### Cuentas y movimientos
+- **Ajustar saldo** (Cuentas → abre una cuenta → «Ajustar saldo»):
+  - Corrige el saldo actual restando o sumando un monto, o escribiendo el saldo correcto.
+  - Muestra el saldo nuevo antes de guardar.
+  - No crea un movimiento, así tus gastos e ingresos no cambian.
+  - En tarjetas de crédito el monto es la deuda.
+- **Depósito y Yappy recibido**: dos accesos nuevos en «Movimiento» que registran un ingreso con la descripción y el método ya puestos, y suman al saldo de la cuenta. «Yappy recibido» solo aparece en perfiles de Panamá. Los dos van a «Otros ingresos».
+
 ### Países y bancos
 - **País de las cuentas**: la configuración inicial pregunta dónde están tus cuentas, Panamá o Colombia, y con eso elige la moneda y los bancos que ves.
 - **Colombia**:

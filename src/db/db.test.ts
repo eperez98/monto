@@ -255,3 +255,27 @@ describe('schema v3: Colombian pesos', () => {
     expect(e.integrityCheck().ok).toBe(true);
   });
 });
+
+describe('adjust the current balance', () => {
+  it('subtracts, adds or sets the balance without creating movements, also for card debt', async () => {
+    const { adjustAccountBalance, createAccount, getAccount, listTransactions } = await import('./repo/finance');
+    const { categoryFor } = await import('./repo/rules');
+    const { categoryIdByName } = await import('./repo/core');
+    const { e, actor } = await freshEngine();
+    const acc = createAccount(e, actor, { name: 'Banco', type: 'savings', currency: 'PAB', initialBalance: 100000 });
+    expect(adjustAccountBalance(e, actor, acc.id, 'subtract', 25000).balance).toBe(75000);
+    expect(adjustAccountBalance(e, actor, acc.id, 'add', 500).balance).toBe(75500);
+    expect(adjustAccountBalance(e, actor, acc.id, 'set', 120000).balance).toBe(120000);
+    expect(listTransactions(e, {}).length).toBe(0);
+    expect(() => adjustAccountBalance(e, actor, acc.id, 'subtract', 0)).toThrow();
+    expect(() => adjustAccountBalance(e, { id: actor.id, role: 'readonly' }, acc.id, 'set', 1)).toThrow();
+
+    const card = createAccount(e, actor, { name: 'Visa', type: 'credit_card', currency: 'PAB', initialBalance: -30000 });
+    expect(adjustAccountBalance(e, actor, card.id, 'set', 45000).balance).toBe(-45000);
+    expect(adjustAccountBalance(e, actor, card.id, 'subtract', 5000).balance).toBe(-40000);
+    expect(getAccount(e, card.id)!.balance).toBe(-40000);
+
+    expect(categoryFor(e, 'Yappy recibido', 'income')).toBe(categoryIdByName(e, 'Otros ingresos', 'income'));
+    expect(categoryFor(e, 'Depósito', 'income')).toBe(categoryIdByName(e, 'Otros ingresos', 'income'));
+  });
+});

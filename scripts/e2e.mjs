@@ -667,6 +667,33 @@ try {
   assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.1'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
   await page.setViewportSize({ width: 1440, height: 900 });
 
+  step('Adjust the balance and receive a Yappy');
+  await click('Cuentas y tarjetas', { exact: true });
+  await page.locator('main button').filter({ hasText: 'Saldo actual' }).first().click();
+  const accDlg = page.getByRole('dialog').first();
+  await accDlg.getByRole('button', { name: 'Ajustar saldo' }).click();
+  const adj = page.getByRole('dialog', { name: 'Ajustar saldo' });
+  await adj.getByRole('tab', { name: 'Cambiar a' }).click();
+  await adj.getByRole('textbox', { name: 'Monto del ajuste' }).fill('1000');
+  await adj.getByText('1,000.00').first().waitFor();
+  await shot('29-adjust-balance');
+  await adj.getByRole('button', { name: 'Guardar saldo' }).click();
+  await page.getByText('Saldo actualizado').waitFor();
+  assert((await accDlg.innerText()).includes('1,000.00'), 'ajustar saldo: cambiar el saldo actual a 1,000');
+  await page.keyboard.press('Escape');
+  await click('Movimiento', { exact: true });
+  await click('Ingresar los datos a mano');
+  await page.getByRole('dialog').getByRole('button', { name: 'Yappy recibido' }).click();
+  assert((await page.getByPlaceholder(/Quincena, cliente/).inputValue()) === 'Yappy recibido', 'Yappy recibido: ingreso con la descripción lista');
+  await page.getByRole('textbox', { name: 'Importe', exact: true }).fill('25');
+  await dclick('Registrar');
+  await page.getByText('Ingreso registrado').waitFor();
+  await page.waitForTimeout(800);
+  await page.locator('main button').filter({ hasText: 'Saldo actual' }).first().click();
+  await page.getByRole('dialog').first().getByText('1,025.00').first().waitFor();
+  assert(true, 'Yappy recibido suma a la cuenta: 1,025.00');
+  await page.keyboard.press('Escape');
+
   step('Phone size, light and dark: every screen');
   await page.setViewportSize({ width: 390, height: 844 });
   const sections = ['Movimientos', 'Cuentas y tarjetas', 'Ingresos y salario', 'Plan mensual', 'Presupuestos', 'Objetivos', 'Préstamos y deudas', 'Calendario', 'Informes', 'Análisis', 'Configuración', 'Acerca de Monto', 'Resumen'];

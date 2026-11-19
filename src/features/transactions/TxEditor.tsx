@@ -24,6 +24,12 @@ const TYPES: Array<{ t: TxType; icon: string }> = [
   { t: 'loan_payment', icon: 'loan' }, { t: 'loan_disbursement', icon: 'bank' }, { t: 'refund', icon: 'refresh' },
 ];
 
+/** Money that comes in: an income with its description and method filled in, so it adds to the account. Yappy is Panama only. */
+const RECEIVED: Array<{ key: string; icon: string; label: () => string; method: PaymentMethod | ''; panamaOnly?: boolean }> = [
+  { key: 'deposit', icon: 'bank', label: () => tr('Depósito'), method: '' },
+  { key: 'yappy', icon: 'phone', label: () => tr('Yappy recibido'), method: 'yappy', panamaOnly: true },
+];
+
 function CategorySelect({ cats, value, onChange, invalid }: { cats: Category[]; value: string; onChange: (v: string) => void; invalid?: boolean }) {
   const top = cats.filter((c) => !c.parentId);
   return (
@@ -248,6 +254,15 @@ export function TxEditor() {
       {!editable && <p className="mb-4 rounded-[12px] bg-amber-soft text-amber text-[12.5px] px-3 py-2">{tr('Solo lectura: no tienes permiso para editar este movimiento.')}</p>}
       <fieldset disabled={!editable} className="space-y-4">
         <div className="flex flex-wrap gap-1.5">
+          {RECEIVED.filter((r) => !r.panamaOnly || profile.country !== 'CO').map((r) => {
+            const on = type === 'income' && desc === r.label();
+            return (
+              <button key={r.key} type="button" aria-pressed={on} onClick={() => { const name = r.label(); setType('income'); setDesc(name); setMethod(r.method); setCategoryId(categoryFor(e, name, 'income') ?? ''); }}
+                className={clsx('inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium border transition', on ? 'bg-emerald text-white border-emerald' : 'border-emerald/40 text-emerald hover:bg-emerald-soft')}>
+                <Icon name={r.icon} size={14} />{r.label()}
+              </button>
+            );
+          })}
           {TYPES.map(({ t, icon }) => (
             <button key={t} type="button" onClick={() => { setType(t); setCategoryId(''); }} className={clsx('group inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium border transition', type === t ? 'bg-brand text-brand-ink border-brand dark:border-emerald' : 'border-line text-ink-2 hover:bg-surface-2')}>
               <Icon name={icon} size={14} active={type === t} />{TX_TYPE_LABEL[t]}

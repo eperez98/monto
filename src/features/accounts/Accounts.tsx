@@ -3,10 +3,10 @@ import { motion } from 'motion/react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
 import { useActor, useCan, useMutate, useProfile, useQuery, accountsVisibleTo } from '../../hooks/useDb';
-import { listAccounts, createAccount, updateAccount, archiveAccount, deleteAccount, ACCOUNT_TYPE_LABEL, listTransactions, listCategories, isLiability } from '../../db/repo/finance';
+import { listAccounts, createAccount, updateAccount, archiveAccount, deleteAccount, adjustAccountBalance, ACCOUNT_TYPE_LABEL, listTransactions, listCategories, isLiability, type BalanceAdjust } from '../../db/repo/finance';
 import { listMembers } from '../../db/repo/core';
 import { balances } from '../../db/repo/analytics';
-import { Button, Card, EmptyState, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, useConfirm, Progress, Stat, IconButton, ease } from '../../components/ui';
+import { Button, Card, EmptyState, Field, Input, Modal, Money, MoneyInput, PageHeader, Select, Badge, useConfirm, Progress, Stat, IconButton, Segmented, ease } from '../../components/ui';
 import { Icon } from '../../icons';
 import { TxRow } from '../transactions/TxRow';
 import { centsToInput, combined, parseMoney, type Currency } from '../../lib/money';
@@ -105,6 +105,7 @@ export default function Accounts() {
   const [editing, setEditing] = useState<Account | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [adjusting, setAdjusting] = useState(false);
   const sel = accounts.find((a) => a.id === selected) ?? null;
   const txs = useQuery((e) => (selected ? listTransactions(e, { accountId: selected, limit: 30 }) : []), [selected]);
   const cur = profile.primaryCurrency;
@@ -132,6 +133,7 @@ export default function Accounts() {
         footer={sel && canManage && <>
           <Button variant="ghost" icon="trash" className="mr-auto !text-coral" onClick={() => confirm.ask({ title: tr('¿Eliminar cuenta?'), body: tr('Solo se pueden eliminar cuentas sin movimientos. Si tiene historial, archívala.'), onConfirm: () => { if (mutate((e, a) => deleteAccount(e, a, sel.id), tr('Cuenta eliminada')) !== undefined) setSelected(null); } })}>{tr('Eliminar')}</Button>
           <Button variant="secondary" onClick={() => mutate((e, a) => archiveAccount(e, a, sel.id, !sel.archived), sel.archived ? tr('Cuenta reactivada') : tr('Cuenta archivada'))}>{sel.archived ? tr('Reactivar') : tr('Archivar')}</Button>
+          <Button variant="secondary" icon="refresh" onClick={() => setAdjusting(true)}>{tr('Ajustar saldo')}</Button>
           <Button icon="edit" onClick={() => { setEditing(sel); setFormOpen(true); }}>{tr('Editar')}</Button>
         </>}>
         {sel && (
@@ -148,8 +150,43 @@ export default function Accounts() {
           </>
         )}
       </Modal>
+      {sel && <AdjustBalance account={sel} open={adjusting} onClose={() => setAdjusting(false)} />}
       {formOpen && <AccountForm open={formOpen} onClose={() => setFormOpen(false)} account={editing} />}
       {confirm.node}
     </div>
   );
 }
+
+/** Fix the current balance: subtract or add an amount, or type the exact balance. No movement is created. */
+function AdjustBalance({ account, open, onClose }: { account: Account; open: boolean; onClose: () => void }) {
+  const mutate = useMutate();
+  const [mode, setMode] = useState<BalanceAdjust>('subtract');
+  const [value, setValue] = useState('');
+  const liab = isLiability(account);
+  const shown = liab ? -account.balance : account.balance;
+  const cents = parseMoney(value || '');
+  const valid = !Number.isNaN(cents) && cents >= 0 && (mode === 'set' || cents > 0);
+  const next = !valid ? shown : mode === 'set' ? cents : mode === 'add' ? shown + cents : shown - cents;
+  const close = () => { setValue(''); setMode('subtract'); onClose(); };
+  const save = () => {
+    if (mutate((e, a) => adjustAccountBalance(e, a, account.id, mode, cents), tr('Saldo actualizado')) !== undefined) close();
+  };
+  return (
+    <Modal open={open} onClose={close} title={tr('Ajustar saldo')} subtitle={account.name} icon="refresh" width={460}
+      footer={<><Button variant="ghost" onClick={close}>{tr('Cancelar')}</Button><Button onClick={save} disabled={!valid}>{tr('Guardar saldo')}</Button></>}>
+      <div className="space-y-4">
+        <Segmented layoutId="adjust-mode" value={mode} onChange={(v) => { setMode(v); setValue(''); }} options={[{ value: 'subtract', label: liab ? tr('Restar a la deuda') : tr('Restar') }, { value: 'add', label: liab ? tr('Sumar a la deuda') : tr('Sumar') }, { value: 'set', label: tr('Cambiar a') }]} />
+        <Field label={mode === 'set' ? (liab ? tr('Deuda actual correcta') : tr('Saldo actual correcto')) : tr('Monto')}>
+          <MoneyInput currency={account.currency} value={value} onChange={setValue} aria-label={tr('Monto del ajuste')} />
+        </Field>
+        <div className="flex items-center justify-between rounded-[14px] bg-surface-2 px-4 py-3 text-[13px]">
+          <span className="text-muted">{liab ? tr('Deuda') : tr('Saldo')}{' '}<Money cents={shown} currency={account.currency} /></span>
+          <Icon name="chevronRight" size={16} className="text-muted" />
+          <span className="font-semibold">{tr('Nuevo')}{' '}<Money cents={next} currency={account.currency} className={next < 0 ? 'text-coral' : undefined} /></span>
+        </div>
+        <p className="text-[12px] text-muted">{tr('Corrige el saldo sin crear un movimiento, así tus gastos e ingresos no cambian. Si fue un gasto o un ingreso real, mejor regístralo como movimiento.')}</p>
+      </div>
+    </Modal>
+  );
+}
+
