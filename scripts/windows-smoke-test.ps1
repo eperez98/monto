@@ -33,10 +33,13 @@ for ($i = 0; $i -lt 60; $i++) {
 }
 if (-not $ok) { throw "Monto no creó su base de datos en $db en 60 s" }
 $size = (Get-Item $db).Length
-Write-Host "Base de datos SQLite creada: $db ($size bytes)"
+Write-Host "Base de datos creada: $db ($size bytes)"
 $header = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($db)[0..15])
-if (-not $header.StartsWith('SQLite format 3')) { throw "El archivo no es una base de datos SQLite válida" }
-Write-Host "Cabecera SQLite verificada"
+# Since 1.0.1 the database is always encrypted at rest with this computer's key (MONTODEV1). A plain SQLite
+# header means the key in the Windows Credential Manager could not be used.
+if ($header.StartsWith('SQLite format 3')) { throw "La base de datos quedó sin cifrar" }
+if (-not $header.StartsWith('MONTODEV1')) { throw "Cabecera desconocida: $($header.Substring(0, 9))" }
+Write-Host "Base de datos cifrada con la llave del equipo (MONTODEV1)"
 if ($app.HasExited) { throw "La aplicación no sigue en ejecución" }
 Stop-Process -Id $app.Id -Force
 Start-Sleep -Seconds 2
