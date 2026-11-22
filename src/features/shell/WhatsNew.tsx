@@ -14,21 +14,24 @@ import { tr } from '../../lib/i18n';
 export const WHATS_NEW_ID = '1.0.1';
 const KEY = 'monto:whats-new';
 export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); } catch { /* private mode: it may show again, harmless */ } };
-const seen = () => { try { return localStorage.getItem(KEY) === WHATS_NEW_ID; } catch { return true; } };
+const lastSeen = (): string | null => { try { return localStorage.getItem(KEY); } catch { return WHATS_NEW_ID; } };
+const seen = () => lastSeen() === WHATS_NEW_ID;
 
 // Screenshots of each change (fictional data), captured by scripts/e2e.mjs with WHATSNEW_SHOTS=1.
 const IMAGES = import.meta.glob('../../assets/whatsnew/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
 const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`];
 
-interface Slide { key: string; icon: string; title: () => string; body: () => string; image: string; theme?: boolean }
-const SLIDES: Slide[] = [
-  { key: 'design', icon: 'sparkle', image: 'glass', theme: true, title: () => tr('Un diseño nuevo: Cristal'), body: () => tr('Paneles translúcidos sobre color suave, más luz y menos ruido. Si prefieres algo con más textura, prueba «Relieve»: papel, cuero y botones con volumen. Elígelo aquí mismo.') },
+/** `rc3`: already shown in 0.8 RC 3's panel — skipped for people who saw that one. */
+interface Slide { key: string; icon: string; title: () => string; body: () => string; image: string; theme?: boolean; rc3?: boolean }
+const ALL_SLIDES: Slide[] = [
+  { key: 'design', rc3: true, icon: 'sparkle', image: 'glass', theme: true, title: () => tr('Un diseño nuevo: Cristal'), body: () => tr('Paneles translúcidos sobre color suave, más luz y menos ruido. Si prefieres algo con más textura, prueba «Relieve»: papel, cuero y botones con volumen. Elígelo aquí mismo.') },
   { key: 'security', icon: 'shield', image: 'security', title: () => tr('Tus datos, cifrados siempre'), body: () => tr('Aunque no uses contraseña, tus datos y copias se guardan cifrados con una llave de este equipo que vive en Windows. Otra app que mire la carpeta solo ve datos ilegibles. Los PIN usan un hash lento y, tras varios intentos fallidos, Monto hace esperar.') },
   { key: 'country', icon: 'home', image: 'country', title: () => tr('Colombia y bancos de EE. UU.'), body: () => tr('Elige el país de tus cuentas: Panamá o Colombia, con pesos y sus bancos. En Panamá también puedes añadir bancos en línea de EE. UU. como Chime, SoFi o Ally, en dólares.') },
-  { key: 'menu', icon: 'menu', image: 'menu', title: () => tr('Un menú que se aparta'), body: () => tr('El menú ahora es una barra de íconos que te deja más espacio. Pasa el cursor y se despliega encima del contenido; fíjalo abierto si lo prefieres. Los grupos se pliegan para ver solo lo que usas.') },
-  { key: 'receipt', icon: 'upload', image: 'receipt', title: () => tr('Registra con la foto del comprobante'), body: () => tr('Sube, arrastra o pega la foto o el PDF de un recibo. Monto lee el comercio, la fecha y el total, y tú revisas antes de guardar. La foto no sale de tu computadora.') },
-  { key: 'summary', icon: 'dashboard', image: 'summary', title: () => tr('Un resumen a tu medida'), body: () => tr('Elige qué tarjetas ves y en qué orden. Al empezar cada mes, «Tu mes en resumen» te cuenta cuánto ahorraste y en qué se fue tu dinero.') },
-  { key: 'banks', icon: 'bank', image: 'banks', title: () => tr('Tu banco, sin teclear'), body: () => tr('Conecta el correo donde te llegan los avisos de tu banco: Monto reconoce a 16 bancos de Panamá, evita duplicados y tú eliges qué agregar. También lee mejor los estados de cuenta en CSV.') },
+  { key: 'account', icon: 'refresh', image: 'account', title: () => tr('Tu cuenta, a tu manera'), body: () => tr('Ajusta el saldo de una cuenta restando, sumando o escribiendo el monto correcto, sin inventar movimientos. Registra un depósito o un Yappy recibido con un toque. Y ponle tu foto a tu perfil: Monto estrena logo y un sonido suave al abrir.') },
+  { key: 'menu', rc3: true, icon: 'menu', image: 'menu', title: () => tr('Un menú que se aparta'), body: () => tr('El menú ahora es una barra de íconos que te deja más espacio. Pasa el cursor y se despliega encima del contenido; fíjalo abierto si lo prefieres. Los grupos se pliegan para ver solo lo que usas.') },
+  { key: 'receipt', rc3: true, icon: 'upload', image: 'receipt', title: () => tr('Registra con la foto del comprobante'), body: () => tr('Sube, arrastra o pega la foto o el PDF de un recibo. Monto lee el comercio, la fecha y el total, y tú revisas antes de guardar. La foto no sale de tu computadora.') },
+  { key: 'summary', rc3: true, icon: 'dashboard', image: 'summary', title: () => tr('Un resumen a tu medida'), body: () => tr('Elige qué tarjetas ves y en qué orden. Al empezar cada mes, «Tu mes en resumen» te cuenta cuánto ahorraste y en qué se fue tu dinero.') },
+  { key: 'banks', rc3: true, icon: 'bank', image: 'banks', title: () => tr('Tu banco, sin teclear'), body: () => tr('Conecta el correo donde te llegan los avisos de tu banco: Monto reconoce a 16 bancos de Panamá, evita duplicados y tú eliges qué agregar. También lee mejor los estados de cuenta en CSV.') },
   { key: 'done', icon: 'check', image: 'done', title: () => tr('Todo listo'), body: () => tr('Además: modo compacto, Mica de Windows 11, copia de seguridad antes de cada actualización y la vista de celular revisada. Puedes cambiar el tema cuando quieras en Configuración → Apariencia.') },
 ];
 
@@ -44,6 +47,8 @@ export function WhatsNew({ onClose }: { onClose: () => void }) {
   const engine = useApp((s) => s.engine);
   const prefs = useQuery((e) => getPrefs(e));
   const [i, setI] = useState(0);
+  // Coming from RC 3, whose panel already showed the design, menu, receipts, summary and bank email.
+  const [SLIDES] = useState(() => ALL_SLIDES.filter((s) => !(s.rc3 && lastSeen() === '0.8-glass')));
   const last = i === SLIDES.length - 1;
   const go = (n: number) => setI(Math.max(0, Math.min(SLIDES.length - 1, n)));
   const picture = (s: Slide) => img(s.theme && prefs.palette === 'skeuo' ? 'skeuo' : s.image);

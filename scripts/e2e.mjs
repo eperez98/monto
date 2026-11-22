@@ -659,12 +659,23 @@ try {
   assert(true, 'novedades: elegir el nuevo tema desde la diapositiva del diseño');
   await page.waitForTimeout(600);
   await shot('23-whats-new');
-  for (let k = 0; k < 7; k++) { await news.getByRole('button', { name: 'Siguiente' }).click(); await page.waitForTimeout(450); }
+  while (await news.getByRole('button', { name: 'Siguiente' }).count()) { await news.getByRole('button', { name: 'Siguiente' }).click(); await page.waitForTimeout(450); }
   await shot('23b-whats-new-last');
   assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });
   assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.1'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  await page.evaluate(() => localStorage.setItem('monto:whats-new', '0.8-glass'));
+  await page.reload();
+  await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
+  await click('Desbloquear');
+  await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: /Carlos/ }).first().click();
+  await news.waitFor();
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 4, 'novedades: quien viene de la RC 3 solo ve lo nuevo de la 1.0.1');
+  while (await news.getByRole('button', { name: 'Siguiente' }).count()) await news.getByRole('button', { name: 'Siguiente' }).click();
+  await news.getByRole('button', { name: 'Usar Monto' }).click();
+  await news.waitFor({ state: 'detached' });
   await page.setViewportSize({ width: 1440, height: 900 });
 
   step('Adjust the balance and receive a Yappy');
@@ -677,6 +688,7 @@ try {
   await adj.getByRole('textbox', { name: 'Monto del ajuste' }).fill('1000');
   await adj.getByText('1,000.00').first().waitFor();
   await shot('29-adjust-balance');
+  await wn('account');
   await adj.getByRole('button', { name: 'Guardar saldo' }).click();
   await page.getByText('Saldo actualizado').waitFor();
   assert((await accDlg.innerText()).includes('1,000.00'), 'ajustar saldo: cambiar el saldo actual a 1,000');

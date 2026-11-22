@@ -1672,4 +1672,6 @@ export const EN: Record<string, string> = {
   "Corrige el saldo sin crear un movimiento, así tus gastos e ingresos no cambian. Si fue un gasto o un ingreso real, mejor regístralo como movimiento.": "Fixes the balance without creating a transaction, so your spending and income don't change. If it was a real expense or income, record it as a transaction instead.",
   "Depósito": "Deposit",
   "Yappy recibido": "Yappy received",
+  "Tu cuenta, a tu manera": "Your account, your way",
+  "Ajusta el saldo de una cuenta restando, sumando o escribiendo el monto correcto, sin inventar movimientos. Registra un depósito o un Yappy recibido con un toque. Y ponle tu foto a tu perfil: Monto estrena logo y un sonido suave al abrir.": "Adjust an account's balance by subtracting, adding or typing the right amount, without inventing transactions. Record a deposit or a Yappy received in one tap. And add your photo to your profile: Monto has a new logo and a soft sound when it opens.",
 };
