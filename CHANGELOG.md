@@ -10,7 +10,7 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-## [0.8.0-rc.3] - 2026-11-18 · Smart Money (Release Candidate 3)
+## [0.8.0-rc.3] - 2026-11-21 · Smart Money (Release Candidate 3)
 
 Tercera versión candidata de la 0.8. Trae un diseño nuevo, «Cristal», y adelanta todo lo planeado para la 0.9 «Calm Design»: Mica de Windows 11, modo compacto, un resumen que tú ordenas y «Tu mes en resumen». También lee comprobantes en PDF, reconoce más bancos de Panamá y revisa la vista de celular pantalla por pantalla. En Windows aparece como versión 0.8.0.3.
 
