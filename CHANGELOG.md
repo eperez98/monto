@@ -10,7 +10,7 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-## [1.0.1] - 2026-11-18 · Release Update
+## [1.0.1] - 2026-11-22 · Release Update
 
 Primera versión estable de Monto. Llega después de la 0.8 RC 3: protege tus datos aunque no uses contraseña, endurece el acceso, se abre a Colombia y a los bancos en línea de EE. UU. y estrena logo, animación de inicio y foto de perfil.
 
