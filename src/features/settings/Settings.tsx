@@ -6,7 +6,8 @@ import { getPrefs, setPrefs, setProfile, listSessions, setMemberPin, setMemberPh
 import { PhotoField } from '../../components/PhotoField';
 import { listCategories, createCategory, updateCategory, deleteCategory } from '../../db/repo/finance';
 import { createBackup, deleteOldBackups, exportBackupFile, exportJSON, oldBackups, pickBackupFile, restoreFromBytes } from '../../services/backup';
-import { decrypt, isEncrypted } from '../../db/crypto';
+import { decrypt, isDeviceEncrypted, isEncrypted } from '../../db/crypto';
+import { Engine } from '../../db/engine';
 import { Button, Card, CardHeader, ChoiceCard, Field, Input, Modal, PageHeader, Segmented, Select, Toggle, Badge, Confirm, useConfirm } from '../../components/ui';
 import { Icon, IconTile, ICON_NAMES } from '../../icons';
 import { LogoMark } from '../../brand/Logo';
@@ -25,6 +26,8 @@ import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
 import { MailTab } from './MailTab';
 import { RulesCard } from './RulesCard';
+import { TrustCard } from './TrustCard';
+import { disableHello, helloEnabled } from '../../services/hello';
 import { IS_PREVIEW } from '../../lib/preview';
 
 type Tab = 'profile' | 'appearance' | 'security' | 'data' | 'mail' | 'categories' | 'updates' | 'about';
@@ -258,8 +261,11 @@ function SecurityTab() {
     setBusy(true);
     try {
       await e.setPassword(open === 'set' ? pw : null);
+      // Windows Hello keeps the password itself: after a change it would hold the old one.
+      const hadHello = await helloEnabled();
+      if (hadHello) await disableHello();
       if (open === 'set' && !prefs.autoLockMinutes) setPrefs(e, { autoLockMinutes: 5 });
-      toast({ kind: 'success', title: open === 'set' ? tr('Contraseña establecida') : tr('Contraseña eliminada'), body: open === 'set' ? tr('Tus datos se guardan cifrados con AES-256.') : (e.protectedAtRest ? tr('Tus datos siguen cifrados con la llave de este equipo.') : tr('Tus datos ya no están cifrados.')) });
+      toast({ kind: 'success', title: open === 'set' ? tr('Contraseña establecida') : tr('Contraseña eliminada'), body: hadHello ? tr('Windows Hello se desactivó: vuelve a activarlo con la contraseña nueva.') : open === 'set' ? tr('Tus datos se guardan cifrados con AES-256.') : (e.protectedAtRest ? tr('Tus datos siguen cifrados con la llave de este equipo.') : tr('Tus datos ya no están cifrados.')) });
       setOpen(null); setCur(''); setPw(''); setPw2('');
     } catch (x) { setErr(errorMessage(x)); }
     setBusy(false);
@@ -294,6 +300,7 @@ function SecurityTab() {
             <Button variant="secondary" onClick={async () => { try { await setMemberPin(e, actor, actor.id, pin || null); toast({ kind: 'success', title: pin ? 'PIN guardado' : 'PIN eliminado' }); setPin(''); } catch (x) { toast({ kind: 'error', title: tr('PIN no válido'), body: errorMessage(x) }); } }}>{pin ? tr('Guardar PIN') : tr('Quitar PIN')}</Button></div>
         </div>
       </Card>
+      <TrustCard canSec={canSec} />
       <Card hover={false}>
         <CardHeader title={tr('Sesiones recientes')} subtitle={tr('Inicios de sesión en este equipo')} />
         <table className="w-full text-[12.5px] m-3 mt-2" style={{ width: 'calc(100% - 24px)' }}>
@@ -322,7 +329,7 @@ function DataTab() {
   const [backups, setBackups] = useState<Array<{ name: string; size?: number; date?: string }>>([]);
   const [location, setLocation] = useState('');
   const [integrity, setIntegrity] = useState<{ ok: boolean; messages: string[] } | null>(null);
-  const [restorePw, setRestorePw] = useState<{ bytes: Uint8Array } | null>(null);
+  const [restorePw, setRestorePw] = useState<{ bytes: Uint8Array; recovery?: boolean } | null>(null);
   const [exp, setExp] = useState<{ pw: string; pw2: string; err: string } | null>(null);
   const doExport = () => {
     if (!exp) return;
@@ -338,7 +345,12 @@ function DataTab() {
   useEffect(() => { void refresh(); }, []);
   const run = async (fn: () => Promise<unknown>, ok: string) => { try { const r = await fn(); if (r !== null) toast({ kind: 'success', title: ok, body: typeof r === 'string' ? r : undefined }); await refresh(); } catch (x) { toast({ kind: 'error', title: tr('Operación fallida'), body: errorMessage(x) }); } };
   const restore = (bytes: Uint8Array, password?: string) => confirm.ask({ title: tr('¿Restaurar esta copia?'), body: tr('Los datos actuales se reemplazarán. Antes se creará automáticamente una copia de seguridad de lo que tienes ahora.'), confirmLabel: tr('Restaurar'), onConfirm: () => void run(async () => { await restoreFromBytes(e, bytes, password); setRestorePw(null); }, tr('Copia restaurada')) });
-  const tryRestore = (bytes: Uint8Array) => (isEncrypted(bytes) ? (setPw(''), setRestorePw({ bytes })) : restore(bytes));
+  const tryRestore = async (bytes: Uint8Array) => {
+    if (isEncrypted(bytes)) return (setPw(''), setRestorePw({ bytes }));
+    // Made on another computer (or another Windows account): it opens with that computer's recovery code.
+    if (isDeviceEncrypted(bytes) && !(await Engine.validateBytes(bytes)).ok) return (setPw(''), setRestorePw({ bytes, recovery: true }));
+    restore(bytes);
+  };
 
   return (
     <>
@@ -395,8 +407,11 @@ function DataTab() {
           <Field label={tr('Confirmar')} error={exp?.err || undefined}><Input type="password" value={exp?.pw2 ?? ''} onChange={(ev) => exp && setExp({ ...exp, pw2: ev.target.value, err: '' })} /></Field>
         </div>
       </Modal>
-      <Modal open={!!restorePw} onClose={() => setRestorePw(null)} title={tr('Copia cifrada')} icon="lock" width={420} footer={<><Button variant="ghost" onClick={() => setRestorePw(null)}>{tr('Cancelar')}</Button><Button onClick={() => restore(restorePw!.bytes, pw)}>{tr('Continuar')}</Button></>}>
-        <Field label={tr('Contraseña de la copia')}><Input type="password" autoFocus value={pw} onChange={(ev) => setPw(ev.target.value)} /></Field>
+      <Modal open={!!restorePw} onClose={() => setRestorePw(null)} title={restorePw?.recovery ? tr('Copia de otro equipo') : tr('Copia cifrada')} icon={restorePw?.recovery ? 'key' : 'lock'} width={restorePw?.recovery ? 520 : 420} footer={<><Button variant="ghost" onClick={() => setRestorePw(null)}>{tr('Cancelar')}</Button><Button onClick={() => restore(restorePw!.bytes, pw)}>{tr('Continuar')}</Button></>}>
+        {restorePw?.recovery
+          ? <><p className="text-[12.5px] text-muted mb-3">{tr('Esta copia se hizo en otro equipo y está cifrada con su llave. Escribe la clave de recuperación de ese equipo (Configuración → Seguridad → Clave de recuperación).')}</p>
+            <Field label={tr('Clave de recuperación')}><Input autoFocus spellCheck={false} value={pw} onChange={(ev) => setPw(ev.target.value)} placeholder="XXXX-XXXX-XXXX-…" className="font-mono" /></Field></>
+          : <Field label={tr('Contraseña de la copia')}><Input type="password" autoFocus value={pw} onChange={(ev) => setPw(ev.target.value)} /></Field>}
       </Modal>
       {confirm.node}
     </>

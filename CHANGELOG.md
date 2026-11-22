@@ -10,6 +10,30 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [1.0.2] - 2026-11-22 · Confianza
+
+Versión de seguridad: recupera tus copias si cambias de equipo, desbloquea Monto con Windows Hello y comprueba cómo lee Monto los correos de tu banco. El instalador estrena imagen.
+
+### Seguridad
+- **Clave de recuperación**: en Configuración → Seguridad puedes ver, copiar o guardar en un archivo la llave de este equipo, escrita como 14 grupos de 4 caracteres.
+  - Al importar una copia automática hecha en otro equipo, Monto pide esa clave y la abre con ella.
+  - Se aceptan minúsculas, espacios y las confusiones habituales (O por 0, I o L por 1). Un dígito de control detecta los errores al copiarla.
+- **Desbloqueo con Windows Hello**: si usas contraseña, puedes abrir Monto con tu huella, tu rostro o el PIN de Windows.
+  - Se activa en Configuración → Seguridad, escribiendo la contraseña una vez.
+  - Windows guarda la contraseña en el Administrador de credenciales y solo la entrega a Monto después de confirmar que eres tú.
+  - Al cambiar o quitar la contraseña, o al borrar el perfil, Windows Hello se desactiva solo.
+- **Instalador firmado (preparado)**: la publicación en GitHub firma el instalador si el repositorio tiene un certificado de firma de código. Sin certificado sale sin firmar, como hasta ahora.
+
+### Correo del banco
+- **Probar un correo**: en Configuración → Correo del banco pega el texto o el HTML de un aviso y mira qué lee Monto: el monto, el comercio, si es gasto o ingreso, y el banco según el remitente. No se guarda ni se envía nada, y funciona sin conectar el correo.
+
+### Instalador
+- El asistente de instalación muestra el logo de Monto: una imagen violeta con el lema en la bienvenida y al terminar, y el logo en la cabecera de cada paso.
+
+### Cambiado
+- El panel de novedades muestra lo que salió después de la última versión que viste: quien venga de la 0.8 RC 3 ve lo de la 1.0.1 y la 1.0.2, y quien venga de la 1.0.1, solo lo nuevo.
+- La hoja de ruta de «Acerca de Monto» quita la 1.0.2 y añade la 1.3 «Claridad». La firma del instalador queda pendiente del certificado; afinar la lectura con correos reales de cada banco depende de recibir ejemplos.
+
 ## [1.0.1] - 2026-11-22 · Release Update
 
 Primera versión estable de Monto. Llega después de la 0.8 RC 3: protege tus datos aunque no uses contraseña, endurece el acceso, se abre a Colombia y a los bancos en línea de EE. UU. y estrena logo, animación de inicio y foto de perfil.

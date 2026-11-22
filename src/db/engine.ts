@@ -4,7 +4,7 @@
  */
 import initSqlJs, { type Database, type SqlJsStatic, type SqlValue } from 'sql.js';
 import { MIGRATIONS } from './schema';
-import { decrypt, decryptDevice, deviceKey, encrypt, encryptDevice, isDeviceEncrypted, isEncrypted, newKey, type KeyMaterial } from './crypto';
+import { decrypt, decryptDevice, deviceKey, encrypt, encryptDevice, importDeviceKey, isDeviceEncrypted, isEncrypted, keyFromRecoveryCode, newKey, type KeyMaterial } from './crypto';
 import type { StorageAdapter } from './adapters';
 import { tr } from '../lib/i18n';
 
@@ -207,7 +207,10 @@ export class Engine {
         if (!password) return { ok: false, version: 0, error: tr('La copia está cifrada; introduce la contraseña.') };
         plain = (await decrypt(bytes, password)).plain;
       } else if (isDeviceEncrypted(bytes)) {
-        plain = await decryptDevice(bytes, await deviceKey());
+        // From another computer: the "password" is that computer's recovery code.
+        const fromCode = password ? await keyFromRecoveryCode(password) : null;
+        if (password && !fromCode) return { ok: false, version: 0, error: tr('La clave de recuperación no es válida. Revisa que esté completa.') };
+        plain = await decryptDevice(bytes, fromCode ? await importDeviceKey(fromCode) : await deviceKey());
       }
       const db = new lib.Database(plain);
       const ic = db.exec('PRAGMA integrity_check')[0]?.values[0]?.[0];

@@ -6,6 +6,7 @@ import { Badge, Button, Card, CardHeader, Field, Input, Segmented, Select } from
 import { Icon } from '../../icons';
 import { connectMail, disconnectMail, getMailPrefs, mailSupported, saveMailPrefs, syncMail, type MailPrefs } from '../../services/mail';
 import { MailReview } from './MailReview';
+import { MailTester } from './MailTester';
 import { formatDate, today } from '../../lib/dates';
 import { locale, tr } from '../../lib/i18n';
 
@@ -27,7 +28,7 @@ export function MailTab() {
   const set = (p: Partial<MailPrefs>) => { setDraft({ ...draft, ...p }); if (saved.connected && can) mutate((en, a) => saveMailPrefs(en, a, p)); };
 
   if (!mailSupported()) {
-    return <Card hover={false} className="p-6"><p className="text-[14px] font-semibold">{tr('Correo del banco')}{' '}<Badge>{tr('Opcional')}</Badge></p><p className="text-[12.5px] text-muted mt-1">{tr('Disponible en la app de escritorio de Monto.')}</p></Card>;
+    return <div className="space-y-5"><Card hover={false} className="p-6"><p className="text-[14px] font-semibold">{tr('Correo del banco')}{' '}<Badge>{tr('Opcional')}</Badge></p><p className="text-[12.5px] text-muted mt-1">{tr('Disponible en la app de escritorio de Monto.')}</p></Card><MailTester /></div>;
   }
 
   const run = async (kind: 'connect' | 'sync' | 'off') => {
@@ -115,6 +116,7 @@ export function MailTab() {
           <div className="p-3"><MailReview key={review.read + ':' + review.candidates.length} result={review} accountId={saved.accountId || draft.accountId} onDone={setReview} /></div>
         </Card>
       )}
+      <MailTester />
     </div>
   );
 }

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag a publicar (por ejemplo v1.0.1)'
+        description: 'Tag a publicar (por ejemplo v1.0.2)'
         required: true
 
 permissions:
@@ -41,8 +41,25 @@ jobs:
         run: |
           $v = (Get-Content package.json | ConvertFrom-Json).version
           if ("v$v" -ne $env:TAG) { throw "El tag $env:TAG no coincide con la versión v$v de package.json" }
+      # Code signing (removes the SmartScreen warning). Only when the repository has a certificate:
+      # WINDOWS_CERTIFICATE = the .pfx in base64, WINDOWS_CERTIFICATE_PASSWORD = its password.
+      # Without them the installer is built unsigned, as before.
+      - name: Preparar la firma del instalador
+        shell: pwsh
+        env:
+          CERT: ${{ secrets.WINDOWS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not $env:CERT) { Write-Host 'Sin certificado: el instalador sale sin firmar.'; '{}' | Out-File -Encoding utf8 signing.json; exit 0 }
+          $pfx = Join-Path $env:RUNNER_TEMP 'monto.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT))
+          $pw = ConvertTo-SecureString $env:CERT_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $pw
+          Remove-Item $pfx
+          @{ bundle = @{ windows = @{ certificateThumbprint = $cert.Thumbprint; digestAlgorithm = 'sha256'; timestampUrl = 'http://timestamp.digicert.com' } } } | ConvertTo-Json -Depth 5 | Out-File -Encoding utf8 signing.json
+          Write-Host "Firmando con el certificado $($cert.Subject)"
       - name: Compilar instaladores
-        run: npx tauri build
+        run: npx tauri build --config signing.json
       - name: Prueba de instalación
         shell: pwsh
         run: |

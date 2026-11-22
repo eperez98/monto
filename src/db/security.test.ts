@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { Engine } from './engine';
 import { MemoryAdapter } from './adapters';
-import { ForeignDeviceError, decrypt, deriveKey, hashSecret, importDeviceKey, isDeviceEncrypted, isEncrypted, newDeviceKeyBase64, setDeviceKeyProvider, sha256Hex, verifySecret } from './crypto';
+import { ForeignDeviceError, decrypt, deriveKey, hashSecret, importDeviceKey, isDeviceEncrypted, isEncrypted, keyFromRecoveryCode, newDeviceKeyBase64, recoveryCodeFromKey, setDeviceKeyProvider, sha256Hex, verifySecret } from './crypto';
 import { afterTry, lockoutMs, passwordProblem } from '../domain/auth';
 import { createBackup, protectOldBackups } from '../services/backup';
 import { freshEngine } from '../test/helpers';
@@ -45,6 +45,37 @@ describe('database protected with this computer key', () => {
     await createBackup(e, 'manual');
     for (const b of await adapter.listBackups()) expect(isDeviceEncrypted(await adapter.readBackup(b.name))).toBe(true);
     expect(await protectOldBackups(e)).toBe(0);
+  });
+});
+
+describe('recovery code', () => {
+  it('writes the device key as 14 groups of 4 and reads it back, forgiving case, spaces and O/I/L', async () => {
+    const k = newDeviceKeyBase64();
+    const code = await recoveryCodeFromKey(k);
+    expect(code).toMatch(/^([0-9A-HJKMNP-TV-Z]{4}-){13}[0-9A-HJKMNP-TV-Z]{4}$/);
+    expect(await keyFromRecoveryCode(code)).toBe(k);
+    expect(await keyFromRecoveryCode(` ${code.toLowerCase().replace(/-/g, ' ').replace(/0/g, 'o').replace(/1/g, 'l')} `)).toBe(k);
+  });
+
+  it('rejects a mistyped or incomplete code', async () => {
+    const code = await recoveryCodeFromKey(newDeviceKeyBase64());
+    const typo = code.slice(0, 5) + (code[5] === 'A' ? 'B' : 'A') + code.slice(6);
+    expect(await keyFromRecoveryCode(typo)).toBeNull();
+    expect(await keyFromRecoveryCode(code.slice(0, -5))).toBeNull();
+  });
+
+  it("opens another computer's backup with that computer's recovery code", async () => {
+    const homeKey = newDeviceKeyBase64();
+    setDeviceKeyProvider(async () => importDeviceKey(homeKey));
+    const home = await Engine.open(new MemoryAdapter());
+    home.run("INSERT INTO settings (key, value) VALUES ('probe', '\"casa\"')");
+    const backup = await home.protect(home.plainBytes());
+
+    setDeviceKeyProvider(async () => importDeviceKey(newDeviceKeyBase64()));
+    expect((await Engine.validateBytes(backup)).ok).toBe(false);
+    expect((await Engine.validateBytes(backup, 'AAAA-BBBB')).error).toMatch(/recuperación/);
+    const v = await Engine.validateBytes(backup, await recoveryCodeFromKey(homeKey));
+    expect(v.ok).toBe(true);
   });
 });
 

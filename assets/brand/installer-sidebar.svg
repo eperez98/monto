@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 164 314">
+  <!-- NSIS welcome/finish page (164x314, shown at the left). Same mark as src/brand/Logo.tsx on the brand violet. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="#6E50F0"/><stop offset=".6" stop-color="#3F2AAE"/><stop offset="1" stop-color="#1F1462"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE08A" stop-opacity=".55"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glow2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#A994FF" stop-opacity=".5"/><stop offset="1" stop-color="#A994FF" stop-opacity="0"/></radialGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9A80FF"/><stop offset="1" stop-color="#5B3FE0"/></linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".4"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#F2A516"/><stop offset="1" stop-color="#FFE08A"/></linearGradient>
+  </defs>
+  <rect width="164" height="314" fill="url(#sky)"/>
+  <circle cx="132" cy="70" r="90" fill="url(#glow)"/>
+  <circle cx="10" cy="270" r="110" fill="url(#glow2)"/>
+  <path d="M-10 250 C 30 236, 50 262, 86 238 S 140 214, 180 196" stroke="#fff" stroke-opacity=".14" stroke-width="2" fill="none"/>
+  <path d="M-10 272 C 34 258, 58 282, 94 260 S 146 238, 180 222" stroke="#fff" stroke-opacity=".09" stroke-width="2" fill="none"/>
+  <g transform="translate(46 74) scale(.6)">
+    <rect x="4" y="4" width="112" height="112" rx="34" fill="url(#badge)" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+    <rect x="4" y="4" width="112" height="112" rx="34" fill="url(#shine)"/>
+    <path d="M32 86V46l28 30 28-30v40" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="88" cy="29" r="10" fill="url(#gold)"/>
+  </g>
+  <text x="82" y="182" text-anchor="middle" font-family="'Inter Tight Variable','Segoe UI',sans-serif" font-size="34" font-weight="700" letter-spacing="-1.6" fill="#fff">monto</text>
+  <text x="82" y="204" text-anchor="middle" font-family="'Instrument Serif',Georgia,serif" font-style="italic" font-size="15" fill="#E4DCFF">tus finanzas, en orden</text>
+</svg>

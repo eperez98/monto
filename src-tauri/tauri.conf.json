@@ -49,9 +49,11 @@
         "languages": ["Spanish", "English"],
         "displayLanguageSelector": true,
         "installerIcon": "icons/icon.ico",
+        "sidebarImage": "installer/sidebar.bmp",
+        "headerImage": "installer/header.bmp",
         "startMenuFolder": "Monto"
       },
-      "wix": { "language": ["es-ES", "en-US"], "version": "1.0.1" }
+      "wix": { "language": ["es-ES", "en-US"], "version": "1.0.2" }
     }
   }
 }

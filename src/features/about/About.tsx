@@ -17,15 +17,6 @@ const HIGHLIGHTS: Array<[string, string, string]> = [
 /** Ideas for upcoming releases. Not promises: they can change or move. */
 const ROADMAP: Array<{ version: string; name: string; kind: string; tone: 'blue' | 'green' | 'amber'; items: string[] }> = [
   {
-    version: '1.0.2', name: 'Confianza', kind: tr('Seguridad'), tone: 'blue',
-    items: [
-      tr('Clave de recuperación: guarda la llave de tu equipo para abrir tus copias aunque cambies de computadora.'),
-      tr('Desbloqueo con Windows Hello: huella, rostro o el PIN de Windows.'),
-      tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
-      tr('Lectura afinada con correos y recibos reales de bancos de Panamá, Colombia y EE. UU.'),
-    ],
-  },
-  {
     version: '1.1', name: 'Conectado', kind: tr('Funciones'), tone: 'green',
     items: [
       tr('Pesos y dólares en el mismo perfil de Colombia, con la tasa de cambio que tú defines.'),
@@ -41,6 +32,15 @@ const ROADMAP: Array<{ version: string; name: string; kind: string; tone: 'blue'
       tr('Resumen anual para tu declaración de renta (DGI en Panamá, DIAN en Colombia).'),
       tr('App de celular acompañante para anotar un gasto en el momento.'),
       tr('Recordatorios de cobro entre los integrantes del hogar.'),
+    ],
+  },
+  {
+    version: '1.3', name: 'Claridad', kind: tr('Informes'), tone: 'blue',
+    items: [
+      tr('Comparación año contra año: en qué gastas más que el año pasado.'),
+      tr('Presupuesto por sobres: reparte cada quincena antes de gastarla.'),
+      tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
+      tr('Exportación a Excel con tus propias plantillas.'),
     ],
   },
 ];

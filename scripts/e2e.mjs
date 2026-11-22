@@ -26,6 +26,12 @@ const dclick = (text) => page.getByRole('dialog').getByRole('button', { name: te
 const WN = process.env.WHATSNEW_SHOTS ? `${out}/whatsnew` : null;
 if (WN) mkdirSync(WN, { recursive: true });
 const wn = async (name) => { if (WN) { await page.waitForTimeout(700); await page.screenshot({ path: `${WN}/${name}.jpg`, type: 'jpeg', quality: 72 }); } };
+// Settings → Bank email: paste a fictional bank alert into the tester.
+const testMail = async () => {
+  await page.getByLabel('Remitente (opcional)').fill('alertas@banco-ejemplo.com');
+  await page.getByLabel('Asunto y texto del correo').fill(`Compra aprobada
+Se realizó una compra por USD 25.40 en SUPERMERCADO EJEMPLO con tu tarjeta terminada en 1234.`);
+};
 
 try {
   step('Splash');
@@ -259,20 +265,23 @@ try {
   await click('Correo del banco', { exact: true });
   await page.getByText('Disponible en la app de escritorio de Monto.').waitFor();
   assert(true, 'correo del banco: solo en la app de escritorio (en el navegador no se conecta)');
+  await testMail();
+  await page.getByText('SUPERMERCADO EJEMPLO').last().waitFor();
+  assert(await page.getByText('$25.40').count() > 0 || await page.getByText('25.40').count() > 0, 'probar un correo: lee el monto, el comercio y el tipo de un aviso pegado');
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 1.0.1').waitFor();
-  assert(true, 'versión 1.0.1 visible en Actualizaciones');
+  await page.getByText('Monto 1.0.2').waitFor();
+  assert(true, 'versión 1.0.2 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
 
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.1 · Release Update'), 'acerca de: versión con nombre Release Update');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2 · Confianza'), 'acerca de: versión con nombre Confianza');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
-  assert(await page.getByText('1.0.2 · Confianza').isVisible() && await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
+  assert(await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && await page.getByText('1.3 · Claridad').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
   await page.waitForTimeout(700);
   await shot('19b-about');
   await click('Resumen', { exact: true });
@@ -631,6 +640,9 @@ try {
   await page.getByRole('button', { name: 'Configuración' }).click();
   await click('Correo del banco');
   await wn('banks');
+  await testMail();
+  await page.getByLabel('Asunto y texto del correo').scrollIntoViewIfNeeded();
+  await wn('mailtest');
   await click('Seguridad');
   await wn('security');
   await look('Cristal', 'Oscuro');
@@ -654,6 +666,8 @@ try {
   const news = page.getByRole('dialog', { name: 'Novedades de Monto' });
   await news.waitFor();
   assert(true, 'quien ya usaba Monto ve el panel de novedades');
+  await news.getByRole('tab', { name: 'Un diseño nuevo: Cristal' }).click();
+  await page.waitForTimeout(600);
   await news.getByRole('button', { name: /^Cristal/ }).click();
   await page.waitForFunction(() => document.documentElement.classList.contains('theme-glass'));
   assert(true, 'novedades: elegir el nuevo tema desde la diapositiva del diseño');
@@ -664,7 +678,7 @@ try {
   assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });
-  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.1'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
   await page.evaluate(() => localStorage.setItem('monto:whats-new', '0.8-glass'));
   await page.reload();
   await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
@@ -672,7 +686,17 @@ try {
   await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await news.waitFor();
-  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 4, 'novedades: quien viene de la RC 3 solo ve lo nuevo de la 1.0.1');
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 7, 'novedades: quien viene de la RC 3 ve lo de la 1.0.1 y la 1.0.2, sin repetir la RC 3');
+  await news.getByRole('button', { name: 'Cerrar novedades' }).click();
+  await news.waitFor({ state: 'detached' });
+  await page.evaluate(() => localStorage.setItem('monto:whats-new', '1.0.1'));
+  await page.reload();
+  await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
+  await click('Desbloquear');
+  await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
+  await page.getByRole('button', { name: /Carlos/ }).first().click();
+  await news.waitFor();
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 4, 'novedades: quien viene de la 1.0.1 solo ve lo nuevo de la 1.0.2');
   while (await news.getByRole('button', { name: 'Siguiente' }).count()) await news.getByRole('button', { name: 'Siguiente' }).click();
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });

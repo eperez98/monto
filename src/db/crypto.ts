@@ -101,6 +101,40 @@ export async function decryptDevice(file: Uint8Array, key: CryptoKey | null): Pr
   }
 }
 
+// ------------------------------------------------------------------ recovery code
+// The device key written for people: Crockford base32 of the 32 key bytes plus 3 checksum bytes, in 14 groups of 4
+// ("7K2M-…"). It opens this computer's backups on another computer. No I, L, O or U, so it is easy to copy by hand.
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+
+const checksum = async (key: Uint8Array) => new Uint8Array(await subtle().digest('SHA-256', key as BufferSource)).slice(0, 3);
+
+export async function recoveryCodeFromKey(base64: string): Promise<string> {
+  const key = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const bytes = new Uint8Array([...key, ...(await checksum(key))]);
+  let bits = 0, acc = 0, out = '';
+  for (const b of bytes) {
+    acc = ((acc << 8) | b) & 0xffff; bits += 8;
+    while (bits >= 5) { out += B32[(acc >> (bits - 5)) & 31]; bits -= 5; }
+  }
+  return out.match(/.{4}/g)!.join('-');
+}
+
+/** The device key (base64) in a recovery code, or null if it is mistyped. Lower case, spaces and O/I/L typos are fine. */
+export async function keyFromRecoveryCode(code: string): Promise<string | null> {
+  const clean = code.toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1');
+  if (clean.length !== 56 || [...clean].some((c) => !B32.includes(c))) return null;
+  const bytes: number[] = [];
+  let bits = 0, acc = 0;
+  for (const c of clean) {
+    acc = ((acc << 5) | B32.indexOf(c)) & 0xffff; bits += 5;
+    if (bits >= 8) { bytes.push((acc >> (bits - 8)) & 255); bits -= 8; }
+  }
+  const key = new Uint8Array(bytes.slice(0, 32));
+  const sum = await checksum(key);
+  if (sum.some((b, i) => b !== bytes[32 + i])) return null;
+  return btoa(String.fromCharCode(...key));
+}
+
 /** Where the device key comes from; set once at start-up on the desktop (none in the browser or in tests). */
 let provider: (() => Promise<CryptoKey | null>) | null = null;
 export const setDeviceKeyProvider = (p: typeof provider) => { provider = p; };

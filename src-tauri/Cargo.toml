@@ -1,6 +1,6 @@
 [package]
 name = "monto"
-version = "1.0.1"
+version = "1.0.2"
 description = "Monto — finanzas personales y familiares"
 authors = ["Erick Arturo Pérez Cazorla"]
 license = "MIT"
@@ -27,7 +27,8 @@ sha2 = "0.10"
 semver = "1"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = ["Data_Pdf", "Foundation", "Foundation_Collections", "Graphics_Imaging", "Media_Ocr", "Storage_Streams"] }
+windows-future = "0.3"
+windows = { version = "0.62", features = ["Data_Pdf", "Foundation", "Foundation_Collections", "Graphics_Imaging", "Media_Ocr", "Security_Credentials_UI", "Storage_Streams", "Win32_System_WinRT"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"

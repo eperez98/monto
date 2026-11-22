@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { LogoMark } from '../../brand/Logo';
 import { Button, Input } from '../../components/ui';
@@ -6,6 +6,7 @@ import { Icon } from '../../icons';
 import { tr } from '../../lib/i18n';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { AppSkeleton } from './AppSkeleton';
+import { disableHello, helloEnabled, helloUnlock } from '../../services/hello';
 
 export function LockScreen({ onUnlock, title = tr('Monto está bloqueado'), subtitle = tr('Introduce tu contraseña para descifrar tus datos.') }: { onUnlock: (password: string) => Promise<string | null>; title?: string; subtitle?: string }) {
   const [pw, setPw] = useState('');
@@ -13,6 +14,30 @@ export function LockScreen({ onUnlock, title = tr('Monto está bloqueado'), subt
   const [busy, setBusy] = useState(false);
   const [shake, setShake] = useState(0);
   const [show, setShow] = useState(false);
+  const [hello, setHello] = useState(false);
+  const asked = useRef(false);
+  const tryHello = async () => {
+    setErr(null);
+    let secret: string | null = null;
+    try { secret = await helloUnlock(); } catch (x) { setErr((x as Error).message || String(x)); return; }
+    if (!secret) return;
+    setBusy(true);
+    const r = await onUnlock(secret);
+    setBusy(false);
+    if (r) {
+      // The password changed somewhere else: forget the old one and ask for it once.
+      await disableHello().catch(() => undefined);
+      setHello(false);
+      setErr(tr('Windows Hello tenía una contraseña antigua. Escribe la contraseña y vuelve a activarlo en Configuración → Seguridad.'));
+    }
+  };
+  // Offer Windows Hello right away when it's turned on for this profile.
+  useEffect(() => {
+    void helloEnabled().then((on) => {
+      setHello(on);
+      if (on && !asked.current) { asked.current = true; void tryHello(); }
+    });
+  }, []);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pw) return;
@@ -36,6 +61,7 @@ export function LockScreen({ onUnlock, title = tr('Monto está bloqueado'), subt
         </div>
         {err && <p className="text-[12px] text-coral mt-2">{err}</p>}
         <Button type="submit" size="lg" className="w-full mt-5" loading={busy} icon="lock">{tr('Desbloquear')}</Button>
+        {hello && <Button type="button" variant="secondary" size="lg" className="w-full mt-2" icon="user" disabled={busy} onClick={() => void tryHello()}>{tr('Usar Windows Hello')}</Button>}
         <p className="text-[11px] text-muted mt-5 leading-relaxed">{tr('Tus datos están cifrados con AES-256 en este equipo. Si olvidas la contraseña no podrán recuperarse.')}</p>
         <ProfileSwitcher className="mt-4" />
       </motion.form>

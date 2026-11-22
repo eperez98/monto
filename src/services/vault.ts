@@ -3,7 +3,7 @@
  * replaced; the browser build and the phone preview have none and keep working unencrypted in memory.
  */
 import { isTauri } from '../db/adapters';
-import { importDeviceKey, newDeviceKeyBase64, setDeviceKeyProvider } from '../db/crypto';
+import { importDeviceKey, newDeviceKeyBase64, recoveryCodeFromKey, setDeviceKeyProvider } from '../db/crypto';
 import { IS_PREVIEW } from '../lib/preview';
 
 let cached: Promise<CryptoKey | null> | null = null;
@@ -29,4 +29,12 @@ export function installDeviceKey() {
     });
     return cached;
   });
+}
+
+/** This computer's recovery code (see crypto.recoveryCodeFromKey), or null outside the desktop app. */
+export async function deviceRecoveryCode(): Promise<string | null> {
+  if (!isTauri() || IS_PREVIEW) return null;
+  const { invoke } = await import('@tauri-apps/api/core');
+  const k = await invoke<string | null>('vault_device_key');
+  return k ? recoveryCodeFromKey(k) : null;
 }

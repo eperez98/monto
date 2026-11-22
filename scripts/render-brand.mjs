@@ -19,7 +19,32 @@ const jobs = [
   ['assets/brand/logo-horizontal.svg', 'assets/brand/logo-horizontal.png', 1040, 280],
   ['assets/brand/logo-vertical.svg', 'assets/brand/logo-vertical.png', 600, 600],
   ['assets/brand/logo-mark.svg', 'assets/brand/logo-mark.png', 512, 512],
+  // The Windows installer (NSIS) only takes 24-bit BMP: these are written as .bmp, see toBmp below.
+  ['assets/brand/installer-sidebar.svg', 'src-tauri/installer/sidebar.bmp', 164, 314],
+  ['assets/brand/installer-header.svg', 'src-tauri/installer/header.bmp', 150, 57],
 ];
+
+/** Uncompressed 24-bit BMP (bottom-up rows padded to 4 bytes) from RGBA pixels. */
+function toBmp(rgba, w, h) {
+  const row = Math.ceil((w * 3) / 4) * 4;
+  const out = Buffer.alloc(54 + row * h);
+  out.write('BM', 0);
+  out.writeUInt32LE(out.length, 2);
+  out.writeUInt32LE(54, 10);
+  out.writeUInt32LE(40, 14);
+  out.writeInt32LE(w, 18);
+  out.writeInt32LE(h, 22);
+  out.writeUInt16LE(1, 26);
+  out.writeUInt16LE(24, 28);
+  out.writeUInt32LE(row * h, 34);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4, o = 54 + (h - 1 - y) * row + x * 3;
+      out[o] = rgba[i + 2]; out[o + 1] = rgba[i + 1]; out[o + 2] = rgba[i];
+    }
+  }
+  return out;
+}
 
 // E2E_CHANNEL=chrome uses the installed Chrome, like scripts/e2e.mjs, instead of downloading Playwright's browser.
 const browser = await chromium.launch({ channel: process.env.E2E_CHANNEL || undefined });
@@ -29,7 +54,19 @@ for (const [src, out, w, h] of jobs) {
   await page.setViewportSize({ width: w, height: h });
   await page.setContent(`<style>${css}</style>${svg}`);
   await page.evaluate(() => document.fonts.ready);
-  writeFileSync(resolve(root, out), await page.locator('svg').screenshot({ omitBackground: true }));
+  const png = await page.locator('svg').screenshot({ omitBackground: !out.endsWith('.bmp') });
+  if (out.endsWith('.bmp')) {
+    const rgba = await page.evaluate(async ({ b64, w, h }) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = Object.assign(document.createElement('canvas'), { width: w, height: h });
+      const g = c.getContext('2d');
+      g.drawImage(img, 0, 0, w, h);
+      return Array.from(g.getImageData(0, 0, w, h).data);
+    }, { b64: png.toString('base64'), w, h });
+    writeFileSync(resolve(root, out), toBmp(rgba, w, h));
+  } else writeFileSync(resolve(root, out), png);
   console.log('✓', out);
 }
 await browser.close();
