@@ -60,7 +60,10 @@ Versión de seguridad: recupera tus copias si cambias de equipo, desbloquea Mont
 - **Probar un correo**: en Configuración → Correo del banco pega el texto o el HTML de un aviso y mira qué lee Monto: el monto, el comercio, si es gasto o ingreso, y el banco según el remitente. No se guarda ni se envía nada, y funciona sin conectar el correo.
 
 ### Instalador
-- El asistente de instalación muestra el logo de Monto: una imagen violeta con el lema en la bienvenida y al terminar, y el logo en la cabecera de cada paso.
+- El asistente de instalación muestra el logo de Monto: una imagen violeta con el lema en la bienvenida y al terminar, y el logo en la cabecera de cada paso. Las imágenes van al doble de resolución para verse nítidas con la escala de pantalla de Windows.
+
+### Acerca de Monto
+- Nueva tarjeta sobre **WinNow**, el otro proyecto del autor: limpieza, privacidad y mantenimiento de Windows 10 y 11, con un botón que abre su repositorio en GitHub. También aparece en el README.
 
 ### Cambiado
 - El panel de novedades muestra lo que salió después de la última versión que viste: quien venga de la 0.8 RC 3 ve lo de la 1.0.1 y la 1.0.2, y quien venga de la 1.0.1, solo lo nuevo.

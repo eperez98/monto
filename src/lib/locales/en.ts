@@ -1788,4 +1788,9 @@ export const EN: Record<string, string> = {
   "No se encontraron los datos en la carpeta de sincronización.": "The data wasn't found in the sync folder.",
   "La contraseña de sincronización no coincide con la de la carpeta.": "The sync password doesn't match the folder's.",
   "Elige la carpeta que sincronizas (OneDrive, Google Drive…)": "Choose the folder you sync (OneDrive, Google Drive…)",
+  "Otro proyecto del autor": "Another project by the author",
+  "Deja Windows 10 y 11 con lo que de verdad usas: quita telemetría, anuncios y programas que no necesitas, con mantenimiento y privacidad en un solo lugar. Cada cambio se respalda antes y se puede deshacer. Funciona desde la terminal o en una ventana, en español e inglés, y no se instala. Hecho en Panamá.": "Sift Windows 10 and 11 down to what you actually use: remove telemetry, ads and apps you don't need, with maintenance and privacy in one place. Every change is backed up first and can be undone. It runs from the terminal or a window, in English and Spanish, with nothing to install. Made in Panama.",
+  "Windows 10 y 11": "Windows 10 and 11",
+  "Gratis y de código abierto": "Free and open source",
+  "Ver WinNow en GitHub": "See WinNow on GitHub",
 };

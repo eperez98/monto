@@ -160,6 +160,10 @@ Más detalles en [docs/arquitectura.md](docs/arquitectura.md) y en las [decision
 
 Las contribuciones son bienvenidas. Lee [CONTRIBUTING.md](CONTRIBUTING.md) y [SECURITY.md](SECURITY.md). Los cambios se registran en [CHANGELOG.md](CHANGELOG.md) con [Versionado Semántico](https://semver.org/lang/es/).
 
+## Otro proyecto
+
+**[WinNow](https://github.com/eperez98/WinNow)**: deja Windows 10 y 11 con lo que de verdad importa. Limpieza, privacidad y mantenimiento desde la terminal o una ventana, en español e inglés. Cada cambio se respalda antes y se puede deshacer. También hecho en Panamá.
+
 ## Licencia
 
 **MIT** — consulta [LICENSE](LICENSE). © 2026 Erick Arturo Pérez Cazorla.
