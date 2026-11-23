@@ -20,8 +20,8 @@ const jobs = [
   ['assets/brand/logo-vertical.svg', 'assets/brand/logo-vertical.png', 600, 600],
   ['assets/brand/logo-mark.svg', 'assets/brand/logo-mark.png', 512, 512],
   // The Windows installer (NSIS) only takes 24-bit BMP: these are written as .bmp, see toBmp below.
-  ['assets/brand/installer-sidebar.svg', 'src-tauri/installer/sidebar.bmp', 164, 314],
-  ['assets/brand/installer-header.svg', 'src-tauri/installer/header.bmp', 150, 57],
+  ['assets/brand/installer-sidebar.svg', 'src-tauri/installer/sidebar.bmp', 328, 628],
+  ['assets/brand/installer-header.svg', 'src-tauri/installer/header.bmp', 300, 114],
 ];
 
 /** Uncompressed 24-bit BMP (bottom-up rows padded to 4 bytes) from RGBA pixels. */
