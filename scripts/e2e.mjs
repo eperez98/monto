@@ -282,6 +282,9 @@ try {
   assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2 · Confianza'), 'acerca de: versión con nombre Confianza');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
   assert(await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && await page.getByText('1.3 · Claridad').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
+  assert(await page.getByRole('heading', { name: 'WinNow' }).isVisible() && await page.getByRole('button', { name: 'Ver WinNow en GitHub' }).isVisible(), 'acerca de: tarjeta del otro proyecto, WinNow, con enlace a GitHub');
+  await page.getByRole('heading', { name: 'WinNow' }).scrollIntoViewIfNeeded();
+  await shot('19c-winnow');
   await page.waitForTimeout(700);
   await shot('19b-about');
   await click('Resumen', { exact: true });

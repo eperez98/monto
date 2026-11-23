@@ -160,6 +160,10 @@ More in [docs/arquitectura.md](docs/arquitectura.md) and the [architecture decis
 
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Changes are tracked in [CHANGELOG.md](CHANGELOG.md) using [Semantic Versioning](https://semver.org/).
 
+## Another project
+
+**[WinNow](https://github.com/eperez98/WinNow)** — sift Windows 10/11 down to what matters: debloat, privacy and maintenance from the terminal or a window, in English and Spanish. Every change is backed up first and can be undone. Also made in Panama.
+
 ## License
 
 **MIT** — see [LICENSE](LICENSE). © 2026 Erick Arturo Pérez Cazorla.

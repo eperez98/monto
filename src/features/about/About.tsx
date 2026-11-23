@@ -102,6 +102,21 @@ export default function About() {
             ))}
           </div>
         </div>
+
+        <Card hover={false} className="col-span-12 p-7">
+          <div className="flex flex-col md:flex-row md:items-center gap-5">
+            <span className="grid place-items-center size-14 shrink-0 rounded-[18px] text-white" style={{ background: 'linear-gradient(135deg, #14B8A6, #0F766E)' }}><Icon name="shield" size={26} /></span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-muted">{tr('Otro proyecto del autor')}</p>
+              <h3 className="text-[20px] font-semibold tracking-[-0.03em] mt-0.5">WinNow</h3>
+              <p className="text-[13px] text-ink-2 mt-1.5 leading-relaxed max-w-[720px]">{tr('Deja Windows 10 y 11 con lo que de verdad usas: quita telemetría, anuncios y programas que no necesitas, con mantenimiento y privacidad en un solo lugar. Cada cambio se respalda antes y se puede deshacer. Funciona desde la terminal o en una ventana, en español e inglés, y no se instala. Hecho en Panamá.')}</p>
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                <Badge>{tr('Windows 10 y 11')}</Badge><Badge>PowerShell</Badge><Badge>{tr('Gratis y de código abierto')}</Badge>
+              </div>
+            </div>
+            <Button variant="secondary" icon="external" className="shrink-0" onClick={() => open('winnow')}>{tr('Ver WinNow en GitHub')}</Button>
+          </div>
+        </Card>
       </div>
     </>
   );

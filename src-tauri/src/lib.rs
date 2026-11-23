@@ -18,13 +18,14 @@ use tauri::Manager;
 /// Opens one of Monto's GitHub pages in the default browser. Only these fixed addresses, never a URL sent by the UI.
 #[tauri::command]
 fn open_project_page(page: String) -> Result<(), String> {
-    let path = match page.as_str() {
-        "repo" => "",
-        "issues" => "/issues",
-        "releases" => "/releases",
+    let url = match page.as_str() {
+        "repo" => format!("https://github.com/{}", updater::REPO),
+        "issues" => format!("https://github.com/{}/issues", updater::REPO),
+        "releases" => format!("https://github.com/{}/releases", updater::REPO),
+        // The author's other project, shown in About.
+        "winnow" => "https://github.com/eperez98/WinNow".to_string(),
         _ => return Err("Página desconocida".into()),
     };
-    let url = format!("https://github.com/{}{path}", updater::REPO);
     #[cfg(windows)]
     let opener = "explorer";
     #[cfg(not(windows))]

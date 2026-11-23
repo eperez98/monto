@@ -1721,4 +1721,9 @@ export const EN: Record<string, string> = {
   "Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.": "If you use a password, you can now open Monto with your fingerprint, your face or your Windows PIN. Turn it on in Settings → Security.",
   "Prueba un correo de tu banco": "Test an email from your bank",
   "En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.": "In Settings → Bank email, paste an alert from your bank and see what Monto understands: amount, merchant and whether it's an expense or income. Nothing is saved or sent.",
+  "Otro proyecto del autor": "Another project by the author",
+  "Deja Windows 10 y 11 con lo que de verdad usas: quita telemetría, anuncios y programas que no necesitas, con mantenimiento y privacidad en un solo lugar. Cada cambio se respalda antes y se puede deshacer. Funciona desde la terminal o en una ventana, en español e inglés, y no se instala. Hecho en Panamá.": "Sift Windows 10 and 11 down to what you actually use: remove telemetry, ads and apps you don't need, with maintenance and privacy in one place. Every change is backed up first and can be undone. It runs from the terminal or a window, in English and Spanish, with nothing to install. Made in Panama.",
+  "Windows 10 y 11": "Windows 10 and 11",
+  "Gratis y de código abierto": "Free and open source",
+  "Ver WinNow en GitHub": "See WinNow on GitHub",
 };
