@@ -42,7 +42,7 @@ export function parseAmount(raw: string): number {
 }
 
 const NUMBER = String.raw`(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?|\d+(?:[.,]\d{1,2})?)`;
-const AMOUNT = new RegExp(String.raw`(B\/\.|PAB|USD|US\$|COP|COL\$|\$)\s?` + NUMBER, 'i');
+const AMOUNT = new RegExp(String.raw`(B\/\.|PAB|USD|US\$|COP|COL\$|RD\$|DOP|CRC|₡|\$)\s?` + NUMBER, 'i');
 // Some banks write the amount without a currency: "Monto: 45.80", "Importe de la transacción: 12.00".
 const LABELED_AMOUNT = new RegExp(String.raw`(?:monto|importe|valor|total)(?:\s+de\s+la\s+(?:transacci[oó]n|compra|operaci[oó]n))?\s*:\s*()` + NUMBER, 'i');
 const INCOME = /(dep[oó]sito|abono|acreditad|acreditaci[oó]n|recibiste|has recibido|te (?:enviaron|envi[oó])|transferencia (?:recibida|entrante)|ach recibid|yappy recibido|reembolso|devoluci[oó]n|cr[eé]dito a (tu|su) cuenta|consignaci[oó]n|you received|received a (?:payment|deposit|transfer)|direct deposit|deposit of|refund|has been credited|sent you)/i;
@@ -57,6 +57,10 @@ const BANKS: Array<[RegExp, string]> = [
   [/bancodeoccidente\.com\.co/i, 'Banco de Occidente'], [/bancopopular\.com\.co/i, 'Banco Popular'], [/avvillas\.com\.co/i, 'Banco AV Villas'], [/bancocajasocial\.com/i, 'Banco Caja Social'],
   [/scotiabankcolpatria\.com/i, 'Scotiabank Colpatria'], [/itau\.co/i, 'Itaú'], [/bancoagrario\.gov\.co/i, 'Banco Agrario'], [/gnbsudameris\.com\.co/i, 'Banco GNB Sudameris'],
   [/bancofalabella\.com\.co/i, 'Banco Falabella'], [/nequi\.com/i, 'Nequi'], [/daviplata\.com/i, 'Daviplata'], [/nu\.com\.co|nubank/i, 'Nu Colombia'], [/lulobank\.com/i, 'Lulo Bank'], [/rappipay|rappi\.com/i, 'RappiPay'],
+  // Costa Rica
+  [/bncr\.fi\.cr/i, 'Banco Nacional de Costa Rica'], [/bancobcr\.com/i, 'Banco de Costa Rica'], [/bancopopular\.fi\.cr/i, 'Banco Popular'], [/promerica\.fi\.cr/i, 'Banco Promerica'],
+  // República Dominicana
+  [/popularenlinea\.com|bpd\.com\.do/i, 'Banco Popular Dominicano'], [/banreservas\.com/i, 'Banreservas'], [/bhd\.com\.do|bhdleon\.com\.do/i, 'Banco BHD'], [/apap\.com\.do/i, 'Asociación Popular de Ahorros y Préstamos'],
   // US online banks and wallets
   [/chime\.com/i, 'Chime'], [/sofi\.(?:com|org)/i, 'SoFi'], [/ally\.com/i, 'Ally Bank'], [/capitalone\.com/i, 'Capital One 360'], [/discover\.com/i, 'Discover Bank'], [/varomoney\.com|varo\.com/i, 'Varo'],
   [/current\.com/i, 'Current'], [/marcus\.com/i, 'Marcus by Goldman Sachs'], [/schwab\.com/i, 'Charles Schwab'], [/revolut\.com/i, 'Revolut'], [/wise\.com/i, 'Wise'], [/paypal\.com/i, 'PayPal'],
@@ -71,16 +75,19 @@ const DESCRIBED = new RegExp(String.raw`(?:descripci[oó]n|detalle)\s*:\s*` + NA
 const AFTER_AMOUNT = new RegExp(String.raw`\b(?:en|at|to|from)\s+` + NAME, 'i');
 
 /** Read amount, direction and merchant from a bank notification. Null when no amount is found. */
-/** `dollarSign`: what a bare "$" means — pesos for a Colombian profile, dollars otherwise. */
-export function parseBankEmail(msg: Pick<MailMessage, 'subject' | 'text' | 'date'> & { from?: string }, dollarSign: Currency = 'USD'): ParsedTx | null {
+/** `local`: the profile's own currency (see countries.localCurrency); it decides what a bare "$" or no symbol means. */
+export function parseBankEmail(msg: Pick<MailMessage, 'subject' | 'text' | 'date'> & { from?: string }, local: Currency = 'PAB'): ParsedTx | null {
   const body = `${msg.subject}\n${msg.text}`;
   const m = AMOUNT.exec(body) ?? LABELED_AMOUNT.exec(body);
   if (!m) return null;
   const amount = parseAmount(m[2]);
   if (!(amount > 0)) return null;
-  // No currency written: balboa and dollar are at par in Panama; record it in balboas.
+  // No currency written: the country's own (balboas in Panama, at par with the dollar).
   const sym = m[1] ?? '';
-  const currency: Currency = /COP|COL\$/i.test(sym) ? 'COP' : /USD|US\$/i.test(sym) ? 'USD' : sym === '$' ? dollarSign : dollarSign === 'COP' ? 'COP' : 'PAB';
+  const home: Currency = local === 'USD' ? 'PAB' : local;
+  const currency: Currency = /COP|COL\$/i.test(sym) ? 'COP' : /RD\$|DOP/i.test(sym) ? 'DOP' : /CRC|₡/.test(sym) ? 'CRC' : /USD|US\$/i.test(sym) ? 'USD'
+    // A bare "$" is the peso in Colombia and the Dominican Republic, and the dollar elsewhere.
+    : sym === '$' ? (home === 'COP' || home === 'DOP' ? home : 'USD') : home;
   const afterAmount = body.slice(m.index + m[0].length);
   const merchant = (LABELED.exec(body)?.[1] ?? DESCRIBED.exec(body)?.[1] ?? AFTER_AMOUNT.exec(afterAmount)?.[1] ?? msg.subject).trim().replace(/[.,;:]+$/, '').slice(0, 60) || msg.subject;
   return { amount, currency, type: INCOME.test(body) ? 'income' : 'expense', merchant, date: msg.date, bank: msg.from ? bankFromSender(msg.from) : undefined };

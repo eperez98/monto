@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { Engine, nowISO, uid } from '../engine';
 import { camel } from '../map';
 import { assertCan } from '../../domain/permissions';
-import { categoryIdByName, getSetting, log, setSetting } from './core';
+import { categoryIdByName, getProfile, getSetting, log, setSetting } from './core';
 import type { PlanItem } from '../../domain/plan';
 import { createTransaction, deleteTransaction, getTransaction, listAccounts } from './finance';
 import { estimateIncome, nextPayment, payOccurrences, type IncomeConfig, type PayOccurrence } from '../../domain/salary';
@@ -11,11 +11,11 @@ import { budgetStatus, type BudgetStatus } from '../../domain/budget';
 import { occurrences, type RecurFrequency } from '../../domain/recurrence';
 import { netBalances, simplifyDebts } from '../../domain/split';
 import { addDays, lastMonths, monthKey, today, type ISODate } from '../../lib/dates';
-import { formatMoney, type Currency } from '../../lib/money';
+import { amountInSql, formatMoney, type Currency } from '../../lib/money';
 import type { Actor, Transaction, Budget, Contribution, Debt, Goal, IncomeSource, Recurring, Reminder, Scope, ScopeFilter, Settlement } from '../types';
 import { tr } from '../../lib/i18n';
 
-const currency = z.enum(['PAB', 'USD', 'COP']);
+const currency = z.enum(['PAB', 'USD', 'COP', 'CRC', 'DOP']);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, tr('Fecha no válida'));
 const cents = z.number().int(tr('Importe no válido'));
 
@@ -199,7 +199,9 @@ export function listBudgets(e: Engine, sf: ScopeFilter, month: string = monthKey
   return rows.map((r) => {
     const b = camel<Budget & { categoryName: string; icon: string; color: string }>(r);
     const tsc = scopeWhere(sf, 't');
-    const used = Number(e.scalar(`SELECT IFNULL(SUM(CASE WHEN t.type='refund' THEN -t.amount ELSE t.amount END),0) FROM transactions t WHERE t.type IN ('expense','loan_payment','refund') AND substr(t.date,1,7) = ? AND (t.category_id = ? OR t.category_id IN (SELECT id FROM categories WHERE parent_id = ?)) AND ${tsc.sql}`, [month, b.categoryId, b.categoryId, ...tsc.p]));
+    // Budgets are in the profile's main currency; spending in other currencies counts at the profile's rate.
+    const amt = amountInSql(getProfile(e).primaryCurrency, 't.amount', 't.currency');
+    const used = Number(e.scalar(`SELECT IFNULL(SUM(CASE WHEN t.type='refund' THEN -${amt} ELSE ${amt} END),0) FROM transactions t WHERE t.type IN ('expense','loan_payment','refund') AND substr(t.date,1,7) = ? AND (t.category_id = ? OR t.category_id IN (SELECT id FROM categories WHERE parent_id = ?)) AND ${tsc.sql}`, [month, b.categoryId, b.categoryId, ...tsc.p]));
     return { ...b, status: budgetStatus(b.amount, Math.max(0, used)) };
   });
 }

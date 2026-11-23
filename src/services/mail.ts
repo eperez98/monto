@@ -14,6 +14,7 @@ import { fromGmail, fromGraph, parseBankEmail, type ParsedTx } from '../domain/b
 import { addDays, today, type ISODate } from '../lib/dates';
 import type { Actor } from '../db/types';
 import { tr } from '../lib/i18n';
+import { localCurrency } from '../domain/countries';
 
 export type MailProvider = 'google' | 'microsoft';
 /** Non-secret settings only. The client ID is a public identifier, not a credential. */
@@ -85,7 +86,7 @@ export async function syncMail(e: Engine): Promise<MailSyncResult> {
     const msg = p.provider === 'google' ? fromGmail(m as Parameters<typeof fromGmail>[0]) : fromGraph(m as Parameters<typeof fromGraph>[0]);
     const key = await sha(msg.id);
     if (done.has(key)) { res.alreadyImported++; continue; }
-    const tx = parseBankEmail(msg, getProfile(e).country === 'CO' ? 'COP' : 'USD');
+    const tx = parseBankEmail(msg, localCurrency(getProfile(e).country));
     if (!tx) { res.noAmount++; continue; }
     // Two emails for the same purchase (same merchant, amount and day) count once.
     const sig = `${norm(tx.merchant)}|${tx.amount}|${tx.date}`;

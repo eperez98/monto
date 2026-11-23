@@ -2,26 +2,29 @@ import { Engine } from '../engine';
 import { listAccounts, isLiability, isLiquid } from './finance';
 import { listBudgets, listDebts, listGoals, listIncomeSources, incomeSummary, listRecurring, recurringOccurrences, listReminders } from './planning';
 import { lastMonths, addDays, addMonths, startOfMonth, endOfMonth, today, type ISODate, type Range, monthKey, formatMonth, monthShort } from '../../lib/dates';
-import { zeroTotals, type Currency, type CurrencyTotals } from '../../lib/money';
+import { amountInSql, combined, zeroTotals, type Currency, type CurrencyTotals } from '../../lib/money';
+import { getProfile } from './core';
 import { findDuplicates, highSpendCategories, projectSavings, savingsRate, type TxLite } from '../../domain/insights';
 import type { ScopeFilter, Transaction } from '../types';
 
 const scopeSql = (sf?: ScopeFilter) => !sf ? { sql: '1=1', p: [] as string[] } : sf.scope === 'family' ? { sql: "scope = 'family'", p: [] as string[] } : { sql: "scope = 'personal' AND member_id = ?", p: [sf.memberId] };
 
 const INCOME_TYPES = "('income')";
-const EXPENSE_EXPR = "SUM(CASE WHEN type IN ('expense','loan_payment') THEN amount WHEN type = 'refund' THEN -amount ELSE 0 END)";
+/** Sums across currencies are shown in the profile's main currency, each row converted at the profile's rate. */
+const display = (e: Engine): Currency => getProfile(e).primaryCurrency;
+const expenseExpr = (amt: string) => `SUM(CASE WHEN type IN ('expense','loan_payment') THEN ${amt} WHEN type = 'refund' THEN -${amt} ELSE 0 END)`;
 
 export interface Totals { income: number; expense: number; net: number; byCurrency: { income: CurrencyTotals; expense: CurrencyTotals } }
 
 export function totals(e: Engine, r: Range, sf?: ScopeFilter): Totals {
   const s = scopeSql(sf);
   const rows = e.all<{ currency: Currency; income: number; expense: number }>(
-    `SELECT currency, IFNULL(SUM(CASE WHEN type IN ${INCOME_TYPES} THEN amount ELSE 0 END),0) AS income, IFNULL(${EXPENSE_EXPR},0) AS expense
+    `SELECT currency, IFNULL(SUM(CASE WHEN type IN ${INCOME_TYPES} THEN amount ELSE 0 END),0) AS income, IFNULL(${expenseExpr('amount')},0) AS expense
      FROM transactions WHERE date BETWEEN ? AND ? AND ${s.sql} GROUP BY currency`, [r.from, r.to, ...s.p]);
   const inc = zeroTotals(), exp = zeroTotals();
   rows.forEach((x) => { inc[x.currency] += x.income; exp[x.currency] += x.expense; });
-  // A profile's currencies never mix pesos with balboas/dollars (see domain/countries), so a plain sum is right.
-  const income = inc.PAB + inc.USD + inc.COP, expense = exp.PAB + exp.USD + exp.COP;
+  const cur = display(e);
+  const income = combined(inc, cur), expense = combined(exp, cur);
   return { income, expense, net: income - expense, byCurrency: { income: inc, expense: exp } };
 }
 
@@ -30,7 +33,8 @@ export interface CategorySlice { categoryId: string; name: string; color: string
 export function expensesByCategory(e: Engine, r: Range, sf?: ScopeFilter, kind: 'expense' | 'income' = 'expense'): CategorySlice[] {
   const s = scopeSql(sf);
   const typeCond = kind === 'expense' ? "t.type IN ('expense','loan_payment','refund')" : "t.type = 'income'";
-  const amt = kind === 'expense' ? "SUM(CASE WHEN t.type='refund' THEN -t.amount ELSE t.amount END)" : 'SUM(t.amount)';
+  const a = amountInSql(display(e), 't.amount', 't.currency');
+  const amt = kind === 'expense' ? `SUM(CASE WHEN t.type='refund' THEN -${a} ELSE ${a} END)` : `SUM(${a})`;
   return e.all<{ category_id: string; name: string; color: string; icon: string; amount: number }>(
     `SELECT IFNULL(p.id, IFNULL(c.id,'none')) AS category_id, IFNULL(p.name, IFNULL(c.name,'Sin categoría')) AS name, IFNULL(p.color, IFNULL(c.color,'#9AA39E')) AS color, IFNULL(p.icon, IFNULL(c.icon,'other')) AS icon, ${amt} AS amount
      FROM transactions t LEFT JOIN categories c ON c.id = t.category_id LEFT JOIN categories p ON p.id = c.parent_id
@@ -43,7 +47,7 @@ export function monthlySeries(e: Engine, months: number, sf?: ScopeFilter, ref: 
   const s = scopeSql(sf);
   const keys = lastMonths(months, ref);
   const rows = e.all<{ m: string; income: number; expense: number }>(
-    `SELECT substr(date,1,7) AS m, IFNULL(SUM(CASE WHEN type IN ${INCOME_TYPES} THEN amount ELSE 0 END),0) AS income, IFNULL(${EXPENSE_EXPR},0) AS expense
+    `SELECT substr(date,1,7) AS m, IFNULL(SUM(CASE WHEN type IN ${INCOME_TYPES} THEN ${amountInSql(display(e))} ELSE 0 END),0) AS income, IFNULL(${expenseExpr(amountInSql(display(e)))},0) AS expense
      FROM transactions WHERE substr(date,1,7) BETWEEN ? AND ? AND ${s.sql} GROUP BY m`, [keys[0], keys.at(-1)!, ...s.p]);
   const map = new Map(rows.map((r) => [r.m, r]));
   return keys.map((k) => {

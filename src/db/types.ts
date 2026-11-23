@@ -56,7 +56,7 @@ export interface Settlement { id: string; fromMemberId: string; toMemberId: stri
 export interface Activity { id: number; memberId: string | null; action: string; entity: string; entityId: string | null; summary: string; scope: Scope; createdAt: string }
 
 /** `country`: where the accounts are ('PA' Panamá, 'CO' Colombia); missing on profiles made before 1.0.1, which are Panama. */
-export interface Profile { name: string; mode: ProfileMode; primaryCurrency: Currency; onboarded: boolean; householdName?: string; country?: 'PA' | 'CO' }
+export interface Profile { name: string; mode: ProfileMode; primaryCurrency: Currency; onboarded: boolean; householdName?: string; country?: 'PA' | 'CO' | 'CR' | 'DO'; fxRates?: Partial<Record<Currency, number>> }
 /** Colour themes. `glass` is the base design; the rest are chosen in Settings → Appearance. */
 export type Palette = 'glass' | 'skeuo' | 'violet' | 'classic' | 'win11';
 export const DEFAULT_PALETTE: Palette = 'glass';

@@ -16,6 +16,7 @@ import { APP_VERSION_LABEL, IS_PRERELEASE, versionLabel } from '../../lib/versio
 import { ThemePicker, ModePicker } from '../../components/ThemePicker';
 import { bootSoundOn, playBootChime, setBootSound } from '../../lib/bootSound';
 import { countryOf } from '../../domain/countries';
+import { CURRENCIES, DEFAULT_RATES, currencyLabel } from '../../lib/money';
 import { passwordProblem } from '../../domain/auth';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
 import { lang, locale, setLang, tr } from '../../lib/i18n';
@@ -27,6 +28,7 @@ import { StylePicker } from '../dashboard/StylePicker';
 import { MailTab } from './MailTab';
 import { RulesCard } from './RulesCard';
 import { TrustCard } from './TrustCard';
+import { SyncCard } from './SyncCard';
 import { disableHello, helloEnabled } from '../../services/hello';
 import { IS_PREVIEW } from '../../lib/preview';
 
@@ -113,9 +115,10 @@ function ProfileTab() {
       </Modal>
       <div>
         <p className="text-[12px] font-medium text-ink-2 mb-2">{tr('Moneda principal')}</p>
-        <Segmented value={profile.primaryCurrency} onChange={(v) => canManage && mutate((e) => setProfile(e, { primaryCurrency: v }), tr('Moneda principal actualizada'))} options={countryOf(profile.country).currencies.map((c) => ({ value: c, label: c === 'PAB' ? 'B/. Balboa (PAB)' : c === 'USD' ? tr('$ Dólar (USD)') : tr('$ Peso colombiano (COP)') }))} />
-        <p className="text-[11.5px] text-muted mt-2">{tr('País de las cuentas: {country}.', { country: countryOf(profile.country).name() })}{' '}{profile.country === 'CO' ? tr('Todas las cuentas van en pesos (COP).') : tr('Paridad fija PAB:USD 1:1. Las cuentas conservan su propia moneda.')}</p>
+        <Segmented value={profile.primaryCurrency} onChange={(v) => canManage && mutate((e) => setProfile(e, { primaryCurrency: v }), tr('Moneda principal actualizada'))} options={countryOf(profile.country).currencies.map((c) => ({ value: c, label: `${CURRENCIES[c].symbol} ${currencyLabel(c)}` }))} />
+        <p className="text-[11.5px] text-muted mt-2">{tr('País de las cuentas: {country}.', { country: countryOf(profile.country).name() })}{' '}{!profile.country || profile.country === 'PA' ? tr('Paridad fija PAB:USD 1:1. Las cuentas conservan su propia moneda.') : tr('Cada cuenta conserva su moneda; los totales se convierten con tu tasa de cambio.')}</p>
       </div>
+      {profile.country && profile.country !== 'PA' && <RateField />}
       {canManage && <div className="flex justify-end"><Button onClick={() => { mutate((e) => setProfile(e, { name: name.trim() || profile.name, householdName: household.trim() || undefined }), tr('Perfil guardado')); }}>{tr('Guardar')}</Button></div>}
     </Card>
     <ProfilesCard currentName={profile.name} />
@@ -381,6 +384,7 @@ function DataTab() {
           {!backups.length && <p className="text-[12.5px] text-muted px-3 py-3">{tr('Aún no hay copias.')}</p>}
         </ul>
       </Card>
+      {canBackup && <SyncCard />}
       {canBackup && (
         <Card hover={false} className="p-6">
           <p className="text-[14px] font-semibold mb-1">{tr('Exportar e importar')}</p>
@@ -562,5 +566,28 @@ function UpdatesTab() {
         </div>
       </Card>
     </>
+  );
+}
+
+/** The rate this profile uses to add dollars to its local currency. Monto never looks rates up. */
+function RateField() {
+  const profile = useProfile();
+  const mutate = useMutate();
+  const canManage = useCan('member.manage');
+  const local = countryOf(profile.country).currencies[0];
+  const saved = profile.fxRates?.[local];
+  const [v, setV] = useState(String(saved ?? DEFAULT_RATES[local]));
+  const n = Number(v.replace(/[\s,]/g, ''));
+  const ok = Number.isFinite(n) && n > 0;
+  return (
+    <div>
+      <Field label={tr('Tasa de cambio: cuántos {currency} vale US$ 1', { currency: local })} error={v && !ok ? tr('Escribe un número mayor que cero.') : undefined}
+        hint={saved ? tr('La defines tú; Monto no la consulta en internet. Cámbiala cuando quieras.') : tr('Es una cifra aproximada: escribe la tasa de tu banco para que los totales sean exactos.')}>
+        <div className="flex gap-2">
+          <Input inputMode="decimal" value={v} disabled={!canManage} onChange={(ev) => setV(ev.target.value)} className="w-48" />
+          <Button variant="secondary" disabled={!ok || !canManage || n === saved} onClick={() => mutate((e) => setProfile(e, { fxRates: { ...profile.fxRates, [local]: n } }), tr('Tasa de cambio guardada'))}>{tr('Guardar tasa')}</Button>
+        </div>
+      </Field>
+    </div>
   );
 }

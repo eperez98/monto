@@ -8,7 +8,7 @@ import { formatMoney } from '../../lib/money';
 import type { Account, Actor, Attachment, Category, ScopeFilter, Transaction, TxType } from '../types';
 import { tr } from '../../lib/i18n';
 
-const currency = z.enum(['PAB', 'USD', 'COP']);
+const currency = z.enum(['PAB', 'USD', 'COP', 'CRC', 'DOP']);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, tr('Fecha no válida'));
 const cents = z.number().int(tr('Importe no válido'));
 
@@ -216,7 +216,11 @@ function checkAccounts(e: Engine, v: z.output<typeof transactionSchema>) {
   const acc = e.get<{ currency: string; archived: number }>('SELECT currency, archived FROM accounts WHERE id = ?', [v.accountId]);
   if (!acc) throw new Error(tr('La cuenta seleccionada no existe.'));
   if (acc.currency !== v.currency) throw new Error(tr('La cuenta opera en {currency}; el movimiento debe usar la misma moneda.', { currency: acc.currency }));
-  if (v.toAccountId && !e.get('SELECT 1 FROM accounts WHERE id = ?', [v.toAccountId])) throw new Error(tr('La cuenta de destino no existe.'));
+  const to = v.toAccountId ? e.get<{ currency: string }>('SELECT currency FROM accounts WHERE id = ?', [v.toAccountId]) : null;
+  if (v.toAccountId && !to) throw new Error(tr('La cuenta de destino no existe.'));
+  // Balboas and dollars are the same money; any other pair would need the amount in both currencies.
+  const par = (c: string) => (c === 'PAB' || c === 'USD' ? 'USD' : c);
+  if (to && par(to.currency) !== par(acc.currency)) throw new Error(tr('Entre cuentas de monedas distintas registra un gasto en una y un ingreso en la otra, con el monto de cada moneda.'));
 }
 
 function writeSplits(e: Engine, id: string, splits?: Array<{ memberId: string; amount: number }>) {

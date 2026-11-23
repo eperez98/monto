@@ -11,6 +11,7 @@ import { Icon } from '../../icons';
 import { addMonths, daysInMonth, formatDate, formatMonth, monthKey, today, weekdayShort } from '../../lib/dates';
 import { formatMoney, parseMoney, type Currency } from '../../lib/money';
 import { tr } from '../../lib/i18n';
+import { SubscriptionsCard } from './SubscriptionsCard';
 
 interface Ev { date: string; title: string; amount: number; currency: Currency; kind: 'income' | 'expense' | 'debt' | 'reminder' | 'tx'; estimated: boolean; done?: boolean; onClick?: () => void; onDelete?: () => void }
 const KIND_STYLE: Record<Ev['kind'], string> = { income: 'bg-emerald-soft text-emerald', expense: 'bg-coral-soft text-coral', debt: 'bg-amber-soft text-amber', reminder: 'bg-blue-soft text-blue', tx: 'bg-surface-3 text-ink-2' };
@@ -133,6 +134,7 @@ export default function Calendar() {
               {!rules.length && <EmptyState icon="repeat" title={tr('Sin pagos recurrentes')} body={tr('Alquiler, luz, internet, streaming… Monto te los recordará.')} className="!py-6" />}
             </ul>
           </Card>
+          <SubscriptionsCard />
         </div>
       </div>
       <Modal open={recOpen} onClose={() => setRecOpen(false)} title={tr('Nuevo pago recurrente')} icon="repeat" width={540}

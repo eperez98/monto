@@ -6,6 +6,7 @@ import { bankFromSender, htmlToText, parseBankEmail } from '../../domain/bankMai
 import { formatMoney } from '../../lib/money';
 import { formatDate, today } from '../../lib/dates';
 import { tr } from '../../lib/i18n';
+import { localCurrency } from '../../domain/countries';
 
 /**
  * Paste a bank alert and see what Monto reads from it, before connecting the mailbox or when an email is read wrong.
@@ -19,7 +20,7 @@ export function MailTester() {
     if (!text.trim()) return undefined;
     const body = /<\w+[^>]*>/.test(text) ? htmlToText(text) : text;
     const [subject, ...rest] = body.split(/\r?\n/);
-    return parseBankEmail({ subject, text: rest.join('\n'), date: today(), from }, profile?.country === 'CO' ? 'COP' : 'USD');
+    return parseBankEmail({ subject, text: rest.join('\n'), date: today(), from }, localCurrency(profile?.country));
   }, [text, from, profile?.country]);
   const bank = from ? bankFromSender(from) : undefined;
 

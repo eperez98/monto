@@ -17,15 +17,6 @@ const HIGHLIGHTS: Array<[string, string, string]> = [
 /** Ideas for upcoming releases. Not promises: they can change or move. */
 const ROADMAP: Array<{ version: string; name: string; kind: string; tone: 'blue' | 'green' | 'amber'; items: string[] }> = [
   {
-    version: '1.1', name: 'Conectado', kind: tr('Funciones'), tone: 'green',
-    items: [
-      tr('Pesos y dólares en el mismo perfil de Colombia, con la tasa de cambio que tú defines.'),
-      tr('Sincronización cifrada entre tus equipos a través de una carpeta tuya (OneDrive o Google Drive).'),
-      tr('Detecta suscripciones y pagos que se repiten a partir de tus movimientos.'),
-      tr('Más países: Costa Rica y República Dominicana, con sus bancos.'),
-    ],
-  },
-  {
     version: '1.2', name: 'Juntos', kind: tr('Hogar'), tone: 'amber',
     items: [
       tr('Metas compartidas en pareja, con lo que aporta cada uno.'),
@@ -41,6 +32,15 @@ const ROADMAP: Array<{ version: string; name: string; kind: string; tone: 'blue'
       tr('Presupuesto por sobres: reparte cada quincena antes de gastarla.'),
       tr('Instalador firmado, sin el aviso de Windows SmartScreen.'),
       tr('Exportación a Excel con tus propias plantillas.'),
+    ],
+  },
+  {
+    version: '1.4', name: 'Al momento', kind: tr('Funciones'), tone: 'green',
+    items: [
+      tr('Anota un gasto desde la barra de tareas de Windows sin abrir Monto.'),
+      tr('Importa estados de cuenta en PDF de tu banco.'),
+      tr('Ahorro automático: aparta un porcentaje de cada ingreso para tus objetivos.'),
+      tr('Más países de la región, con sus monedas y bancos.'),
     ],
   },
 ];

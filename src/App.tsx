@@ -22,6 +22,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { guarded } from './services/attempts';
 import { installDeviceKey } from './services/vault';
 import { WhatsNewHost } from './features/shell/WhatsNew';
+import { SyncHost } from './features/settings/SyncCard';
 import { Topbar } from './components/layout/Topbar';
 import { NotificationsPanel } from './components/layout/Notifications';
 import { GuideTour } from './components/layout/GuideTour';
@@ -34,6 +35,10 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { DEFAULT_PALETTE, type Member, type Palette } from './db/types';
 import { tr } from './lib/i18n';
 import { IS_PREVIEW } from './lib/preview';
+import { setRates } from './lib/money';
+
+/** The profile's exchange rates feed every total (lib/money); refreshed on open and after each change. */
+const syncRates = (e: Engine) => setRates(getProfile(e).fxRates);
 
 // Desktop: the database and backups are encrypted with this computer's key unless the user sets a password.
 installDeviceKey();
@@ -130,7 +135,7 @@ export default function App() {
 
   const afterOpen = useCallback((e: Engine) => {
     setEngine(e);
-    e.subscribe(() => bump());
+    syncRates(e); e.subscribe(() => { syncRates(e); bump(); });
     applyVisual(e);
     const profile = getProfile(e);
     // New databases are seeded at the end of onboarding, in the language chosen there.
@@ -157,7 +162,7 @@ export default function App() {
         const m = getMember(e, String(ev.data.actorId));
         if (!m) throw new Error(tr('Sin sesión activa'));
         setEngine(e);
-        e.subscribe(() => bump());
+        syncRates(e); e.subscribe(() => { syncRates(e); bump(); });
         applyVisual(e);
         setActor({ id: m.id, role: m.role }, null);
         useApp.getState().go(ev.data.route as RouteKey);
@@ -311,6 +316,7 @@ export default function App() {
             <PartnerSetupHost />
             <MailReviewHost />
             <WhatsNewHost />
+            <SyncHost />
           </motion.div>
         )}
       </AnimatePresence>

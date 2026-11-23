@@ -20,7 +20,7 @@ import { ProfileSwitcher } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
 import type { DashboardStyle } from '../dashboard/Dashboard';
 import { parseMoney, type Currency } from '../../lib/money';
-import { COUNTRIES, bankGroups, currencyForBank, type Country } from '../../domain/countries';
+import { COUNTRIES, bankGroups, countryHint, currencyForBank, type Country } from '../../domain/countries';
 import { passwordProblem } from '../../domain/auth';
 import { today } from '../../lib/dates';
 import type { Engine } from '../../db/engine';
@@ -187,7 +187,7 @@ export function Onboarding({ engine, onDone }: { engine: Engine; onDone: (owner:
                   <p className="serif text-[18px] text-ink-2">{tr('Tu país de residencia o el de tus cuentas. Define la moneda y los bancos que verás.')}</p>
                   <div className="grid grid-cols-2 gap-3 mt-8">
                     {(Object.values(COUNTRIES)).map((c) => (
-                      <ChoiceCard key={c.code} selected={country === c.code} onClick={() => pickCountry(c.code)} title={c.name()} description={c.code === 'PA' ? tr('Balboa y dólar a la par.') : tr('Pesos colombianos (COP).')} />
+                      <ChoiceCard key={c.code} selected={country === c.code} onClick={() => pickCountry(c.code)} title={c.name()} description={countryHint(c.code)} />
                     ))}
                   </div>
                   {country === 'PA' ? (

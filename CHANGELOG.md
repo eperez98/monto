@@ -10,6 +10,38 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [1.1.0] - 2026-11-22 · Conectado
+
+Tus datos en todos tus equipos, las suscripciones que se repiten a la vista, pesos y dólares en el mismo perfil, y dos países nuevos: Costa Rica y República Dominicana.
+
+### Sincronización
+- **Entre tus equipos, sin servidores**: eliges una carpeta que ya sincronizas (OneDrive, Google Drive, Dropbox…) y Monto guarda ahí tus datos cifrados con una contraseña de sincronización (AES-256-GCM, PBKDF2 600 000).
+  - Monto solo escribe en una subcarpeta «Monto»: el archivo cifrado y un pequeño JSON con la revisión. Escribe primero en un archivo temporal, para que el servicio nunca suba un archivo a medias.
+  - Al abrir, si solo cambió la carpeta, trae los cambios después de guardar una copia de seguridad de lo que tenías. Si solo cambió este equipo, los sube unos segundos después de cada cambio.
+  - Si cambiaron los dos, Monto no mezcla nada: te pregunta qué copia conservar.
+  - Windows guarda la contraseña de sincronización en el Administrador de credenciales, así que no tienes que escribirla cada vez.
+  - Se activa en Configuración → Datos y copias.
+
+### Suscripciones detectadas
+- En el Calendario, Monto muestra los cargos que se repiten en tus movimientos y cuánto suman al mes.
+  - Detecta suscripciones semanales, quincenales, mensuales, trimestrales y anuales.
+  - Se basa en el mismo comercio, un monto parecido (±15 %) y un ritmo constante, con al menos 3 pagos (2 si son anuales). Deja fuera lo que ya programaste y lo que dejó de cobrarse.
+  - «Programar» la agrega a tus pagos recurrentes; «No es una suscripción» la oculta para siempre.
+
+### Monedas y países
+- **Pesos y dólares en el mismo perfil**: Colombia, Costa Rica y República Dominicana admiten cuentas en su moneda y en dólares, con los bancos en línea de EE. UU.
+  - Los totales, gráficos, categorías y presupuestos convierten cada movimiento a tu moneda principal con la tasa que defines en Configuración → Perfil. Monto no consulta tasas en internet.
+  - Una transferencia entre cuentas de monedas distintas se rechaza con una explicación. Para esos casos registra un gasto en una cuenta y un ingreso en la otra.
+- **Costa Rica**: colones (₡), con su formato (₡ 12 500) y 14 bancos y cooperativas.
+- **República Dominicana**: pesos dominicanos (RD$) y 14 bancos y asociaciones.
+- El correo del banco reconoce ₡, CRC, RD$ y DOP, y algunos remitentes de bancos de los dos países. Un «$» suelto cuenta como peso en Colombia y República Dominicana, y como dólar en Panamá y Costa Rica.
+
+### Base de datos
+- **Esquema v5**: las monedas admiten colones (CRC) y pesos dominicanos (DOP). Las reglas de moneda se amplían igual que en la v3, sin copiar ningún dato, y se verifica la integridad justo después.
+
+### Cambiado
+- La hoja de ruta de «Acerca de Monto» quita la 1.1 y añade la 1.4 «Al momento».
+
 ## [1.0.2] - 2026-11-22 · Confianza
 
 Versión de seguridad: recupera tus copias si cambias de equipo, desbloquea Monto con Windows Hello y comprueba cómo lee Monto los correos de tu banco. El instalador estrena imagen.

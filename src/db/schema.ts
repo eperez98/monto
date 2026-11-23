@@ -240,6 +240,15 @@ export const MIGRATIONS: Migration[] = [
   },
   // v4 (1.0.1): profile photo per member, a small JPEG as a data URL (≤ 256×256). Encrypted with the rest of the file.
   `ALTER TABLE members ADD COLUMN photo TEXT;`,
+  // v5 (1.1): colones (CRC) and Dominican pesos (DOP), widened the same way as v3: the stored table definitions are
+  // edited in place, no row is copied, and integrity_check runs right after.
+  (db) => {
+    db.run('PRAGMA writable_schema = ON');
+    db.run("UPDATE sqlite_master SET sql = replace(sql, 'currency IN (''PAB'',''USD'',''COP'')', 'currency IN (''PAB'',''USD'',''COP'',''CRC'',''DOP'')') WHERE type = 'table'");
+    db.run(`PRAGMA schema_version = ${db.get('PRAGMA schema_version') + 1}`);
+    db.run('PRAGMA writable_schema = OFF');
+    if (db.get("SELECT count(*) FROM pragma_integrity_check WHERE integrity_check <> 'ok'") > 0) throw new Error('integrity_check');
+  },
 ];
 
 export const SCHEMA_VERSION = MIGRATIONS.length;

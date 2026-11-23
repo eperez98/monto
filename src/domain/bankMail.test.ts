@@ -59,3 +59,13 @@ describe('Colombia and US online banks', () => {
     expect(at('no-reply@sofi.org', 'Direct deposit', 'Direct deposit of $1,500.00 received from ACME PAYROLL.')).toMatchObject({ amount: 150000, type: 'income', bank: 'SoFi' });
   });
 });
+
+describe('Costa Rica and the Dominican Republic (1.1)', () => {
+  it('reads colones and Dominican pesos, and what a bare $ means in each country', () => {
+    expect(parseBankEmail({ subject: 'Compra', text: 'Compra por ₡12.500,00 en AUTOMERCADO', date: '2026-11-14' }, 'CRC')).toMatchObject({ amount: 1250000, currency: 'CRC' });
+    expect(parseBankEmail({ subject: 'Consumo', text: 'Consumo de RD$ 1,250.50 en SIRENA', date: '2026-11-14' }, 'DOP')).toMatchObject({ amount: 125050, currency: 'DOP' });
+    expect(parseBankEmail({ subject: 'Consumo', text: 'Consumo de $ 900.00 en JUMBO', date: '2026-11-14' }, 'DOP')?.currency).toBe('DOP');
+    expect(parseBankEmail({ subject: 'Compra', text: 'Compra por $ 20.00 en AMAZON', date: '2026-11-14' }, 'CRC')?.currency).toBe('USD');
+    expect(parseBankEmail({ subject: 'Alerta', text: 'Monto: 4.500,00', date: '2026-11-14' }, 'CRC')?.currency).toBe('CRC');
+  });
+});

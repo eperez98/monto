@@ -53,7 +53,7 @@ describe('transactions & accounts', () => {
     createTransaction(e, actor, { type: 'transfer', description: 'Envío', amount: 5000, currency: 'PAB', date: '2026-11-03', accountId: pab.id, toAccountId: usd.id });
     expect(getAccount(e, usd.id)!.balance).toBe(25000);
     const b = balances(e);
-    expect(b.available).toEqual({ PAB: 60000, USD: 25000, COP: 0 });
+    expect(b.available).toEqual({ PAB: 60000, USD: 25000, COP: 0, CRC: 0, DOP: 0 });
     deleteTransaction(e, actor, t.id);
     expect(getAccount(e, pab.id)!.balance).toBe(45000);
     expect(() => createTransaction(e, actor, { type: 'expense', description: 'x', amount: 100, currency: 'USD', date: '2026-11-03', accountId: pab.id })).toThrow(/misma moneda/);
@@ -277,5 +277,27 @@ describe('adjust the current balance', () => {
 
     expect(categoryFor(e, 'Yappy recibido', 'income')).toBe(categoryIdByName(e, 'Otros ingresos', 'income'));
     expect(categoryFor(e, 'Depósito', 'income')).toBe(categoryIdByName(e, 'Otros ingresos', 'income'));
+  });
+});
+
+describe('several currencies in one profile (1.1)', () => {
+  it('stores colones and Dominican pesos, refuses a transfer between pesos and dollars, and totals at the profile rate', async () => {
+    const { setRates } = await import('../lib/money');
+    const { setProfile } = await import('./repo/core');
+    const { e, actor } = await freshEngine();
+    setProfile(e, { country: 'CO', primaryCurrency: 'COP', fxRates: { COP: 4000 } });
+    setRates({ COP: 4000 });
+    const cop = createAccount(e, actor, { name: 'Bancolombia', type: 'savings', currency: 'COP', initialBalance: 0 });
+    const usd = createAccount(e, actor, { name: 'Chime', type: 'checking', currency: 'USD', initialBalance: 0 });
+    createAccount(e, actor, { name: 'BNCR', type: 'savings', currency: 'CRC', initialBalance: 100 });
+    createAccount(e, actor, { name: 'Banreservas', type: 'savings', currency: 'DOP', initialBalance: 100 });
+    createTransaction(e, actor, { type: 'expense', description: 'Mercado', amount: 8000000, currency: 'COP', date: '2026-11-03', accountId: cop.id });
+    createTransaction(e, actor, { type: 'expense', description: 'Netflix', amount: 1000, currency: 'USD', date: '2026-11-04', accountId: usd.id });
+    expect(() => createTransaction(e, actor, { type: 'transfer', description: 'Cambio', amount: 1000, currency: 'USD', date: '2026-11-05', accountId: usd.id, toAccountId: cop.id })).toThrow(/monedas distintas/);
+    // $ 80 000 in pesos plus US$ 10 at 4 000.
+    expect(totals(e, { from: '2026-11-01', to: '2026-11-30' }).expense).toBe(8000000 + 4000000);
+    expect(monthlySeries(e, 1, undefined, '2026-11-20').at(-1)!.expense).toBe(12000000);
+    expect(expensesByCategory(e, { from: '2026-11-01', to: '2026-11-30' }).reduce((a, c) => a + c.amount, 0)).toBe(12000000);
+    setRates(undefined);
   });
 });

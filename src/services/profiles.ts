@@ -5,6 +5,7 @@ import { assertCan } from '../domain/permissions';
 import { useApp } from '../store/app';
 import { createBackup } from './backup';
 import { disableHello } from './hello';
+import { disableSync } from './sync';
 import type { Actor } from '../db/types';
 
 /** Save pending changes and reopen Monto on another profile. */
@@ -35,6 +36,7 @@ export async function deleteCurrentProfile(e: Engine, actor: Actor): Promise<voi
   e.adapter = new MemoryAdapter();
   await file.remove();
   await disableHello(id).catch(() => undefined);
+  await disableSync(id).catch(() => undefined);
   const rest = (await listProfiles()).filter((p) => p.id !== id);
   await saveProfiles(rest);
   setActiveProfileId(rest[0]?.id ?? DEFAULT_PROFILE_ID);

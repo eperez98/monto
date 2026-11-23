@@ -5,7 +5,7 @@ import { can, canEditTransaction } from './permissions';
 import { occurrences } from './recurrence';
 import { netBalances, simplifyDebts, splitEqually } from './split';
 import { findDuplicates, highSpendCategories, monthsToGoal, projectSavings, savingsRate } from './insights';
-import { combined, convert, formatMoney, parseMoney } from '../lib/money';
+import { amountInSql, combined, convert, formatMoney, parseMoney, setRates } from '../lib/money';
 import { periodRange, previousRange } from '../lib/dates';
 
 describe('money', () => {
@@ -27,8 +27,27 @@ describe('money', () => {
     expect(parseMoney('12,5')).toBe(1250);
     expect(formatMoney(4500000, 'COP')).toBe('$ 45.000');
     expect(formatMoney(4500050, 'COP')).toBe('$ 45.000,5');
-    expect(combined({ PAB: 1000, USD: 500, COP: 9000 }, 'COP')).toBe(9000);
-    expect(combined({ PAB: 1000, USD: 500, COP: 9000 }, 'PAB')).toBe(1500);
+    setRates({ COP: 4000 });
+    // US$ 15.00 at 4 000 pesos each, plus $ 90 in pesos.
+    expect(combined({ PAB: 1000, USD: 500, COP: 9000 }, 'COP')).toBe(6009000);
+    expect(combined({ PAB: 1000, USD: 500, COP: 400000 }, 'PAB')).toBe(1600);
+  });
+  it('converts at the rate the user sets, and keeps balboa and dollar at par', () => {
+    setRates({ COP: 3900, CRC: 500, DOP: 60, PAB: 2 });
+    expect(convert(10000, 'USD', 'COP')).toBe(39000000);
+    expect(convert(39000000, 'COP', 'USD')).toBe(10000);
+    expect(convert(5000, 'CRC', 'DOP')).toBe(600);
+    expect(convert(100, 'PAB', 'USD')).toBe(100);
+    expect(amountInSql('COP')).toContain("WHEN 'USD' THEN amount * 3900");
+    setRates({ COP: -5 });
+    expect(convert(100, 'USD', 'COP')).toBe(400000);
+    setRates(undefined);
+  });
+  it('writes colones and Dominican pesos the local way', () => {
+    expect(formatMoney(1250000, 'CRC')).toMatch(/^₡ 12\s500$/);
+    expect(formatMoney(125050, 'DOP')).toBe('RD$ 1,250.50');
+    expect(parseMoney('RD$ 1,250.50')).toBe(125050);
+    expect(parseMoney('₡ 12500')).toBe(1250000);
   });
   it('PAB:USD parity is 1:1', () => {
     expect(convert(12345, 'PAB', 'USD')).toBe(12345);

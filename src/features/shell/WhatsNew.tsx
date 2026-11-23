@@ -11,7 +11,7 @@ import { IS_PREVIEW } from '../../lib/preview';
 import { tr } from '../../lib/i18n';
 
 /** Bump when a release brings changes worth a tour; users who already saw this one don't see it again. */
-export const WHATS_NEW_ID = '1.0.2';
+export const WHATS_NEW_ID = '1.1';
 const KEY = 'monto:whats-new';
 export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); } catch { /* private mode: it may show again, harmless */ } };
 const lastSeen = (): string | null => { try { return localStorage.getItem(KEY); } catch { return WHATS_NEW_ID; } };
@@ -22,12 +22,16 @@ const IMAGES = import.meta.glob('../../assets/whatsnew/*.jpg', { eager: true, im
 const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`];
 
 /** Panels shown so far, oldest first. A slide's `v` is the panel that introduced it. */
-const PANELS = ['0.8-glass', '1.0.1', '1.0.2'] as const;
+const PANELS = ['0.8-glass', '1.0.1', '1.0.2', '1.1'] as const;
 type Panel = (typeof PANELS)[number];
 /** Without `v` the slide is always shown (the closing one). */
 interface Slide { key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel }
 /** Newest first: someone coming from an older version sees what they missed, in the order it came out backwards. */
 const ALL_SLIDES: Slide[] = [
+  { key: 'sync', v: '1.1', icon: 'refresh', title: () => tr('Tus datos en todos tus equipos'), body: () => tr('Elige una carpeta que ya sincronizas, como OneDrive o Google Drive, y Monto guarda ahí tus datos cifrados. En tu otra computadora usas la misma contraseña de sincronización. Actívalo en Configuración → Datos y copias.') },
+  { key: 'subs', v: '1.1', icon: 'repeat', image: 'subs', title: () => tr('Suscripciones detectadas'), body: () => tr('Monto encuentra en tus movimientos los cargos que se repiten, como streaming, gimnasio o internet, y te dice cuánto suman al mes. Prográmalos con un toque en el Calendario.') },
+  { key: 'fx', v: '1.1', icon: 'bank', title: () => tr('Pesos y dólares juntos'), body: () => tr('En Colombia, Costa Rica y República Dominicana puedes tener cuentas en tu moneda y en dólares. Los totales se convierten con la tasa que tú defines en Configuración → Perfil.') },
+  { key: 'countries', v: '1.1', icon: 'home', title: () => tr('Costa Rica y República Dominicana'), body: () => tr('Dos países nuevos, con colones y pesos dominicanos, sus bancos y la lectura de sus correos de alerta.') },
   { key: 'recovery', v: '1.0.2', icon: 'key', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
   { key: 'hello', v: '1.0.2', icon: 'user', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
   { key: 'mailtest', v: '1.0.2', icon: 'bell', image: 'mailtest', title: () => tr('Prueba un correo de tu banco'), body: () => tr('En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.') },
