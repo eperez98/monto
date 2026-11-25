@@ -83,7 +83,7 @@ On Windows, Monto encrypts the local database and backups with AES-256-GCM. You 
 
 **Quote Builder**, available for Panama profiles, keeps pending, cancelled and paid quotes in one list. Enter the client company, services and prices in balboas. The PDF includes your name, national ID, optional tax ID and ACH payment details (bank, account type and account number).
 
-Edit a pending quote or cancel it with a reason. When you confirm payment, Monto saves a dated receipt with its own ID. You can export that receipt as a PDF again later.
+For Panama profiles, **Quote Builder** prices services by unit, hour or day. Each quote includes the client’s contact details, ACH terms (upfront, within 15 days after completion, or a percentage split), a 15-day validity period and spaces for both signatures. Attach the client’s acceptance to approve the quote, then confirm payment to issue a receipt.
 
 In **Settings → Data and backups**, you can delete backups older than 15 days. Monto keeps the newest one. To start over, an administrator can type **DELETE** to erase every profile and local backup on that device. The illustrated tour introduces these options after an update.
 

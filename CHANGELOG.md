@@ -12,6 +12,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
 
+El Cotizador admite tarifas por unidad, hora o día, cantidades, datos de contacto y tres condiciones de pago por ACH. La propuesta tiene 15 días de validez e incluye espacios para las firmas del cliente y del profesional. La aprobación exige adjuntar evidencia antes de emitir el recibo por pago.
+
 ### Republicación del 25 de noviembre de 2026
 
 - **El Cotizador (Panamá).** Crea presupuestos comerciales con la empresa destinataria, servicios y precios, datos del emisor (nombre, cédula y RUC opcional) e instrucciones de pago por ACH. La cotización se exporta a PDF con la tabla de servicios y el total en PAB.
