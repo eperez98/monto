@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import clsx from 'clsx';
 import { useApp } from '../../store/app';
 import { getPrefs, setPrefs } from '../../db/repo/core';
-import { useQuery } from '../../hooks/useDb';
+import { useProfile, useQuery } from '../../hooks/useDb';
 import { Button, IconButton, useMotionOK, ease } from '../../components/ui';
 import { ThemePicker, ModePicker } from '../../components/ThemePicker';
 import { Icon } from '../../icons';
@@ -13,23 +13,26 @@ import { tr } from '../../lib/i18n';
 /** Bump when a release brings changes worth a tour; users who already saw this one don't see it again. */
 export const WHATS_NEW_ID = '1.0.2b';
 const KEY = 'monto:whats-new';
-export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); } catch { /* private mode: it may show again, harmless */ } };
+export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); localStorage.setItem('monto:quotes-tour', 'seen'); } catch { /* private mode: it may show again, harmless */ } };
 const lastSeen = (): string | null => { try { return localStorage.getItem(KEY); } catch { return WHATS_NEW_ID; } };
-const seen = () => lastSeen() === WHATS_NEW_ID;
+const seenTools = () => { try { return localStorage.getItem('monto:quotes-tour') === 'seen'; } catch { return true; } };
+const seen = () => lastSeen() === WHATS_NEW_ID && seenTools();
 
 // Screenshots of each change (fictional data), captured by scripts/e2e.mjs with WHATSNEW_SHOTS=1.
-const IMAGES = import.meta.glob('../../assets/whatsnew/*.jpg', { eager: true, import: 'default' }) as Record<string, string>;
-const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`];
+const IMAGES = import.meta.glob('../../assets/whatsnew/*.{jpg,svg}', { eager: true, import: 'default' }) as Record<string, string>;
+const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`] ?? IMAGES[`../../assets/whatsnew/${name}.svg`];
 
 /** Panels shown so far, oldest first. A slide's `v` is the panel that introduced it. */
 const PANELS = ['0.8-glass', '1.0.1', '1.0.2b'] as const;
 type Panel = (typeof PANELS)[number];
 /** Without `v` the slide is always shown (the closing one). */
-interface Slide { key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel }
+interface Slide { tools?: boolean; key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel }
 /** Newest first: someone coming from an older version sees what they missed, in the order it came out backwards. */
 const ALL_SLIDES: Slide[] = [
-  { key: 'recovery', v: '1.0.2b', icon: 'key', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
-  { key: 'hello', v: '1.0.2b', icon: 'user', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
+  { key: 'quotes', tools: true, icon: 'reports', image: 'quotes', title: () => tr('El Cotizador'), body: () => tr('Prepara cotizaciones por ACH, expórtalas a PDF y genera el recibo al confirmar un cobro.') },
+  { key: 'cleanup', tools: true, icon: 'database', image: 'cleanup', title: () => tr('Limpieza de datos'), body: () => tr('En Datos y copias puedes eliminar respaldos de más de 15 días o borrar todos los perfiles para empezar de nuevo.') },
+  { key: 'recovery', v: '1.0.2b', icon: 'key', image: 'recovery', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
+  { key: 'hello', v: '1.0.2b', icon: 'user', image: 'hello', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
   { key: 'mailtest', v: '1.0.2b', icon: 'bell', image: 'mailtest', title: () => tr('Prueba un correo de tu banco'), body: () => tr('En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.') },
   { key: 'design', v: '0.8-glass', icon: 'sparkle', image: 'glass', theme: true, title: () => tr('Un diseño nuevo: Cristal'), body: () => tr('Paneles translúcidos sobre color suave, más luz y menos ruido. Si prefieres algo con más textura, prueba «Relieve»: papel, cuero y botones con volumen. Elígelo aquí mismo.') },
   { key: 'security', v: '1.0.1', icon: 'shield', image: 'security', title: () => tr('Tus datos, cifrados siempre'), body: () => tr('Aunque no uses contraseña, tus datos y copias se guardan cifrados con una llave de este equipo que vive en Windows. Otra app que mire la carpeta solo ve datos ilegibles. Los PIN usan un hash lento y, tras varios intentos fallidos, Monto hace esperar.') },
@@ -55,10 +58,11 @@ export function WhatsNew({ onClose }: { onClose: () => void }) {
   const prefs = useQuery((e) => getPrefs(e));
   const [i, setI] = useState(0);
   // Only what came out after the last panel this person saw (everything if they never saw one).
+  const profile = useProfile();
   const [SLIDES] = useState(() => {
     const previous = lastSeen();
     const seenAt = PANELS.indexOf((previous === '1.0.2' ? '1.0.1' : previous) as Panel);
-    return ALL_SLIDES.filter((s) => !s.v || PANELS.indexOf(s.v) > seenAt);
+    return ALL_SLIDES.filter((s) => s.tools ? !seenTools() && (s.key !== 'quotes' || (profile.country ?? 'PA') === 'PA') : !s.v || PANELS.indexOf(s.v) > seenAt);
   });
   const last = i === SLIDES.length - 1;
   const go = (n: number) => setI(Math.max(0, Math.min(SLIDES.length - 1, n)));

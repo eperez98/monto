@@ -20,6 +20,7 @@ export const NAV_GROUPS: Array<{ title: string; items: NavItem[] }> = [
   { title: tr('Hogar y análisis'), items: [
     { key: 'family', label: tr('Familia'), icon: 'family', family: true, hint: tr('Integrantes del hogar, gastos compartidos y quién debe a quién.') },
     { key: 'calendar', label: tr('Calendario'), icon: 'calendar', hint: tr('Pagos y cobros programados, día por día.') },
+    { key: 'quotes', label: tr('El Cotizador'), icon: 'reports', hint: tr('Inventario de cotizaciones y recibos ACH') },
     { key: 'reports', label: tr('Informes'), icon: 'reports', hint: tr('Tablas listas para exportar a Excel, PDF o Notion.') },
     { key: 'insights', label: tr('Análisis'), icon: 'insights', hint: tr('Tendencias y consejos a partir de tus datos.') },
   ] },

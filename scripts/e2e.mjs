@@ -257,9 +257,9 @@ try {
   await click('Verificar', { exact: true });
   await page.getByText(/Todo en orden: el archivo no está dañado/).waitFor();
   assert(true, 'copia de seguridad e integridad OK');
-  await click('Borrar copias de más de 30 días');
-  await page.getByText('No hay copias de más de 30 días').waitFor();
-  assert(true, 'borrar copias antiguas: sin copias de más de 30 días que borrar');
+  await click('Borrar copias de más de 15 días');
+  await page.getByText('No hay copias de más de 15 días').waitFor();
+  assert(true, 'borrar copias antiguas: sin copias de más de 15 días que borrar');
 
   step('Bank email tab');
   await click('Correo del banco', { exact: true });

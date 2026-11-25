@@ -12,6 +12,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
 
+El Cotizador para Panamá incorpora cotizaciones ACH, inventario y recibos PDF. Datos y copias permite limpiar respaldos de más de 15 días o reiniciar todos los perfiles locales. El panel de novedades incluye ilustraciones.
+
 Versión de seguridad: recupera tus copias si cambias de equipo, desbloquea Monto con Windows Hello y comprueba cómo lee Monto los correos de tu banco. El instalador estrena imagen.
 
 ### Seguridad
