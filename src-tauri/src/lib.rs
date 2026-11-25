@@ -6,7 +6,6 @@
 //! a single-instance guard so two windows never write the same database, and
 //! opt-in updates from GitHub Releases verified with SHA-256 (see `updater`).
 
-mod mail;
 mod net;
 mod hello;
 mod vault;
@@ -52,8 +51,19 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, mail::mail_connect, mail::mail_sync, mail::mail_disconnect, ocr::read_receipt, vault::vault_device_key, vault::vault_create_device_key, hello::hello_available, hello::hello_enabled, hello::hello_enable, hello::hello_unlock, hello::hello_disable])
+        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, ocr::read_receipt, vault::vault_device_key, vault::vault_create_device_key, hello::hello_available, hello::hello_enabled, hello::hello_enable, hello::hello_unlock, hello::hello_disable])
         .setup(|app| {
+            // Remove mailbox tokens saved by earlier versions, without contacting the providers.
+            #[cfg(windows)]
+            for provider in ["google", "microsoft"] {
+                if let Ok(entry) = keyring::Entry::new("Monto · correo del banco", provider) {
+                    if let Err(error) = entry.delete_credential() {
+                        if !matches!(error, keyring::Error::NoEntry) {
+                            eprintln!("No se pudo eliminar la credencial de correo anterior.");
+                        }
+                    }
+                }
+            }
             // Make sure the data folder exists before the UI asks for it.
             if let Ok(dir) = app.path().app_data_dir() {
                 let _ = std::fs::create_dir_all(dir.join("backups"));

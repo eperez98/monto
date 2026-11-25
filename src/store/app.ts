@@ -26,8 +26,6 @@ interface AppState {
   notificationsOpen: boolean;
   tourOpen: boolean;
   phonePreview: boolean;
-  /** Bank-email transactions found at startup, waiting for the user's review. */
-  mailReview: import('../services/mail').MailSyncResult | null;
   reducedMotion: boolean;
   dark: boolean;
   setEngine: (e: Engine | null) => void;
@@ -44,7 +42,6 @@ interface AppState {
   setNotificationsOpen: (o: boolean) => void;
   setTourOpen: (o: boolean) => void;
   setPhonePreview: (o: boolean) => void;
-  setMailReview: (r: import('../services/mail').MailSyncResult | null) => void;
   setVisual: (v: { reducedMotion?: boolean; dark?: boolean }) => void;
 }
 
@@ -66,7 +63,6 @@ export const useApp = create<AppState>((set) => ({
   notificationsOpen: false,
   tourOpen: false,
   phonePreview: false,
-  mailReview: null,
   reducedMotion: false,
   dark: false,
   setEngine: (engine) => set({ engine, revision: engine?.revision ?? 0 }),
@@ -87,6 +83,5 @@ export const useApp = create<AppState>((set) => ({
   setNotificationsOpen: (notificationsOpen) => set({ notificationsOpen }),
   setTourOpen: (tourOpen) => set({ tourOpen }),
   setPhonePreview: (phonePreview) => set({ phonePreview }),
-  setMailReview: (mailReview) => set({ mailReview }),
   setVisual: (v) => set(v),
 }));

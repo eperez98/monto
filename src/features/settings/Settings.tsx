@@ -24,7 +24,7 @@ import { copyProfileForCouple, createProfile, deleteCurrentProfile, switchProfil
 import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
-import { MailTab } from './MailTab';
+import { MailTester } from './MailTester';
 import { RulesCard } from './RulesCard';
 import { TrustCard } from './TrustCard';
 import { disableHello, helloEnabled } from '../../services/hello';
@@ -53,7 +53,7 @@ export default function Settings() {
           {tab === 'security' && <SecurityTab />}
           {tab === 'data' && <DataTab />}
           {tab === 'categories' && <><CategoriesTab /><RulesCard /></>}
-          {tab === 'mail' && <MailTab />}
+          {tab === 'mail' && <MailTester />}
           {tab === 'updates' && <UpdatesTab />}
           {tab === 'about' && <AboutTab />}
         </div>

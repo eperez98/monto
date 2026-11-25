@@ -263,8 +263,7 @@ try {
 
   step('Bank email tab');
   await click('Correo del banco', { exact: true });
-  await page.getByText('Disponible en la app de escritorio de Monto.').waitFor();
-  assert(true, 'correo del banco: solo en la app de escritorio (en el navegador no se conecta)');
+  assert(await page.getByText('Google (Gmail)', { exact: true }).count() === 0, 'la conexión de correo está retirada');
   await testMail();
   await page.getByText('SUPERMERCADO EJEMPLO').last().waitFor();
   assert(await page.getByText('$25.40').count() > 0 || await page.getByText('25.40').count() > 0, 'probar un correo: lee el monto, el comercio y el tipo de un aviso pegado');
@@ -642,7 +641,6 @@ try {
   await page.getByRole('dialog', { name: 'Personalizar el resumen' }).getByRole('button', { name: 'Listo' }).click();
   await page.getByRole('button', { name: 'Configuración' }).click();
   await click('Correo del banco');
-  await wn('banks');
   await testMail();
   await page.getByLabel('Asunto y texto del correo').scrollIntoViewIfNeeded();
   await wn('mailtest');

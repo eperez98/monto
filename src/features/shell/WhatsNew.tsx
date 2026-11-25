@@ -38,7 +38,6 @@ const ALL_SLIDES: Slide[] = [
   { key: 'menu', v: '0.8-glass', icon: 'menu', image: 'menu', title: () => tr('Un menú que se aparta'), body: () => tr('El menú ahora es una barra de íconos que te deja más espacio. Pasa el cursor y se despliega encima del contenido; fíjalo abierto si lo prefieres. Los grupos se pliegan para ver solo lo que usas.') },
   { key: 'receipt', v: '0.8-glass', icon: 'upload', image: 'receipt', title: () => tr('Registra con la foto del comprobante'), body: () => tr('Sube, arrastra o pega la foto o el PDF de un recibo. Monto lee el comercio, la fecha y el total, y tú revisas antes de guardar. La foto no sale de tu computadora.') },
   { key: 'summary', v: '0.8-glass', icon: 'dashboard', image: 'summary', title: () => tr('Un resumen a tu medida'), body: () => tr('Elige qué tarjetas ves y en qué orden. Al empezar cada mes, «Tu mes en resumen» te cuenta cuánto ahorraste y en qué se fue tu dinero.') },
-  { key: 'banks', v: '0.8-glass', icon: 'bank', image: 'banks', title: () => tr('Tu banco, sin teclear'), body: () => tr('Conecta el correo donde te llegan los avisos de tu banco: Monto reconoce a 16 bancos de Panamá, evita duplicados y tú eliges qué agregar. También lee mejor los estados de cuenta en CSV.') },
   { key: 'done', icon: 'check', image: 'done', title: () => tr('Todo listo'), body: () => tr('Además: modo compacto, Mica de Windows 11, copia de seguridad antes de cada actualización y la vista de celular revisada. Puedes cambiar el tema cuando quieras en Configuración → Apariencia.') },
 ];
 

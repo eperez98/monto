@@ -12,6 +12,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [1.0.3] - 2026-11-25 · 1.0.2.1c Confianza
 
+Se retira la conexión con Gmail y Outlook. La prueba manual de avisos bancarios sigue disponible.
+
 Los perfiles de Panamá pueden abrir la calculadora de salario y décimo en Ingresos.
 
 ## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
