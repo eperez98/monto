@@ -81,6 +81,8 @@ Individual, couple or family profiles with roles, shared expenses, who‑owes‑
 
 ## Features
 
+For Panama profiles, **Quote Builder** prices services by unit, hour or day. Each quote includes the client’s contact details, ACH terms (upfront, within 15 days after completion, or a percentage split), a 15-day validity period and spaces for both signatures. Attach the client’s acceptance to approve the quote, then confirm payment to issue a receipt.
+
 <details open>
 <summary><b>Income and salary</b></summary>
 

@@ -12,6 +12,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [1.0.4] - 2026-11-25 · 1.0.2.1d Confianza
 
+El Cotizador admite tarifas por unidad, hora o día, cantidades, datos de contacto y tres condiciones de pago por ACH. La propuesta tiene 15 días de validez e incluye espacios para las firmas del cliente y del profesional. La aprobación exige adjuntar evidencia antes de emitir el recibo por pago.
+
 El Cotizador para Panamá incorpora cotizaciones ACH, inventario y recibos PDF. Datos y copias permite limpiar respaldos de más de 15 días o reiniciar todos los perfiles locales. El panel de novedades incluye ilustraciones.
 
 En Perfiles puedes editar el nombre, proteger el acceso con un PIN de seis dígitos y borrar el perfil con copia previa. El actualizador busca versiones estables.

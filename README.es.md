@@ -81,6 +81,8 @@ Base de datos SQLite 100 % local, cifrado **AES‑256** opcional, bloqueo autom�
 
 ## Características
 
+En perfiles de Panamá, **El Cotizador** calcula cada servicio por unidad, hora o día. La propuesta identifica a la empresa y su contacto, detalla el pago por ACH (al inicio, al finalizar con plazo de 15 días, o dividido por porcentaje) y tiene 15 días de validez. El PDF tiene espacios para firmar. Adjunta la aceptación del cliente para aprobarla y confirma el pago para emitir el recibo.
+
 <details open>
 <summary><b>Ingresos y salario</b></summary>
 

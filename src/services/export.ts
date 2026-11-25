@@ -5,7 +5,7 @@ import { locale, tr } from '../lib/i18n';
 
 export interface ReportColumn { key: string; label: string; money?: boolean; align?: 'left' | 'right' }
 export interface ReportTable { name: string; columns: ReportColumn[]; rows: Array<Record<string, string | number | null>> }
-export interface Report { title: string; subtitle: string; tables: ReportTable[]; summary?: Array<{ label: string; value: string }> }
+export interface Report { signatures?: [string,string]; title: string; subtitle: string; tables: ReportTable[]; summary?: Array<{ label: string; value: string }> }
 
 // Brand palette (midnight + gold) for exported documents.
 const INK = [20, 48, 77] as const; // #14304D
@@ -182,6 +182,17 @@ export async function buildPDF(r: Report): Promise<Uint8Array> {
     y = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y) + 34;
   }
 
+  if (r.signatures) {
+    if (y + 100 > doc.internal.pageSize.getHeight() - 56) { doc.addPage(); y = 60; }
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...INK);
+    doc.text(tr('Firmas'),M,y+8);
+    const column = (W - 2*M - 24)/2;
+    r.signatures.forEach((label,index)=>{
+      const x=M+index*(column+24);
+      doc.setDrawColor(...MUTED); doc.line(x,y+66,x+column,y+66);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(label,x,y+81);
+    });
+  }
   const pages = doc.getNumberOfPages();
   const H = doc.internal.pageSize.getHeight();
   for (let i = 1; i <= pages; i++) {
