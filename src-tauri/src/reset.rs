@@ -22,7 +22,10 @@ fn forget(service: &str, user: &str) -> Result<(), String> {
     }
 }
 
-fn clear_files(base: &Path) -> Result<(), String> {
+fn clear_files(
+    base: &Path,
+    forget: impl Fn(&str, &str) -> Result<(), String>,
+) -> Result<(), String> {
     let mut profiles = std::collections::BTreeSet::from([String::from("default")]);
     let mut files = Vec::new();
     for entry in fs::read_dir(base).map_err(|e| e.to_string())? {
@@ -61,5 +64,42 @@ fn clear_files(base: &Path) -> Result<(), String> {
 
 #[tauri::command]
 pub fn reset_local_data(app: tauri::AppHandle) -> Result<(), String> {
-    clear_files(&app.path().app_data_dir().map_err(|e| e.to_string())?)
+    clear_files(
+        &app.path().app_data_dir().map_err(|e| e.to_string())?,
+        forget,
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn removes_managed_databases_and_backups_and_can_be_retried() {
+        let base = std::env::temp_dir().join(format!(
+            "monto-reset-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir(&base).unwrap();
+        fs::create_dir_all(base.join("backups/profile2")).unwrap();
+        for name in [
+            "monto.db",
+            "monto-profile2.db.tmp",
+            "profiles.json",
+            "backups/profile2/example.monto",
+            "unrelated.db",
+        ] {
+            fs::write(base.join(name), b"fixture").unwrap();
+        }
+        for _ in 0..2 {
+            clear_files(&base, |_, _| Ok(())).unwrap();
+        }
+        assert_eq!(fs::read_dir(&base).unwrap().count(), 1);
+        assert!(base.join("unrelated.db").is_file());
+        fs::remove_dir_all(base).unwrap();
+    }
 }
