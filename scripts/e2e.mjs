@@ -688,7 +688,7 @@ try {
   await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await news.waitFor();
-  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 9, 'novedades: quien viene de la RC 3 ve lo de la 1.0.1 y la 1.0.2, sin repetir la RC 3');
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 11, 'novedades: quien viene de la RC 3 ve lo de la 1.0.1 y la 1.0.2, sin repetir la RC 3');
   await news.getByRole('button', { name: 'Cerrar novedades' }).click();
   await news.waitFor({ state: 'detached' });
   await page.evaluate(() => localStorage.setItem('monto:whats-new', '1.0.1'));
@@ -698,7 +698,7 @@ try {
   await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await news.waitFor();
-  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 6, 'novedades: quien viene de la 1.0.1 solo ve lo nuevo de la 1.0.2');
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 8, 'novedades: quien viene de la 1.0.1 solo ve lo nuevo de la 1.0.2');
   while (await news.getByRole('button', { name: 'Siguiente' }).count()) await news.getByRole('button', { name: 'Siguiente' }).click();
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });

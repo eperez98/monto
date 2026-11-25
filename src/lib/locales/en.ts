@@ -1,5 +1,8 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Avisos bancarios manuales": "Manual bank alerts",
+  "En Ingresos puedes estimar tu salario mensual y la partida del décimo en Panamá.": "In Income, you can estimate your monthly salary and thirteenth-month installment in Panama.",
+  "Puedes pegar un aviso en Configuración → Correo del banco. Se retiró la conexión automática con Gmail y Outlook.": "Paste a notification in Settings → Bank email. Automatic Gmail and Outlook connections have been removed.",
   "Administra tus perfiles": "Manage your profiles",
   "En Configuración → Perfil, pulsa Editar junto al perfil que quieras cambiar. Puedes renombrarlo, protegerlo con un PIN de seis dígitos o borrarlo con una copia de seguridad previa.": "In Settings → Profile, choose Edit next to a profile to rename it, protect it with a six-digit PIN, or delete it after a backup.",
   "Actualizaciones estables": "Stable updates",
