@@ -12,9 +12,13 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
 
-El Cotizador para Panamá incorpora cotizaciones ACH, inventario y recibos PDF. Datos y copias permite limpiar respaldos de más de 15 días o reiniciar todos los perfiles locales. El panel de novedades incluye ilustraciones.
+### Republicación del 25 de noviembre de 2026
 
-Versión de seguridad: recupera tus copias si cambias de equipo, desbloquea Monto con Windows Hello y comprueba cómo lee Monto los correos de tu banco. El instalador estrena imagen.
+- **El Cotizador (Panamá).** Crea presupuestos comerciales con la empresa destinataria, servicios y precios, datos del emisor (nombre, cédula y RUC opcional) e instrucciones de pago por ACH. La cotización se exporta a PDF con la tabla de servicios y el total en PAB.
+- **Inventario y recibos.** Edita cotizaciones pendientes, cancélalas indicando el motivo o confirma un cobro para emitir su recibo. Los documentos cobrados conservan sus datos y pueden volver a exportarse.
+- **Copias locales.** El plazo de limpieza pasa de 30 a 15 días. La copia más reciente se conserva. Una acción independiente permite al administrador borrar todos los perfiles y respaldos locales tras escribir la confirmación y volver a la configuración inicial.
+- **Novedades ilustradas.** El panel reconoce esta edición aunque ya se haya visto el panel anterior y recuerda cuándo se cierra.
+- **Actualización desde otra compilación de 1.0.2b.** Descarga el ZIP y ejecuta el instalador manualmente. La etiqueta y la versión interna siguen siendo `v1.0.2` y `1.0.2`.
 
 ### Seguridad
 - **Clave de recuperación**: en Configuración → Seguridad puedes ver, copiar o guardar en un archivo la llave de este equipo, escrita como 14 grupos de 4 caracteres.

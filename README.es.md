@@ -15,7 +15,7 @@
 ![MIT](https://img.shields.io/badge/licencia-MIT-14304D)
 
 **Ingresos, quincenas, gastos, presupuestos, ahorros y deudas — en balboas y dólares, para ti o para todo tu hogar.**<br />
-Sin nube y sin cuentas en línea: tus datos se quedan en tu equipo.
+Perfiles para Panamá (PAB/USD) y Colombia (COP). Monto guarda tus finanzas en tu equipo.
 
 [Características](#características) · [Capturas](#capturas) · [Descargar](#descargar) · [Licencia](#licencia)
 
@@ -42,7 +42,7 @@ Perfil individual, en pareja o familiar con roles, gastos compartidos, quién le
 <td width="33%" valign="top">
 
 ### 🔒 Privado por diseño
-Base de datos SQLite 100 % local, cifrado **AES‑256** opcional, bloqueo automático y copias diarias. Nada sale de tu PC.
+Windows protege la base local y las copias con cifrado AES-256-GCM. Puedes añadir una contraseña, usar Windows Hello y guardar una clave de recuperación.
 
 </td>
 </tr>
@@ -78,6 +78,14 @@ Base de datos SQLite 100 % local, cifrado **AES‑256** opcional, bloqueo autom�
 </details>
 
 <sub>Las capturas usan datos ficticios de ejemplo. Se regeneran con `node scripts/screenshots.mjs`.</sub>
+
+## Novedades de 1.0.2b Confianza
+
+**El Cotizador**, disponible para perfiles de Panamá, reúne en un inventario las propuestas pendientes, canceladas y cobradas. Indica la empresa destinataria, los servicios y sus precios en balboas. El PDF incluye tu nombre, cédula, RUC opcional y los datos para el pago por ACH (banco, tipo y número de cuenta).
+
+Puedes editar una propuesta pendiente o cancelarla indicando el motivo. Cuando confirmas el cobro, Monto guarda un recibo con fecha e identificador propio que puedes volver a exportar en PDF.
+
+En **Configuración → Datos y copias** puedes eliminar respaldos de más de 15 días. Monto conserva el más reciente. Para empezar de nuevo, un administrador puede escribir **BORRAR** y eliminar todos los perfiles y copias locales de ese equipo. El panel de novedades ilustra estas opciones al actualizar.
 
 ## Características
 
@@ -134,9 +142,11 @@ Base de datos SQLite 100 % local, cifrado **AES‑256** opcional, bloqueo autom�
 
 ## Descargar
 
-1. Entra en **[Releases](https://github.com/eperez98/monto/releases)** y descarga `Monto_x.y.z_x64.zip`.
-2. Descomprímelo y ejecuta `Monto_x.y.z_x64-setup.exe`. Elige **Español** o **English**. No necesita permisos de administrador.
+1. Entra en **[Releases](https://github.com/eperez98/monto/releases)** y descarga `Monto_1.0.2_x64.zip`.
+2. Descomprímelo y ejecuta `Monto_1.0.2_x64-setup.exe`. Elige **Español** o **English**. No necesita permisos de administrador.
 3. Windows SmartScreen puede mostrar un aviso porque el instalador aún no está firmado: **Más información → Ejecutar de todas formas**.
+
+Si ya tienes una compilación anterior de **1.0.2b**, descarga y ejecuta este instalador para recibir los cambios. Las dos compilaciones usan la versión interna `1.0.2`.
 
 El zip incluye también `SHA256SUMS.txt` (para verificar el instalador) y `LEEME.txt`. Al actualizar se conservan tus datos en `%APPDATA%\com.monto.finanzas`. Consulta la [guía de instalación](docs/instalacion.md) y el [manual de usuario](docs/manual-de-usuario.md).
 

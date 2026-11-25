@@ -15,7 +15,7 @@
 ![MIT](https://img.shields.io/badge/license-MIT-14304D)
 
 **Income, paydays, expenses, budgets, savings and debts — in balboas and dollars, for you or your whole household.**<br />
-No cloud, no account: your data stays on your computer.
+Profiles support Panama (PAB/USD) and Colombia (COP). Monto stores your finances on your computer.
 
 [Features](#features) · [Screenshots](#screenshots) · [Download](#download) · [License](#license)
 
@@ -42,7 +42,7 @@ Individual, couple or family profiles with roles, shared expenses, who‑owes‑
 <td width="33%" valign="top">
 
 ### 🔒 Private by design
-100 % local SQLite database, optional **AES‑256** encryption, auto‑lock and daily backups. Nothing leaves your PC.
+On Windows, Monto encrypts the local database and backups with AES-256-GCM. You can add a password, enable Windows Hello and save a recovery key.
 
 </td>
 </tr>
@@ -78,6 +78,14 @@ Individual, couple or family profiles with roles, shared expenses, who‑owes‑
 </details>
 
 <sub>Screenshots use fictional demo data. Regenerate them with `node scripts/screenshots.mjs`.</sub>
+
+## What's new in 1.0.2b Confianza
+
+**Quote Builder**, available for Panama profiles, keeps pending, cancelled and paid quotes in one list. Enter the client company, services and prices in balboas. The PDF includes your name, national ID, optional tax ID and ACH payment details (bank, account type and account number).
+
+Edit a pending quote or cancel it with a reason. When you confirm payment, Monto saves a dated receipt with its own ID. You can export that receipt as a PDF again later.
+
+In **Settings → Data and backups**, you can delete backups older than 15 days. Monto keeps the newest one. To start over, an administrator can type **DELETE** to erase every profile and local backup on that device. The illustrated tour introduces these options after an update.
 
 ## Features
 
@@ -134,9 +142,11 @@ Individual, couple or family profiles with roles, shared expenses, who‑owes‑
 
 ## Download
 
-1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_x.y.z_x64.zip`.
-2. Unzip it and run `Monto_x.y.z_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
+1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_1.0.2_x64.zip`.
+2. Unzip it and run `Monto_1.0.2_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
 3. Windows SmartScreen may warn you because the installer isn't code‑signed yet: **More info → Run anyway**.
+
+If you already use an earlier build of **1.0.2b**, download and run this installer to get the changes. Both builds use the internal version `1.0.2`.
 
 The zip also includes `SHA256SUMS.txt` (to verify the installer) and `LEEME.txt`. Updating keeps your data in `%APPDATA%\com.monto.finanzas`. See the [installation guide](docs/instalacion.md).
 
