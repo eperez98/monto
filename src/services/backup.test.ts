@@ -18,6 +18,11 @@ describe('old backups cleanup', () => {
     expect(oldBackups([{ name: 'monto-20250101-080000-auto.monto' }, { name: 'monto-20250201-080000-auto.monto' }], 30, now)).toEqual(['monto-20250101-080000-auto.monto']);
   });
 
+  it('uses a strict 15-day cutoff by default', () => {
+    const names = ['monto-20261030-115959-auto.monto', 'monto-20261030-120000-auto.monto', 'monto-20261114-110000-auto.monto'];
+    expect(oldBackups(names.map(name => ({ name })), undefined, now)).toEqual([names[0]]);
+  });
+
   it('rejects names that could escape the backups folder', async () => {
     expect(() => safeBackupName(String.raw`..\monto.db.monto`)).toThrow();
     expect(() => safeBackupName('a/b.monto')).toThrow();
