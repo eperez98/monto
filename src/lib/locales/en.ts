@@ -1,5 +1,17 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Calculadora de salario y décimo": "Salary and thirteenth-month pay calculator",
+  "Salario bruto mensual": "Gross monthly salary",
+  "Ingresa un salario mayor que cero.": "Enter a salary greater than zero.",
+  "Total bruto ganado en el período del décimo": "Gross earnings in the installment period",
+  "Ingresa un importe válido.": "Enter a valid amount.",
+  "Si dejas el segundo campo vacío, se estiman cuatro meses con el mismo salario. Ingresa el total real si trabajaste parte del período o si tu salario cambió.": "Leave the second field blank to estimate four months at the same salary. Enter actual earnings for a partial period or a change in salary.",
+  "Descuentos mensuales de CSS y Seguro Educativo": "Monthly social security and education insurance deductions",
+  "Salario mensual después de CSS y Seguro Educativo": "Monthly salary after social security and education insurance",
+  "Partida bruta del décimo": "Gross thirteenth-month installment",
+  "Descuento de CSS del décimo": "Social security on the installment",
+  "Partida del décimo después de CSS": "Installment after social security",
+  "Importes antes del impuesto sobre la renta (ISR) y otros descuentos.": "Amounts before income tax and other deductions.",
   // App shell
   'Finanzas personales y familiares': 'Personal and family finances',
   'Preparando…': 'Getting ready…',

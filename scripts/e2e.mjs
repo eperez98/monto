@@ -271,7 +271,7 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 1.0.2').waitFor();
+  await page.getByText('Monto 1.0.2b').waitFor();
   assert(true, 'versión 1.0.2 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
@@ -279,7 +279,7 @@ try {
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2 · Confianza'), 'acerca de: versión con nombre Confianza');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2b · Confianza'), 'acerca de: versión con nombre Confianza');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
   assert(await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && await page.getByText('1.3 · Claridad').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
   assert(await page.getByRole('heading', { name: 'WinNow' }).isVisible() && await page.getByRole('button', { name: 'Ver WinNow en GitHub' }).isVisible(), 'acerca de: tarjeta del otro proyecto, WinNow, con enlace a GitHub');

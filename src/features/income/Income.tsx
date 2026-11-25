@@ -1,3 +1,5 @@
+import { APP_VERSION } from '../../lib/version';
+import { PanamaSalaryCalculator } from './PanamaSalaryCalculator';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
@@ -200,6 +202,9 @@ function SourceCard({ s, index, onEdit, onReceive }: { s: IncomeSummary; index: 
 }
 
 export default function Income() {
+  const profile = useProfile();
+  const available = APP_VERSION !== '1.0.2' && (profile.country ?? 'PA') === 'PA';
+  const [showCalculator, setShowCalculator] = useState(false);
   const actor = useActor();
   const canManage = useCan('income.manage');
   const mutate = useMutate();
@@ -215,6 +220,8 @@ export default function Income() {
   return (
     <div>
       <PageHeader title={tr('Ingresos y salario')} subtitle={tr('Lo estimado y lo realmente recibido, siempre por separado')} actions={canManage && <Button icon="plus" onClick={() => setForm({ open: true, source: null })}>{tr('Nueva fuente')}</Button>} />
+      {available && <div className="mb-4"><Button variant="secondary" icon="salary" onClick={() => setShowCalculator(true)}>{tr('Calculadora de salario y décimo')}</Button></div>}
+      {available && showCalculator && <PanamaSalaryCalculator onClose={() => setShowCalculator(false)} />}
       {sources.length > 1 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5 mb-6">
           <Card className="p-5"><Stat label={<span className="flex gap-1.5 items-center">{tr('Mensual estimado (todas)')}{' '}<EstimateTag /></span>} value={<Money animated cents={totalMonthly} currency={cur} />} /></Card>
