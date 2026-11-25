@@ -11,7 +11,7 @@ import { IS_PREVIEW } from '../../lib/preview';
 import { tr } from '../../lib/i18n';
 
 /** Bump when a release brings changes worth a tour; users who already saw this one don't see it again. */
-export const WHATS_NEW_ID = '1.0.2';
+export const WHATS_NEW_ID = '1.0.2.1d';
 const KEY = 'monto:whats-new';
 export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); } catch { /* private mode: it may show again, harmless */ } };
 const lastSeen = (): string | null => { try { return localStorage.getItem(KEY); } catch { return WHATS_NEW_ID; } };
@@ -22,12 +22,14 @@ const IMAGES = import.meta.glob('../../assets/whatsnew/*.jpg', { eager: true, im
 const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`];
 
 /** Panels shown so far, oldest first. A slide's `v` is the panel that introduced it. */
-const PANELS = ['0.8-glass', '1.0.1', '1.0.2'] as const;
+const PANELS = ['0.8-glass', '1.0.1', '1.0.2', WHATS_NEW_ID] as const;
 type Panel = (typeof PANELS)[number];
 /** Without `v` the slide is always shown (the closing one). */
 interface Slide { key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel }
 /** Newest first: someone coming from an older version sees what they missed, in the order it came out backwards. */
 const ALL_SLIDES: Slide[] = [
+  { key: 'user-d', v: WHATS_NEW_ID, icon: 'user', title: () => tr('Administra tus perfiles'), body: () => tr('En Configuración → Perfil, pulsa Editar junto al perfil que quieras cambiar. Puedes renombrarlo, protegerlo con un PIN de seis dígitos o borrarlo con una copia de seguridad previa.') },
+  { key: 'refresh-d', v: WHATS_NEW_ID, icon: 'refresh', title: () => tr('Actualizaciones estables'), body: () => tr('Monto busca versiones estables al iniciar o cuando pulsas Buscar actualizaciones. Tú decides cuándo instalar cada actualización.') },
   { key: 'recovery', v: '1.0.2', icon: 'key', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
   { key: 'hello', v: '1.0.2', icon: 'user', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
   { key: 'mailtest', v: '1.0.2', icon: 'bell', image: 'mailtest', title: () => tr('Prueba un correo de tu banco'), body: () => tr('En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.') },
@@ -67,7 +69,7 @@ export function WhatsNew({ onClose }: { onClose: () => void }) {
         initial={ok ? { opacity: 0, y: 24, scale: 0.97 } : false} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.45, ease }}
         className="card acrylic relative w-full max-w-[920px] max-h-[calc(100vh-32px)] flex flex-col rounded-[30px] bg-surface border border-line shadow-pop overflow-hidden">
         <header className="flex items-center justify-between px-7 pt-6">
-          <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-soft text-brand text-[11.5px] font-semibold"><Icon name="sparkle" size={13} />{tr('Novedades de esta versión')}</span>
+          <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-soft text-brand text-[11.5px] font-semibold"><Icon name="sparkle" size={13} />{tr('Novedades de esta versión')} · {WHATS_NEW_ID}</span>
           <span className="text-[12px] text-muted">{tr('{n} de {total}', { n: i + 1, total: SLIDES.length })}</span>
         </header>
 

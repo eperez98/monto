@@ -1,5 +1,9 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Administra tus perfiles": "Manage your profiles",
+  "En Configuración → Perfil, pulsa Editar junto al perfil que quieras cambiar. Puedes renombrarlo, protegerlo con un PIN de seis dígitos o borrarlo con una copia de seguridad previa.": "In Settings → Profile, choose Edit next to a profile to rename it, protect it with a six-digit PIN, or delete it after a backup.",
+  "Actualizaciones estables": "Stable updates",
+  "Monto busca versiones estables al iniciar o cuando pulsas Buscar actualizaciones. Tú decides cuándo instalar cada actualización.": "Monto checks for stable releases at startup or when you select Check for updates. You choose when to install each update.",
   "Editar perfil": "Edit profile",
   "Quitar PIN del perfil": "Remove profile PIN",
   "Nuevo PIN de 6 dígitos": "New 6-digit PIN",
