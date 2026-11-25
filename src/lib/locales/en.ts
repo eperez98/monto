@@ -1,5 +1,12 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Editar perfil": "Edit profile",
+  "Quitar PIN del perfil": "Remove profile PIN",
+  "Nuevo PIN de 6 dígitos": "New 6-digit PIN",
+  "Déjalo vacío para conservar el bloqueo actual.": "Leave blank to keep the current lock setting.",
+  "Confirmar PIN": "Confirm PIN",
+  "Desbloquear perfil": "Unlock profile",
+  "PIN de 6 dígitos": "6-digit PIN",
   "Calculadora de salario y décimo": "Salary and thirteenth-month pay calculator",
   "Salario bruto mensual": "Gross monthly salary",
   "Ingresa un salario mayor que cero.": "Enter a salary greater than zero.",

@@ -11,7 +11,9 @@ import { autoBackup, protectOldBackups } from './services/backup';
 import { notifyBillsDue } from './services/billAlerts';
 import { checkForUpdate, updatesSupported, type UpdateInfo } from './services/updates';
 import { UpdatePrompt } from './components/layout/UpdatePrompt';
-import { IS_PRERELEASE } from './lib/version';
+import { ProfilePinGate } from './features/shell/ProfilePinGate';
+import { activeProfileId } from './db/adapters';
+import { profilePinHash } from './services/profiles';
 import { Splash } from './features/shell/Splash';
 import { LockScreen } from './features/shell/LockScreen';
 import { MemberPicker } from './features/shell/MemberPicker';
@@ -107,7 +109,7 @@ export default function App() {
     const sid = startSession(e, m.id);
     setActor({ id: m.id, role: m.role }, sid);
     // Each session starts on the dashboard in the member's personal view (privacy between members).
-    useApp.getState().go('dashboard');
+    useApp.getState().go(sessionStorage.getItem('monto:edit-profile') === activeProfileId() ? 'settings' : 'dashboard');
     useApp.getState().setScope('personal');
     const posted = runAutoPost(e, { id: m.id, role: m.role });
     if (posted) useApp.getState().toast({ kind: 'info', title: tr('{posted} movimiento(s) programado(s) registrado(s)', { posted }), body: tr('Se registraron automáticamente los pagos recurrentes vencidos.') });
@@ -117,12 +119,18 @@ export default function App() {
     const prefs = getPrefs(e);
     // On by default; the user can turn it off in Settings → Updates. Nothing installs without their OK.
     if (prefs.autoCheckUpdates !== false && updatesSupported()) {
-      void checkForUpdate(prefs.betaUpdates ?? IS_PRERELEASE).then((u) => { if (u) setUpdate(u); }).catch(() => undefined);
+      void checkForUpdate().then((u) => { if (u) setUpdate(u); }).catch(() => undefined);
     }
     setPhase('app');
   }, []);
 
-  const afterOpen = useCallback((e: Engine) => {
+  const [pendingProfile, setPendingProfile] = useState<Engine | null>(null);
+  const afterOpen = useCallback((e: Engine, pinVerified = false) => {
+    if (!pinVerified && profilePinHash(e)) {
+      setPendingProfile(e);
+      setPhase('profilePin');
+      return;
+    }
     setEngine(e);
     e.subscribe(() => bump());
     applyVisual(e);
@@ -212,6 +220,7 @@ export default function App() {
     if (!e) return;
     if (s.sessionId) endSession(e, s.sessionId, reason);
     await e.flush();
+    if (profilePinHash(e)) { location.reload(); return; }
     if (e.encrypted) {
       // Leave the screen first; close the decrypted database once the app view has unmounted.
       setPhase('locked');
@@ -230,7 +239,7 @@ export default function App() {
   useEffect(() => {
     if (phase !== 'app' || !engine) return;
     const minutes = getPrefs(engine).autoLockMinutes;
-    if (!minutes || !engine.encrypted) return;
+    if (!minutes || (!engine.encrypted && !profilePinHash(engine))) return;
     let t: ReturnType<typeof setTimeout>;
     const reset = () => { clearTimeout(t); t = setTimeout(() => void lock('inactividad'), minutes * 60_000); };
     const evs = ['mousemove', 'keydown', 'mousedown', 'wheel'];
@@ -270,6 +279,10 @@ export default function App() {
     <>
       <AnimatePresence mode="wait">
         {phase === 'splash' && <Splash key="splash" status={status} />}
+        {phase === 'profilePin' && pendingProfile && <ProfilePinGate engine={pendingProfile} onOpen={() => {
+          setPendingProfile(null);
+          afterOpen(pendingProfile, true);
+        }} />}
         {phase === 'locked' && <LockScreen key="lock" onUnlock={async (pw) => { const s = useApp.getState(); if (s.engine) { const old = s.engine; setEngine(null); setActor(null); old.close(); } return unlock(pw); }} />}
         {phase === 'error' && (
           <motion.div key="err" className="fixed inset-0 grid place-items-center p-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

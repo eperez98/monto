@@ -20,7 +20,7 @@ import { passwordProblem } from '../../domain/auth';
 import { checkForUpdate, downloadAndInstall, updatesSupported, type UpdateInfo } from '../../services/updates';
 import { lang, locale, setLang, tr } from '../../lib/i18n';
 import { activeProfileId, listProfiles, type ProfileEntry } from '../../db/adapters';
-import { copyProfileForCouple, createProfile, deleteCurrentProfile, switchProfile } from '../../services/profiles';
+import { editCurrentProfile, profilePinHash, copyProfileForCouple, createProfile, deleteCurrentProfile, switchProfile } from '../../services/profiles';
 import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
@@ -133,6 +133,21 @@ function ProfilesCard({ currentName }: { currentName: string }) {
   const [newName, setNewName] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const current = activeProfileId();
+  const [editing, setEditing] = useState(false);
+  const [label, setLabel] = useState('');
+  const [pin, setPin] = useState('');
+  const [repeat, setRepeat] = useState('');
+  const [removePin, setRemovePin] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const openEditor = (name: string) => {
+    setLabel(name); setPin(''); setRepeat(''); setRemovePin(false); setEditing(true);
+  };
+  useEffect(() => {
+    if (list.length && sessionStorage.getItem('monto:edit-profile') === current) {
+      sessionStorage.removeItem('monto:edit-profile');
+      if (canDelete) openEditor(list.find(p => p.id === current)?.name || currentName);
+    }
+  }, [list, current, canDelete, currentName]);
   useEffect(() => { void listProfiles().then(setList).catch(() => undefined); }, []);
   const fail = (err: unknown) => toast({ kind: 'error', title: tr('No se pudo completar'), body: (err as Error).message });
   return (
@@ -150,21 +165,42 @@ function ProfilesCard({ currentName }: { currentName: string }) {
             <Icon name="user" size={16} className="text-muted" />
             <span className="flex-1 text-[13px] font-medium truncate">{p.id === current ? (p.name || currentName) : profileLabel(p, i)}</span>
             {p.id === current ? <Badge tone="green">{tr('Abierto')}</Badge> : <Button size="sm" variant="secondary" onClick={() => void switchProfile(p.id).catch(fail)}>{tr('Abrir')}</Button>}
+            {canDelete && <Button size="sm" variant="ghost" icon="edit" onClick={() => {
+              if (p.id === current) openEditor(p.name || currentName);
+              else {
+                sessionStorage.setItem('monto:edit-profile', p.id);
+                sessionStorage.setItem('monto:settings-tab', 'profile');
+                void switchProfile(p.id).catch(fail);
+              }
+            }}>{tr('Editar')}</Button>}
           </li>
         ))}
       </ul>
-      {canDelete && (
-        <div className="mt-5 flex items-center justify-between gap-3 rounded-[16px] bg-coral-soft/60 px-4 py-3">
-          <p className="text-[12.5px] text-ink-2">{tr('Borra todos los datos de este perfil. Antes se guarda una copia de seguridad.')}</p>
-          <Button size="sm" variant="danger" icon="trash" onClick={() => setConfirmDelete(true)}>{tr('Borrar este perfil')}</Button>
+      {editing && canDelete && <Modal open title={tr('Editar perfil')} onClose={() => setEditing(false)} width={440}
+        footer={<><Button variant="ghost" onClick={() => setEditing(false)}>{tr('Cancelar')}</Button>
+          <Button disabled={saving || !label.trim() || (!removePin && (pin !== repeat || (!!pin && !/^\d{6}$/.test(pin))))} onClick={async () => {
+            setSaving(true);
+            try {
+              setList(await editCurrentProfile(engine, actor, label, removePin ? '' : pin || null));
+              setEditing(false);
+            } catch (err) { fail(err); } finally { setSaving(false); }
+          }}>{tr('Guardar')}</Button></>}>
+        <div className="grid gap-4">
+          <Field label={tr('Nombre del perfil')}><Input autoFocus maxLength={60} value={label} onChange={ev => setLabel(ev.target.value)} /></Field>
+          {profilePinHash(engine) && <Toggle label={tr('Quitar PIN del perfil')} checked={removePin} onChange={setRemovePin} />}
+          {!removePin && <>
+            <Field label={tr('Nuevo PIN de 6 dígitos')} hint={tr('Déjalo vacío para conservar el bloqueo actual.')}><Input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={ev => setPin(ev.target.value.replace(/\D/g, ''))} /></Field>
+            {pin && <Field label={tr('Confirmar PIN')}><Input type="password" inputMode="numeric" maxLength={6} value={repeat} onChange={ev => setRepeat(ev.target.value.replace(/\D/g, ''))} /></Field>}
+          </>}
+          <Button variant="danger" icon="trash" onClick={() => { setEditing(false); setConfirmDelete(true); }}>{tr('Borrar este perfil')}</Button>
         </div>
-      )}
+      </Modal>}
       <Modal open={creating} onClose={() => setCreating(false)} title={tr('Nuevo perfil')} icon="user" width={420}
         footer={<><Button variant="ghost" onClick={() => setCreating(false)}>{tr('Cancelar')}</Button><Button disabled={!newName.trim()} onClick={() => void createProfile(newName).catch(fail)}>{tr('Crear y abrir')}</Button></>}>
         <Field label={tr('Nombre del perfil')} hint={tr('Monto se reiniciará en el nuevo perfil para configurarlo.')}><Input autoFocus value={newName} maxLength={60} onChange={(e) => setNewName(e.target.value)} placeholder={tr('Ej. Negocio')} /></Field>
       </Modal>
       <Confirm open={confirmDelete} onClose={() => setConfirmDelete(false)} confirmLabel={tr('Borrar perfil')}
-        title={tr('¿Borrar el perfil «{name}»?', { name: currentName })}
+        title={tr('¿Borrar el perfil «{name}»?', { name: list.find(p => p.id === current)?.name || currentName })}
         body={tr('Se eliminarán todos sus movimientos, cuentas, integrantes y ajustes. Se guarda una copia de seguridad en la carpeta de copias por si te equivocas. Después se abrirá otro perfil o la configuración inicial.')}
         onConfirm={() => { setConfirmDelete(false); void deleteCurrentProfile(engine, actor).catch(fail); }} />
     </Card>
@@ -490,7 +526,6 @@ function UpdatesTab() {
   const prefs = useQuery((en) => getPrefs(en));
   const mutate = useMutate();
   const toast = useApp((s) => s.toast);
-  const beta = prefs.betaUpdates ?? IS_PRERELEASE;
   const [state, setState] = useState<'idle' | 'checking' | 'none' | 'available' | 'downloading' | 'error'>('idle');
   const [info, setInfo] = useState<UpdateInfo | null>(null);
   const [err, setErr] = useState('');
@@ -501,7 +536,7 @@ function UpdatesTab() {
   const check = async () => {
     setState('checking'); setErr('');
     try {
-      const u = await checkForUpdate(beta);
+      const u = await checkForUpdate();
       setInfo(u); setCheckedAt(new Date()); setState(u ? 'available' : 'none');
     } catch (x) { setErr(errorMessage(x)); setState('error'); }
   };
@@ -530,7 +565,7 @@ function UpdatesTab() {
           <Button icon="refresh" loading={state === 'checking'} disabled={!supported || state === 'downloading'} onClick={() => void check()}>{tr('Buscar actualizaciones')}</Button>
         </div>
         {!supported && <p className="text-[12.5px] text-muted mt-4">{tr('Las actualizaciones están disponibles en la aplicación de escritorio para Windows.')}</p>}
-        {state === 'none' && <p className="mt-5 flex items-center gap-2 text-[13px] text-emerald"><Icon name="check" size={16} strokeWidth={2.4} />{tr('Tienes la versión más reciente')}{beta ? tr(' (incluyendo versiones Beta)') : ''}.</p>}
+        {state === 'none' && <p className="mt-5 flex items-center gap-2 text-[13px] text-emerald"><Icon name="check" size={16} strokeWidth={2.4} />{tr('Tienes la versión más reciente')}.</p>}
         {state === 'error' && <p className="mt-5 flex items-center gap-2 text-[13px] text-coral"><Icon name="alert" size={16} />{err}</p>}
         {(state === 'available' || state === 'downloading') && info && (
           <div className="mt-5 rounded-[18px] border border-emerald/40 bg-emerald-soft/40 p-5">
@@ -554,8 +589,6 @@ function UpdatesTab() {
       <Card hover={false} className="p-6 space-y-5">
         <Toggle checked={prefs.autoCheckUpdates !== false} disabled={!supported} onChange={(v) => mutate((en) => setPrefs(en, { autoCheckUpdates: v }), v ? tr('Búsqueda automática activada') : tr('Búsqueda automática desactivada'))}
           label={tr('Avisarme al iniciar si hay una versión nueva')} description={tr('Consulta la página de versiones de Monto en GitHub y te pregunta si quieres descargarla. Nunca se instala sin tu permiso ni se envía ningún dato financiero o personal.')} />
-        <Toggle checked={beta} disabled={!supported} onChange={(v) => mutate((en) => setPrefs(en, { betaUpdates: v }), v ? tr('Canal Beta activado') : tr('Canal estable activado'))}
-          label={tr('Recibir versiones Beta')} description={tr('Acceso anticipado a novedades. Pueden contener errores; tus datos se respaldan antes de actualizar.')} />
         <div className="rounded-[14px] bg-surface-2 p-4 text-[12px] text-ink-2 leading-relaxed flex gap-3">
           <Icon name="shield" size={18} className="text-emerald shrink-0 mt-0.5" />
           <span>{tr('Cada instalador se descarga desde las versiones oficiales en GitHub y se verifica con su suma')}{' '}<b>SHA-256</b>{' '}{tr('antes de ejecutarse. Antes de instalar se crea una copia de seguridad automática. Tus datos en')}{' '}<code>{tr('%APPDATA%\\com.monto.finanzas')}</code>{' '}{tr('no se modifican.')}</span>

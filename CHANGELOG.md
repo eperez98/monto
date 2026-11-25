@@ -10,6 +10,10 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [1.0.4] - 2026-11-25 · 1.0.2.1d Confianza
+
+En Perfiles puedes editar el nombre, proteger el acceso con un PIN de seis dígitos y borrar el perfil con copia previa. El actualizador busca versiones estables.
+
 ## [1.0.3] - 2026-11-25 · 1.0.2.1c Confianza
 
 Se retira la conexión con Gmail y Outlook. La prueba manual de avisos bancarios sigue disponible.

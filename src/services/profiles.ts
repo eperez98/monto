@@ -1,4 +1,7 @@
 /** Several independent profiles (each its own database file): create, switch and delete. */
+import { getSetting, setSetting } from '../db/repo/core';
+import { hashSecret } from '../db/crypto';
+import { tr } from '../lib/i18n';
 import { Engine, uid } from '../db/engine';
 import { activeProfileId, defaultAdapter, DEFAULT_PROFILE_ID, MemoryAdapter, listProfiles, saveProfiles, setActiveProfileId } from '../db/adapters';
 import { assertCan } from '../domain/permissions';
@@ -6,6 +9,23 @@ import { useApp } from '../store/app';
 import { createBackup } from './backup';
 import { disableHello } from './hello';
 import type { Actor } from '../db/types';
+
+export const profilePinHash = (e: Engine) => getSetting(e, 'profilePin', { hash: '' }).hash;
+
+export async function editCurrentProfile(e: Engine, actor: Actor, name: string, pin: string | null) {
+  assertCan(actor.role, 'security.manage');
+  const label = name.trim();
+  if (!label || label.length > 60) throw new Error(tr('Nombre del perfil'));
+  if (pin && !/^\d{6}$/.test(pin)) throw new Error(tr('PIN de 6 dígitos'));
+  const hash = pin ? await hashSecret(pin) : '';
+  const list = (await listProfiles()).map(p => p.id === activeProfileId() ? { ...p, name: label } : p);
+  await saveProfiles(list);
+  if (pin !== null) {
+    setSetting(e, 'profilePin', { hash });
+    await e.flush();
+  }
+  return list;
+}
 
 /** Save pending changes and reopen Monto on another profile. */
 export async function switchProfile(id: string): Promise<void> {

@@ -11,10 +11,10 @@ export interface UpdateInfo {
 
 export const updatesSupported = () => isTauri();
 
-export async function checkForUpdate(includePrerelease: boolean): Promise<UpdateInfo | null> {
+export async function checkForUpdate(): Promise<UpdateInfo | null> {
   if (!isTauri()) throw new Error(tr('Las actualizaciones solo están disponibles en la aplicación de escritorio.'));
   const { invoke } = await import('@tauri-apps/api/core');
-  return invoke<UpdateInfo | null>('check_update', { includePrerelease });
+  return invoke<UpdateInfo | null>('check_update', { includePrerelease: false });
 }
 
 /** Save, back up, then download, verify and launch the installer. Monto closes when it starts. */
