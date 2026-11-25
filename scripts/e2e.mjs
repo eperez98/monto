@@ -681,7 +681,7 @@ try {
   assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });
-  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2b'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
   await page.evaluate(() => localStorage.setItem('monto:whats-new', '0.8-glass'));
   await page.reload();
   await page.getByPlaceholder('Contraseña').fill('clave-segura-123');

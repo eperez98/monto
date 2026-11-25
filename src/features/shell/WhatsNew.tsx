@@ -11,7 +11,7 @@ import { IS_PREVIEW } from '../../lib/preview';
 import { tr } from '../../lib/i18n';
 
 /** Bump when a release brings changes worth a tour; users who already saw this one don't see it again. */
-export const WHATS_NEW_ID = '1.0.2';
+export const WHATS_NEW_ID = '1.0.2b';
 const KEY = 'monto:whats-new';
 export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); } catch { /* private mode: it may show again, harmless */ } };
 const lastSeen = (): string | null => { try { return localStorage.getItem(KEY); } catch { return WHATS_NEW_ID; } };
@@ -22,15 +22,15 @@ const IMAGES = import.meta.glob('../../assets/whatsnew/*.jpg', { eager: true, im
 const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`];
 
 /** Panels shown so far, oldest first. A slide's `v` is the panel that introduced it. */
-const PANELS = ['0.8-glass', '1.0.1', '1.0.2'] as const;
+const PANELS = ['0.8-glass', '1.0.1', '1.0.2b'] as const;
 type Panel = (typeof PANELS)[number];
 /** Without `v` the slide is always shown (the closing one). */
 interface Slide { key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel }
 /** Newest first: someone coming from an older version sees what they missed, in the order it came out backwards. */
 const ALL_SLIDES: Slide[] = [
-  { key: 'recovery', v: '1.0.2', icon: 'key', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
-  { key: 'hello', v: '1.0.2', icon: 'user', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
-  { key: 'mailtest', v: '1.0.2', icon: 'bell', image: 'mailtest', title: () => tr('Prueba un correo de tu banco'), body: () => tr('En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.') },
+  { key: 'recovery', v: '1.0.2b', icon: 'key', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
+  { key: 'hello', v: '1.0.2b', icon: 'user', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
+  { key: 'mailtest', v: '1.0.2b', icon: 'bell', image: 'mailtest', title: () => tr('Prueba un correo de tu banco'), body: () => tr('En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.') },
   { key: 'design', v: '0.8-glass', icon: 'sparkle', image: 'glass', theme: true, title: () => tr('Un diseño nuevo: Cristal'), body: () => tr('Paneles translúcidos sobre color suave, más luz y menos ruido. Si prefieres algo con más textura, prueba «Relieve»: papel, cuero y botones con volumen. Elígelo aquí mismo.') },
   { key: 'security', v: '1.0.1', icon: 'shield', image: 'security', title: () => tr('Tus datos, cifrados siempre'), body: () => tr('Aunque no uses contraseña, tus datos y copias se guardan cifrados con una llave de este equipo que vive en Windows. Otra app que mire la carpeta solo ve datos ilegibles. Los PIN usan un hash lento y, tras varios intentos fallidos, Monto hace esperar.') },
   { key: 'country', v: '1.0.1', icon: 'home', image: 'country', title: () => tr('Colombia y bancos de EE. UU.'), body: () => tr('Elige el país de tus cuentas: Panamá o Colombia, con pesos y sus bancos. En Panamá también puedes añadir bancos en línea de EE. UU. como Chime, SoFi o Ally, en dólares.') },
@@ -55,7 +55,11 @@ export function WhatsNew({ onClose }: { onClose: () => void }) {
   const prefs = useQuery((e) => getPrefs(e));
   const [i, setI] = useState(0);
   // Only what came out after the last panel this person saw (everything if they never saw one).
-  const [SLIDES] = useState(() => { const seenAt = PANELS.indexOf(lastSeen() as Panel); return ALL_SLIDES.filter((s) => !s.v || PANELS.indexOf(s.v) > seenAt); });
+  const [SLIDES] = useState(() => {
+    const previous = lastSeen();
+    const seenAt = PANELS.indexOf((previous === '1.0.2' ? '1.0.1' : previous) as Panel);
+    return ALL_SLIDES.filter((s) => !s.v || PANELS.indexOf(s.v) > seenAt);
+  });
   const last = i === SLIDES.length - 1;
   const go = (n: number) => setI(Math.max(0, Math.min(SLIDES.length - 1, n)));
   const picture = (s: Slide) => (s.image ? img(s.theme && prefs.palette === 'skeuo' ? 'skeuo' : s.image) : undefined);
@@ -68,7 +72,7 @@ export function WhatsNew({ onClose }: { onClose: () => void }) {
         initial={ok ? { opacity: 0, y: 24, scale: 0.97 } : false} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.45, ease }}
         className="card acrylic relative w-full max-w-[920px] max-h-[calc(100vh-32px)] flex flex-col rounded-[30px] bg-surface border border-line shadow-pop overflow-hidden">
         <header className="flex items-center justify-between px-7 pt-6">
-          <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-soft text-brand text-[11.5px] font-semibold"><Icon name="sparkle" size={13} />{tr('Novedades de esta versión')}</span>
+          <span className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-soft text-brand text-[11.5px] font-semibold"><Icon name="sparkle" size={13} />{tr('Novedades de esta versión')} · {WHATS_NEW_ID}</span>
           <span className="text-[12px] text-muted">{tr('{n} de {total}', { n: i + 1, total: SLIDES.length })}</span>
         </header>
 
