@@ -6,6 +6,7 @@
 //! a single-instance guard so two windows never write the same database, and
 //! opt-in updates from GitHub Releases verified with SHA-256 (see `updater`).
 
+mod reset;
 mod net;
 mod hello;
 mod vault;
@@ -51,7 +52,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
-        .invoke_handler(tauri::generate_handler![updater::check_update, updater::install_update, open_project_page, ocr::read_receipt, vault::vault_device_key, vault::vault_create_device_key, hello::hello_available, hello::hello_enabled, hello::hello_enable, hello::hello_unlock, hello::hello_disable])
+        .invoke_handler(tauri::generate_handler![reset::reset_local_data, updater::check_update, updater::install_update, open_project_page, ocr::read_receipt, vault::vault_device_key, vault::vault_create_device_key, hello::hello_available, hello::hello_enabled, hello::hello_enable, hello::hello_unlock, hello::hello_disable])
         .setup(|app| {
             // Remove mailbox tokens saved by earlier versions, without contacting the providers.
             #[cfg(windows)]

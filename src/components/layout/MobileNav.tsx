@@ -51,7 +51,7 @@ export function MobileNav({ onSwitchMember }: { onSwitchMember: () => void }) {
                 <div key={g.title} className="mt-3">
                   <p className="px-1 mb-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">{g.title}</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {g.items.filter((n) => !n.family || profile.mode !== 'individual').map((n) => (
+                    {g.items.filter((n) => (!n.family || profile.mode !== 'individual') && (n.key !== 'quotes' || (profile.country ?? 'PA') === 'PA')).map((n) => (
                       <button key={n.key} onClick={() => pick(n.key)} className={clsx('flex flex-col items-center gap-1.5 rounded-[18px] p-3 text-[11.5px] text-center border', route === n.key ? 'border-brand bg-brand-soft/60 text-brand' : 'border-line/70 text-ink-2')}>
                         <Icon name={n.icon} size={20} />{n.label}
                       </button>

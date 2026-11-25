@@ -73,7 +73,7 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 space-y-2" aria-label={tr('Principal')} data-tour="nav">
           {NAV_GROUPS.map((g, gi) => {
             const folded = open && closed.includes(g.title);
-            const items = g.items.filter((n) => !n.family || profile.mode !== 'individual');
+            const items = g.items.filter((n) => (!n.family || profile.mode !== 'individual') && (n.key !== 'quotes' || (profile.country ?? 'PA') === 'PA'));
             return (
               <div key={g.title}>
                 {open ? (

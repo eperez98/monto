@@ -24,6 +24,7 @@ import { editCurrentProfile, profilePinHash, copyProfileForCouple, createProfile
 import { PartnerWizard, PARTNER_SETUP_KEY } from '../family/PartnerWizard';
 import { profileLabel } from '../shell/ProfileSwitcher';
 import { StylePicker } from '../dashboard/StylePicker';
+import { ResetData } from './ResetData';
 import { MailTester } from './MailTester';
 import { RulesCard } from './RulesCard';
 import { TrustCard } from './TrustCard';
@@ -400,9 +401,9 @@ function DataTab() {
         <CardHeader title={tr('Copias de seguridad')} subtitle={tr('Se crea una copia automática cada día al abrir Monto')} action={canBackup && <div className="flex flex-wrap justify-end gap-2">
           <Button size="sm" variant="secondary" icon="trash" onClick={() => {
             const n = oldBackups(backups).length;
-            if (!n) return toast({ kind: 'info', title: tr('No hay copias de más de 30 días') });
-            confirm.ask({ title: tr('¿Borrar {n} copia(s) de más de 30 días?', { n }), body: tr('Se eliminan de este equipo y no se pueden recuperar. La copia más reciente siempre se conserva.'), confirmLabel: tr('Borrar'), onConfirm: () => void run(async () => tr('{n} copia(s) eliminada(s)', { n: await deleteOldBackups(e) }), tr('Copias antiguas borradas')) });
-          }}>{tr('Borrar copias de más de 30 días')}</Button>
+            if (!n) return toast({ kind: 'info', title: tr('No hay copias de más de 15 días') });
+            confirm.ask({ title: tr('¿Borrar {n} copia(s) de más de 15 días?', { n }), body: tr('Se eliminan de este equipo y no se pueden recuperar. La copia más reciente siempre se conserva.'), confirmLabel: tr('Borrar'), onConfirm: () => void run(async () => tr('{n} copia(s) eliminada(s)', { n: await deleteOldBackups(e) }), tr('Copias antiguas borradas')) });
+          }}>{tr('Borrar copias de más de 15 días')}</Button>
           <Button size="sm" icon="database" onClick={() => void run(() => createBackup(e), tr('Copia creada'))}>{tr('Crear copia ahora')}</Button>
         </div>} />
         <ul className="p-3 max-h-[260px] overflow-y-auto">
@@ -449,6 +450,7 @@ function DataTab() {
             <Field label={tr('Clave de recuperación')}><Input autoFocus spellCheck={false} value={pw} onChange={(ev) => setPw(ev.target.value)} placeholder="XXXX-XXXX-XXXX-…" className="font-mono" /></Field></>
           : <Field label={tr('Contraseña de la copia')}><Input type="password" autoFocus value={pw} onChange={(ev) => setPw(ev.target.value)} /></Field>}
       </Modal>
+      <ResetData />
       {confirm.node}
     </>
   );
