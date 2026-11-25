@@ -53,7 +53,7 @@
         "headerImage": "installer/header.bmp",
         "startMenuFolder": "Monto"
       },
-      "wix": { "language": ["es-ES", "en-US"], "version": "1.0.2" }
+      "wix": { "language": ["es-ES", "en-US"], "version": "1.0.3" }
     }
   }
 }

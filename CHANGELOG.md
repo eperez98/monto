@@ -10,6 +10,10 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [1.0.3] - 2026-11-25 · 1.0.2.1c Confianza
+
+Los perfiles de Panamá pueden abrir la calculadora de salario y décimo en Ingresos.
+
 ## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
 
 Calculadora de salario y décimo para Panamá incluida para su activación en 1.0.2.1c.
