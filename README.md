@@ -6,7 +6,7 @@
 
 <br />
 
-[![Download for Windows](https://img.shields.io/badge/Download%20for%20Windows-1.0.2b%20Confianza-6C5CE7?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/eperez98/monto/releases)
+[![Download for Windows](https://img.shields.io/badge/Download%20for%20Windows-1.0.2c%20Confianza-6C5CE7?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/eperez98/monto/releases)
 
 [![CI](https://github.com/eperez98/monto/actions/workflows/ci.yml/badge.svg)](https://github.com/eperez98/monto/actions/workflows/ci.yml)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-14304D)
@@ -79,7 +79,7 @@ On Windows, Monto encrypts the local database and backups with AES-256-GCM. You 
 
 <sub>Screenshots use fictional demo data. Regenerate them with `node scripts/screenshots.mjs`.</sub>
 
-## What's new in 1.0.2b Confianza
+## What's new in 1.0.2c Confianza
 
 **Quote Builder**, available for Panama profiles, keeps pending, cancelled and paid quotes in one list. Enter the client company, services and prices in balboas. The PDF includes your name, national ID, optional tax ID and ACH payment details (bank, account type and account number).
 
@@ -142,11 +142,10 @@ In **Settings → Data and backups**, you can delete backups older than 15 days.
 
 ## Download
 
-1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_1.0.2_x64.zip`.
-2. Unzip it and run `Monto_1.0.2_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
+1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_1.0.5_x64.zip`.
+2. Unzip it and run `Monto_1.0.2c_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
 3. Windows SmartScreen may warn you because the installer isn't code‑signed yet: **More info → Run anyway**.
 
-If you already use an earlier build of **1.0.2b**, download and run this installer to get the changes. Both builds use the internal version `1.0.2`.
 
 The zip also includes `SHA256SUMS.txt` (to verify the installer) and `LEEME.txt`. Updating keeps your data in `%APPDATA%\com.monto.finanzas`. See the [installation guide](docs/instalacion.md).
 

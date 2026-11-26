@@ -11,7 +11,7 @@ import { IS_PREVIEW } from '../../lib/preview';
 import { tr } from '../../lib/i18n';
 
 /** Bump when a release brings changes worth a tour; users who already saw this one don't see it again. */
-export const WHATS_NEW_ID = '1.0.2b';
+export const WHATS_NEW_ID = '1.0.2c';
 const KEY = 'monto:whats-new';
 export const markWhatsNewSeen = () => { try { localStorage.setItem(KEY, WHATS_NEW_ID); localStorage.setItem('monto:quotes-tour', 'seen'); } catch { /* private mode: it may show again, harmless */ } };
 const lastSeen = (): string | null => { try { return localStorage.getItem(KEY); } catch { return WHATS_NEW_ID; } };
@@ -23,7 +23,7 @@ const IMAGES = import.meta.glob('../../assets/whatsnew/*.{jpg,svg}', { eager: tr
 const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`] ?? IMAGES[`../../assets/whatsnew/${name}.svg`];
 
 /** Panels shown so far, oldest first. A slide's `v` is the panel that introduced it. */
-const PANELS = ['0.8-glass', '1.0.1', '1.0.2b'] as const;
+const PANELS = ['0.8-glass', '1.0.1', '1.0.2b', WHATS_NEW_ID] as const;
 type Panel = (typeof PANELS)[number];
 /** Without `v` the slide is always shown (the closing one). */
 interface Slide { tools?: boolean; key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel }
@@ -31,6 +31,7 @@ interface Slide { tools?: boolean; key: string; icon: string; title: () => strin
 const ALL_SLIDES: Slide[] = [
   { key: 'quotes', tools: true, icon: 'reports', image: 'quotes', title: () => tr('El Cotizador'), body: () => tr('Prepara cotizaciones por ACH, expórtalas a PDF y genera el recibo al confirmar un cobro.') },
   { key: 'cleanup', tools: true, icon: 'database', image: 'cleanup', title: () => tr('Limpieza de datos'), body: () => tr('En Datos y copias puedes eliminar respaldos de más de 15 días o borrar todos los perfiles para empezar de nuevo.') },
+  { key: 'quotes-c', v: WHATS_NEW_ID, icon: 'reports', image: 'quotes', title: () => tr('Cotización - Servicios Profesionales'), body: () => tr('Cotiza por unidad, hora o día. Adjunta la aceptación del cliente y confirma el pago para emitir su recibo.'), },
   { key: 'recovery', v: '1.0.2b', icon: 'key', image: 'recovery', title: () => tr('Tu clave de recuperación'), body: () => tr('Guarda la clave de este equipo en Configuración → Seguridad. Si cambias de computadora o reinstalas Windows, con ella abres tus copias de seguridad automáticas.') },
   { key: 'hello', v: '1.0.2b', icon: 'user', image: 'hello', title: () => tr('Desbloquea con Windows Hello'), body: () => tr('Si usas contraseña, ahora puedes abrir Monto con tu huella, tu rostro o el PIN de Windows. Actívalo en Configuración → Seguridad.') },
   { key: 'mailtest', v: '1.0.2b', icon: 'bell', image: 'mailtest', title: () => tr('Prueba un correo de tu banco'), body: () => tr('En Configuración → Correo del banco pega un aviso de tu banco y mira qué entiende Monto: monto, comercio y si es gasto o ingreso. Nada se guarda ni se envía.') },
@@ -62,7 +63,7 @@ export function WhatsNew({ onClose }: { onClose: () => void }) {
   const [SLIDES] = useState(() => {
     const previous = lastSeen();
     const seenAt = PANELS.indexOf((previous === '1.0.2' ? '1.0.1' : previous) as Panel);
-    return ALL_SLIDES.filter((s) => s.tools ? !seenTools() && (s.key !== 'quotes' || (profile.country ?? 'PA') === 'PA') : !s.v || PANELS.indexOf(s.v) > seenAt);
+    return ALL_SLIDES.filter((s) => s.key === 'quotes-c' && (profile.country ?? 'PA') !== 'PA' ? false : s.tools ? !seenTools() && (s.key !== 'quotes' || (profile.country ?? 'PA') === 'PA') : !s.v || PANELS.indexOf(s.v) > seenAt);
   });
   const last = i === SLIDES.length - 1;
   const go = (n: number) => setI(Math.max(0, Math.min(SLIDES.length - 1, n)));

@@ -73,6 +73,7 @@ jobs:
           $pkg = "release/Monto_${v}_x64"
           New-Item -ItemType Directory -Force $pkg | Out-Null
           Copy-Item "src-tauri/target/release/bundle/nsis/Monto_${v}_x64-setup.exe" $pkg/ -ErrorAction Stop
+          if ($v -eq '1.0.5') { Rename-Item -LiteralPath "$pkg/Monto_${v}_x64-setup.exe" -NewName 'Monto_1.0.2c_x64-setup.exe' }
           Copy-Item packaging/LEEME.txt $pkg/
           Get-ChildItem $pkg -Filter *.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Out-File -Encoding ascii "$pkg/SHA256SUMS.txt"
           Compress-Archive -Path "$pkg/*" -DestinationPath "$pkg.zip"

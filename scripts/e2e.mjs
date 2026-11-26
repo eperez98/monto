@@ -271,7 +271,7 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 1.0.2b').waitFor();
+  await page.getByText('Monto 1.0.2c').waitFor();
   assert(true, 'versión 1.0.2 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
@@ -279,7 +279,7 @@ try {
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2b · Confianza'), 'acerca de: versión con nombre Confianza');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2c · Confianza'), 'acerca de: versión con nombre Confianza');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
   assert(await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && await page.getByText('1.3 · Claridad').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
   assert(await page.getByRole('heading', { name: 'WinNow' }).isVisible() && await page.getByRole('button', { name: 'Ver WinNow en GitHub' }).isVisible(), 'acerca de: tarjeta del otro proyecto, WinNow, con enlace a GitHub');
@@ -681,7 +681,7 @@ try {
   assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });
-  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2b'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2c'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
   await page.evaluate(() => localStorage.setItem('monto:whats-new', '0.8-glass'));
   await page.reload();
   await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
@@ -689,7 +689,7 @@ try {
   await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await news.waitFor();
-  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 7, 'novedades: quien viene de la RC 3 ve lo de la 1.0.1 y la 1.0.2, sin repetir la RC 3');
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 8, 'novedades: quien viene de la RC 3 ve lo de la 1.0.1 y la 1.0.2, sin repetir la RC 3');
   await news.getByRole('button', { name: 'Cerrar novedades' }).click();
   await news.waitFor({ state: 'detached' });
   await page.evaluate(() => localStorage.setItem('monto:whats-new', '1.0.1'));
@@ -699,7 +699,7 @@ try {
   await page.getByText('¿Quién está usando Monto?').waitFor({ timeout: 15000 });
   await page.getByRole('button', { name: /Carlos/ }).first().click();
   await news.waitFor();
-  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 4, 'novedades: quien viene de la 1.0.1 solo ve lo nuevo de la 1.0.2');
+  assert((await news.getByRole('tablist', { name: 'Diapositivas' }).getByRole('tab').count()) === 5, 'novedades: quien viene de la 1.0.1 solo ve lo nuevo de la 1.0.2');
   while (await news.getByRole('button', { name: 'Siguiente' }).count()) await news.getByRole('button', { name: 'Siguiente' }).click();
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });

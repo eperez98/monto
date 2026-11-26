@@ -1,5 +1,6 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Cotiza por unidad, hora o día. Adjunta la aceptación del cliente y confirma el pago para emitir su recibo.": "Quote by unit, hour or day. Attach the client’s acceptance and confirm payment to issue a receipt.",
   "Primero debes aprobar la cotización.": "Approve the quote first.",
   "La evidencia debe pesar como máximo 8 MB.": "The attachment must be 8 MB or smaller.",
   "Selecciona una captura PNG o JPG, o un PDF firmado.": "Select a PNG or JPG screenshot, or a signed PDF.",

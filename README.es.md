@@ -6,7 +6,7 @@
 
 <br />
 
-[![Descargar para Windows](https://img.shields.io/badge/Descargar%20para%20Windows-1.0.2b%20Confianza-6C5CE7?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/eperez98/monto/releases)
+[![Descargar para Windows](https://img.shields.io/badge/Descargar%20para%20Windows-1.0.2c%20Confianza-6C5CE7?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/eperez98/monto/releases)
 
 [![CI](https://github.com/eperez98/monto/actions/workflows/ci.yml/badge.svg)](https://github.com/eperez98/monto/actions/workflows/ci.yml)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-14304D)
@@ -79,7 +79,7 @@ Windows protege la base local y las copias con cifrado AES-256-GCM. Puedes añad
 
 <sub>Las capturas usan datos ficticios de ejemplo. Se regeneran con `node scripts/screenshots.mjs`.</sub>
 
-## Novedades de 1.0.2b Confianza
+## Novedades de 1.0.2c Confianza
 
 **El Cotizador**, disponible para perfiles de Panamá, reúne en un inventario las propuestas pendientes, canceladas y cobradas. Indica la empresa destinataria, los servicios y sus precios en balboas. El PDF incluye tu nombre, cédula, RUC opcional y los datos para el pago por ACH (banco, tipo y número de cuenta).
 
@@ -142,11 +142,10 @@ En **Configuración → Datos y copias** puedes eliminar respaldos de más de 15
 
 ## Descargar
 
-1. Entra en **[Releases](https://github.com/eperez98/monto/releases)** y descarga `Monto_1.0.2_x64.zip`.
-2. Descomprímelo y ejecuta `Monto_1.0.2_x64-setup.exe`. Elige **Español** o **English**. No necesita permisos de administrador.
+1. Entra en **[Releases](https://github.com/eperez98/monto/releases)** y descarga `Monto_1.0.5_x64.zip`.
+2. Descomprímelo y ejecuta `Monto_1.0.2c_x64-setup.exe`. Elige **Español** o **English**. No necesita permisos de administrador.
 3. Windows SmartScreen puede mostrar un aviso porque el instalador aún no está firmado: **Más información → Ejecutar de todas formas**.
 
-Si ya tienes una compilación anterior de **1.0.2b**, descarga y ejecuta este instalador para recibir los cambios. Las dos compilaciones usan la versión interna `1.0.2`.
 
 El zip incluye también `SHA256SUMS.txt` (para verificar el instalador) y `LEEME.txt`. Al actualizar se conservan tus datos en `%APPDATA%\com.monto.finanzas`. Consulta la [guía de instalación](docs/instalacion.md) y el [manual de usuario](docs/manual-de-usuario.md).
 

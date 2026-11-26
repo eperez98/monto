@@ -10,6 +10,14 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+## [1.0.5] - 2026-11-26 · 1.0.2c Confianza
+
+Esta edición sustituye a 1.0.2b. El instalador para Windows se llama `Monto_1.0.2c_x64-setup.exe`. El actualizador reconoce esta entrega por su versión interna 1.0.5.
+
+- El Cotizador de Panamá calcula servicios por unidad, hora o día e incluye los datos de contacto del cliente y las condiciones de pago ACH.
+- Las propuestas tienen 15 días de validez. El PDF «Cotización - Servicios Profesionales» incluye espacios para las firmas del cliente y del profesional.
+- Para aprobar una cotización se adjunta la aceptación del cliente. El recibo se emite al confirmar el pago.
+
 ## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
 
 El Cotizador admite tarifas por unidad, hora o día, cantidades, datos de contacto y tres condiciones de pago por ACH. La propuesta tiene 15 días de validez e incluye espacios para las firmas del cliente y del profesional. La aprobación exige adjuntar evidencia antes de emitir el recibo por pago.
