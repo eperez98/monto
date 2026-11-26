@@ -50,6 +50,7 @@ export const EN: Record<string, string> = {
   "Cancelada": "Cancelled",
   "Recibo": "Receipt",
   "Cotización": "Quote",
+  "Cotización - Servicios Profesionales": "Quote - Professional Services",
   "Detalle": "Detail",
   "Información": "Information",
   "Datos del documento": "Document details",
