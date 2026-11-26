@@ -38,6 +38,7 @@ interface AppState {
   toast: (t: Omit<Toast, 'id'>) => void;
   dismissToast: (id: number) => void;
   openTx: (type?: TxType, tx?: Transaction | null) => void;
+  savedTransactionId: string | null;
   closeTx: () => void;
   setNotificationsOpen: (o: boolean) => void;
   setTourOpen: (o: boolean) => void;
@@ -79,6 +80,7 @@ export const useApp = create<AppState>((set) => ({
   },
   dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),
   openTx: (type, tx = null) => set({ txEditor: { open: true, type, tx } }),
+  savedTransactionId: null,
   closeTx: () => set({ txEditor: { open: false } }),
   setNotificationsOpen: (notificationsOpen) => set({ notificationsOpen }),
   setTourOpen: (tourOpen) => set({ tourOpen }),

@@ -156,7 +156,7 @@ try {
   await page.locator('select').filter({ hasText: 'Sin categoría' }).selectOption({ label: 'Supermercado' });
   await shot('05-new-transaction');
   await dclick('Registrar');
-  await page.getByText('Gasto registrado').waitFor();
+  await page.getByText('Movimiento guardado').last().waitFor();
   await page.waitForTimeout(1500);
   const hero2 = await page.locator('[data-tour="hero"]').innerText();
   assert(hero2.includes('2,454.80'), 'saldo tras gasto 2,454.80');
@@ -177,7 +177,7 @@ try {
   await page.getByRole('textbox', { name: 'Importe', exact: true }).fill('300');
   await page.getByPlaceholder(/Quincena, cliente/).fill('Proyecto freelance');
   await dclick('Registrar');
-  await page.getByText('Ingreso registrado').waitFor();
+  await page.getByText('Movimiento guardado').last().waitFor();
   await page.waitForTimeout(1600);
   await shot('06-dashboard');
 
@@ -270,7 +270,7 @@ try {
 
   step('Updates tab');
   await click('Actualizaciones', { exact: true });
-  await page.getByText('Monto 1.0.2.1d').waitFor();
+  await page.getByText('Monto 1.0.2.1a').waitFor();
   assert(true, 'versión 1.0.2 visible en Actualizaciones');
   await page.waitForTimeout(900);
   await shot('19-updates');
@@ -278,7 +278,7 @@ try {
   step('About page');
   await page.getByRole('button', { name: 'Acerca de Monto' }).first().click();
   await page.getByText('Apoya el desarrollo').waitFor();
-  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2.1d · Confianza'), 'acerca de: versión con nombre Confianza');
+  assert((await page.getByText(/^Versión/).first().innerText()).includes('1.0.2.1a · Confianza'), 'acerca de: versión con nombre Confianza');
   assert(await page.getByRole('button', { name: 'Ver mi repositorio en GitHub' }).isVisible(), 'acerca de: apoyar con el repositorio');
   assert(await page.getByText('1.1 · Conectado').isVisible() && await page.getByText('1.2 · Juntos').isVisible() && await page.getByText('1.3 · Claridad').isVisible() && !(await page.getByText('0.9 · Calm Design').count()), 'acerca de: tres versiones futuras con ideas, sin la 0.9');
   assert(await page.getByRole('heading', { name: 'WinNow' }).isVisible() && await page.getByRole('button', { name: 'Ver WinNow en GitHub' }).isVisible(), 'acerca de: tarjeta del otro proyecto, WinNow, con enlace a GitHub');
@@ -680,7 +680,7 @@ try {
   assert(!(await news.getByRole('button', { name: 'Siguiente' }).count()), 'novedades: las diapositivas avanzan hasta el final');
   await news.getByRole('button', { name: 'Usar Monto' }).click();
   await news.waitFor({ state: 'detached' });
-  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2.1d'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
+  assert(await page.evaluate(() => localStorage.getItem('monto:whats-new') === '1.0.2.1a'), 'novedades: «Usar Monto» cierra el panel y no vuelve a salir');
   await page.evaluate(() => localStorage.setItem('monto:whats-new', '0.8-glass'));
   await page.reload();
   await page.getByPlaceholder('Contraseña').fill('clave-segura-123');
@@ -725,7 +725,7 @@ try {
   assert((await page.getByPlaceholder(/Quincena, cliente/).inputValue()) === 'Yappy recibido', 'Yappy recibido: ingreso con la descripción lista');
   await page.getByRole('textbox', { name: 'Importe', exact: true }).fill('25');
   await dclick('Registrar');
-  await page.getByText('Ingreso registrado').waitFor();
+  await page.getByText('Movimiento guardado').last().waitFor();
   await page.waitForTimeout(800);
   await page.locator('main button').filter({ hasText: 'Saldo actual' }).first().click();
   await page.getByRole('dialog').first().getByText('1,025.00').first().waitFor();

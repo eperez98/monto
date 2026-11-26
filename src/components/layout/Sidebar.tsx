@@ -8,7 +8,8 @@ import { NAV_GROUPS } from './nav';
 import { useActor, useProfile, useQuery, accountsVisibleTo } from '../../hooks/useDb';
 import { listMembers } from '../../db/repo/core';
 import { balances, upcoming } from '../../db/repo/analytics';
-import { Avatar, Money } from '../ui';
+import { ProfileSwitcher } from '../../features/shell/ProfileSwitcher';
+import { Avatar, Money, useMotionOK } from '../ui';
 import { formatDate } from '../../lib/dates';
 import { ROLE_LABEL } from '../../domain/permissions';
 import { tr } from '../../lib/i18n';
@@ -25,6 +26,7 @@ const write = (k: string, v: string) => { try { localStorage.setItem(k, v); } ca
  * is on it, and can be pinned open. Groups fold away, and the extras (accounts, next payment) only appear when open.
  */
 export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
+  const duration = useMotionOK() ? 0.16 : 0;
   const route = useApp((s) => s.route);
   const go = useApp((s) => s.go);
   const actor = useActor();
@@ -52,18 +54,18 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
 
   const label = (text: string) => (
     <AnimatePresence initial={false}>
-      {open && <motion.span initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration: 0.16 }} className="relative z-10 truncate">{text}</motion.span>}
+      {open && <motion.span initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -6 }} transition={{ duration }} className="relative z-10 truncate">{text}</motion.span>}
     </AnimatePresence>
   );
 
   return (
-    <motion.aside className="relative h-full shrink-0" animate={{ width: pinned ? OPEN : RAIL }} initial={false} transition={{ type: 'spring', stiffness: 420, damping: 40 }}>
+    <motion.aside className="relative h-full shrink-0" animate={{ width: pinned ? OPEN : RAIL }} initial={false} transition={{ duration, ease: 'easeOut' }}>
       <motion.div
         // Only keyboard focus opens it: a mouse click must not move the button between press and release.
         onMouseEnter={pinned ? undefined : enter} onMouseLeave={pinned ? undefined : leave}
         onFocus={pinned ? undefined : (e) => { if ((e.target as HTMLElement).matches(':focus-visible')) setPeek(true); }} onBlur={pinned ? undefined : (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setPeek(false); }}
         onKeyDown={(e) => { if (e.key === 'Escape' && !pinned) setPeek(false); }}
-        animate={{ width: open ? OPEN : RAIL }} initial={false} transition={{ type: 'spring', stiffness: 420, damping: 40 }}
+        animate={{ width: open ? OPEN : RAIL }} initial={false} transition={{ duration, ease: 'easeOut' }}
         className={clsx('acrylic glass absolute inset-y-0 left-0 z-40 flex flex-col bg-surface border-r border-line/70 overflow-hidden', peek && !pinned && 'shadow-pop rounded-r-[24px]')}
       >
         <div className={clsx('flex items-center h-[72px] shrink-0', open ? 'px-5 justify-between' : 'justify-center')}>
@@ -72,23 +74,23 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
 
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 space-y-2" aria-label={tr('Principal')} data-tour="nav">
           {NAV_GROUPS.map((g, gi) => {
-            const folded = open && closed.includes(g.title);
+            const folded = Boolean(g.title) && closed.includes(g.title);
             const items = g.items.filter((n) => (!n.family || profile.mode !== 'individual') && (n.key !== 'quotes' || (profile.country ?? 'PA') === 'PA'));
             return (
               <div key={g.title}>
-                {open ? (
+                {g.title && (open ? (
                   <button onClick={() => toggleGroup(g.title)} aria-expanded={!folded} className="w-full flex items-center justify-between px-3 h-7 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted hover:text-ink-2">
                     {g.title}<Icon name="chevronDown" size={13} className={clsx('transition-transform', folded && '-rotate-90')} />
                   </button>
-                ) : gi > 0 && <div className="mx-4 my-2 h-px bg-line" />}
+                ) : gi > 0 && <div className="h-7 grid place-items-center"><span className="w-5 h-px bg-line" /></div>)}
                 <div className="space-y-0.5">
                   {items.filter((n) => !folded || n.key === route).map((n) => {
                     const active = route === n.key;
                     return (
                       <button key={n.key} data-tour={`nav-${n.key}`} onClick={() => pick(n.key)} aria-label={n.label} title={open ? n.hint : n.label} aria-current={active ? 'page' : undefined}
-                        className={clsx('nav-pill group relative w-full flex items-center gap-3 h-10 rounded-full text-[13px] transition-colors', open ? 'px-3' : 'justify-center', active ? 'text-brand-ink font-semibold' : 'text-ink-2 hover:text-ink hover:bg-surface-3/70')}>
-                        {active && <motion.span layoutId="nav-active" className="nav-pill absolute inset-0 rounded-full bg-brand shadow-[0_8px_20px_-10px_color-mix(in_srgb,var(--brand)_75%,transparent)]" transition={{ type: 'spring', stiffness: 500, damping: 40 }} />}
-                        <Icon name={n.icon} size={19} active={active} className={clsx('relative z-10 shrink-0 transition-colors', active ? 'text-brand-ink' : 'text-muted group-hover:text-ink-2')} />
+                        className={clsx('nav-pill group relative w-full flex items-center gap-3 h-10 rounded-full text-[13px] transition-colors', 'pl-4 pr-2', active ? 'text-brand bg-brand-soft font-semibold' : 'text-ink-2 hover:text-ink hover:bg-surface-3/70')}>
+                        {active && <span aria-hidden="true" className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-brand" />}
+                        <Icon name={n.icon} size={19} active={active} className={clsx('relative z-10 shrink-0 transition-colors', active ? 'text-brand' : 'text-muted group-hover:text-ink-2')} />
                         {label(n.label)}
                       </button>
                     );
@@ -136,6 +138,7 @@ export function Sidebar({ onSwitchMember }: { onSwitchMember: () => void }) {
             className={clsx('group flex items-center gap-3 rounded-[16px] text-[13px] hover:bg-surface-3 transition', open ? 'w-full px-3 py-2' : 'size-10 justify-center', route === 'settings' ? 'text-ink bg-surface-3' : 'text-muted')}>
             <Icon name="settings" size={18} active={route === 'settings'} className="shrink-0" />{label(tr('Configuración'))}
           </button>
+          {open && <ProfileSwitcher />}
           <button onClick={onSwitchMember} title={tr('Cambiar de integrante')} aria-label={tr('Cambiar de integrante')}
             className={clsx('flex items-center gap-2.5 rounded-[16px] hover:bg-surface-3/70 transition', open ? 'w-full px-2 py-2' : 'size-11 justify-center')}>
             {me && <Avatar name={me.name} color={me.color} emoji={me.emoji} photo={me.photo} size={30} />}

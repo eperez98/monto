@@ -1,3 +1,4 @@
+import { useApp } from '../../store/app';
 import { motion } from 'motion/react';
 import clsx from 'clsx';
 import { IconTile, Icon } from '../../icons';
@@ -10,6 +11,7 @@ import { tr } from '../../lib/i18n';
 const TYPE_ICON: Record<string, string> = { income: 'income', expense: 'expense', transfer: 'transfer', card_payment: 'card', loan_disbursement: 'bank', loan_payment: 'loan', refund: 'refresh' };
 
 export function TxRow({ tx, categories, accounts, members, index = 0, onClick, showDate = true }: { tx: Transaction; categories: Category[]; accounts: Account[]; members?: Member[]; index?: number; onClick?: () => void; showDate?: boolean }) {
+  const recent = useApp((s) => s.savedTransactionId === tx.id);
   const ok = useMotionOK();
   const cat = categories.find((c) => c.id === tx.categoryId);
   const parent = cat?.parentId ? categories.find((c) => c.id === cat.parentId) : null;
@@ -27,7 +29,7 @@ export function TxRow({ tx, categories, accounts, members, index = 0, onClick, s
       initial={ok ? { opacity: 0, x: -8 } : false}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: Math.min(index, 12) * 0.03, duration: 0.3 }}
-      className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-[14px] text-left hover:bg-surface-2 transition-colors"
+      className={clsx(recent && 'ring-1 ring-inset ring-brand bg-brand-soft', ok && 'transition-colors duration-150', "group w-full flex items-center gap-3 px-3 py-2.5 rounded-[14px] text-left hover:bg-surface-2")}
     >
       <IconTile name={icon} color={color} size={38} />
       <div className="flex-1 min-w-0">

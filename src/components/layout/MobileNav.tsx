@@ -5,10 +5,11 @@ import { useApp, type RouteKey } from '../../store/app';
 import { useCan, useProfile } from '../../hooks/useDb';
 import { Icon } from '../../icons';
 import { NAV_GROUPS } from './nav';
+import { ProfileSwitcher } from '../../features/shell/ProfileSwitcher';
 import { QuickPrefs } from './QuickPrefs';
 import { tr } from '../../lib/i18n';
 
-const TABS: Array<[RouteKey, string, string]> = [['dashboard', 'dashboard', tr('Resumen')], ['transactions', 'transactions', tr('Movimientos')], ['plan', 'savings', tr('Plan')]];
+const TABS: Array<[RouteKey, string, string]> = [['dashboard', 'dashboard', tr('Resumen')], ['transactions', 'transactions', tr('Movimientos')], ['plan', 'planMonth', tr('Plan')]];
 
 /** Bottom tab bar for phone-width screens (below `md`), with a "More" sheet holding every section. */
 export function MobileNav({ onSwitchMember }: { onSwitchMember: () => void }) {
@@ -49,7 +50,7 @@ export function MobileNav({ onSwitchMember }: { onSwitchMember: () => void }) {
               <div className="flex items-center justify-between mb-2"><QuickPrefs /><button onClick={() => { setMore(false); onSwitchMember(); }} className="text-[12.5px] text-brand">{tr('Cambiar de integrante')}</button></div>
               {NAV_GROUPS.map((g) => (
                 <div key={g.title} className="mt-3">
-                  <p className="px-1 mb-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">{g.title}</p>
+                  {g.title && <p className="px-1 mb-1 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">{g.title}</p>}
                   <div className="grid grid-cols-3 gap-2">
                     {g.items.filter((n) => (!n.family || profile.mode !== 'individual') && (n.key !== 'quotes' || (profile.country ?? 'PA') === 'PA')).map((n) => (
                       <button key={n.key} onClick={() => pick(n.key)} className={clsx('flex flex-col items-center gap-1.5 rounded-[18px] p-3 text-[11.5px] text-center border', route === n.key ? 'border-brand bg-brand-soft/60 text-brand' : 'border-line/70 text-ink-2')}>
@@ -59,6 +60,7 @@ export function MobileNav({ onSwitchMember }: { onSwitchMember: () => void }) {
                   </div>
                 </div>
               ))}
+              <ProfileSwitcher className="mt-4" />
               <button onClick={() => pick('settings')} className="mt-4 w-full flex items-center gap-3 rounded-[18px] border border-line/70 p-3 text-[13px] text-ink"><Icon name="settings" size={18} />{tr('Configuración')}</button>
               <button onClick={() => pick('about')} className="mt-2 w-full flex items-center gap-3 rounded-[18px] border border-line/70 p-3 text-[13px] text-ink"><Icon name="info" size={18} />{tr('Acerca de Monto')}</button>
             </motion.div>

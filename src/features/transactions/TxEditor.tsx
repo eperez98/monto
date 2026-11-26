@@ -139,8 +139,17 @@ export function TxEditor() {
       const t = tx ? updateTransaction(en, a, tx.id, input) : createTransaction(en, a, input);
       files.forEach((f) => addAttachment(en, a, t.id, f));
       return t;
-    }, tx ? tr('Movimiento actualizado') : { title: `${TX_TYPE_LABEL[type]} registrado`, body: `${desc} · ${formatMoney(cents, currency)}` });
-    if (r) { setSaved(true); setTimeout(close, 550); }
+    }, tx ? tr('Movimiento actualizado') : { title: tr('Movimiento guardado'), body: `${desc} · ${formatMoney(cents, currency)}` });
+    if (r) {
+      if (!tx) {
+        useApp.setState({ savedTransactionId: r.id });
+        window.setTimeout(() => {
+          if (useApp.getState().savedTransactionId === r.id) useApp.setState({ savedTransactionId: null });
+        }, 3000);
+      }
+      setSaved(true);
+      setTimeout(close, 550);
+    }
   };
 
   const remove = () => confirm.ask({ title: tr('¿Eliminar este movimiento?'), body: tr('El saldo de la cuenta se recalculará. Esta acción no se puede deshacer.'), onConfirm: () => { if (mutate((en, a) => deleteTransaction(en, a, tx!.id), tr('Movimiento eliminado')) !== undefined) close(); } });

@@ -1,5 +1,8 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Dinero": "Money",
+  "Planificación": "Planning",
+  "Movimiento guardado": "Transaction saved",
   "Primero debes aprobar la cotización.": "Approve the quote first.",
   "La evidencia debe pesar como máximo 8 MB.": "The attachment must be 8 MB or smaller.",
   "Selecciona una captura PNG o JPG, o un PDF firmado.": "Select a PNG or JPG screenshot, or a signed PDF.",

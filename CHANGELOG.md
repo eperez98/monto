@@ -10,7 +10,10 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-## [1.0.4] - 2026-11-25 · 1.0.2.1d Confianza
+## [1.0.4] - 2026-11-26 · 1.0.2.1a Confianza
+
+- Menú por tareas con accesos directos a Resumen y al Cotizador en Panamá, nuevos iconos y una marca lateral para la sección activa.
+- Al registrar un movimiento, se confirma el guardado y se resalta la fila durante tres segundos.
 
 El Cotizador admite tarifas por unidad, hora o día, cantidades, datos de contacto y tres condiciones de pago por ACH. La propuesta tiene 15 días de validez e incluye espacios para las firmas del cliente y del profesional. La aprobación exige adjuntar evidencia antes de emitir el recibo por pago.
 
