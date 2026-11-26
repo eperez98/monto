@@ -203,7 +203,7 @@ function SourceCard({ s, index, onEdit, onReceive }: { s: IncomeSummary; index: 
 
 export default function Income() {
   const profile = useProfile();
-  const available = !['1.0.2', '1.0.5'].includes(APP_VERSION) && (profile.country ?? 'PA') === 'PA';
+  const available = !['1.0.2', '1.0.2+3'].includes(APP_VERSION) && (profile.country ?? 'PA') === 'PA';
   const [showCalculator, setShowCalculator] = useState(false);
   const actor = useActor();
   const canManage = useCan('income.manage');

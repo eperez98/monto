@@ -26,5 +26,5 @@ npm run tauri build    # genera src-tauri/target/release/bundle/nsis/*-setup.exe
 
 Prueba automática de instalación (PowerShell, Windows):
 ```powershell
-./scripts/windows-smoke-test.ps1 -Installer .\src-tauri\target\release\bundle\nsis\Monto_1.0.5_x64-setup.exe
+./scripts/windows-smoke-test.ps1 -Installer .\src-tauri\target\release\bundle\nsis\Monto_1.0.2+3_x64-setup.exe
 ```

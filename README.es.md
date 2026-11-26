@@ -142,7 +142,7 @@ En **Configuración → Datos y copias** puedes eliminar respaldos de más de 15
 
 ## Descargar
 
-1. Entra en **[Releases](https://github.com/eperez98/monto/releases)** y descarga `Monto_1.0.5_x64.zip`.
+1. Entra en **[Releases](https://github.com/eperez98/monto/releases)** y descarga `Monto_1.0.2c_x64.zip`.
 2. Descomprímelo y ejecuta `Monto_1.0.2c_x64-setup.exe`. Elige **Español** o **English**. No necesita permisos de administrador.
 3. Windows SmartScreen puede mostrar un aviso porque el instalador aún no está firmado: **Más información → Ejecutar de todas formas**.
 

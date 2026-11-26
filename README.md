@@ -142,7 +142,7 @@ In **Settings → Data and backups**, you can delete backups older than 15 days.
 
 ## Download
 
-1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_1.0.5_x64.zip`.
+1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_1.0.2c_x64.zip`.
 2. Unzip it and run `Monto_1.0.2c_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
 3. Windows SmartScreen may warn you because the installer isn't code‑signed yet: **More info → Run anyway**.
 

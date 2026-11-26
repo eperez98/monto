@@ -2,7 +2,7 @@ import pkg from '../../package.json';
 
 /** Human label for a SemVer version: "0.4.8-beta.2" → "0.4.8 Beta 2". */
 export function versionLabel(v: string): string {
-  const labels: Record<string, string> = { '1.0.2': '1.0.2b', '1.0.5': '1.0.2c', '1.0.3': '1.0.2.1c', '1.1.0': '1.1a' };
+  const labels: Record<string, string> = { '1.0.2': '1.0.2b', '1.0.2+3': '1.0.2c', '1.0.3': '1.0.2.1c', '1.1.0': '1.1a' };
   const label = labels[v.replace(/^v/, '')];
   if (label) return label;
   const m = v.replace(/^v/, '').match(/^(\d+\.\d+\.\d+)(?:-([a-z]+)\.?(\d+)?)?/i);

@@ -1,6 +1,6 @@
 [package]
 name = "monto"
-version = "1.0.5"
+version = "1.0.2+3"
 description = "Monto — finanzas personales y familiares"
 authors = ["Erick Arturo Pérez Cazorla"]
 license = "MIT"

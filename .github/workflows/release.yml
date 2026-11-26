@@ -40,7 +40,8 @@ jobs:
         shell: pwsh
         run: |
           $v = (Get-Content package.json | ConvertFrom-Json).version
-          if ("v$v" -ne $env:TAG) { throw "El tag $env:TAG no coincide con la versión v$v de package.json" }
+          $releaseTag = if ($v -eq '1.0.2+3') { 'v1.0.2c' } else { "v$v" }
+          if ($releaseTag -ne $env:TAG) { throw "El tag $env:TAG no coincide con la versión v$v de package.json" }
       # Code signing (removes the SmartScreen warning). Only when the repository has a certificate:
       # WINDOWS_CERTIFICATE = the .pfx in base64, WINDOWS_CERTIFICATE_PASSWORD = its password.
       # Without them the installer is built unsigned, as before.
@@ -72,8 +73,9 @@ jobs:
           $v = $env:TAG.TrimStart('v')
           $pkg = "release/Monto_${v}_x64"
           New-Item -ItemType Directory -Force $pkg | Out-Null
-          Copy-Item "src-tauri/target/release/bundle/nsis/Monto_${v}_x64-setup.exe" $pkg/ -ErrorAction Stop
-          if ($v -eq '1.0.5') { Rename-Item -LiteralPath "$pkg/Monto_${v}_x64-setup.exe" -NewName 'Monto_1.0.2c_x64-setup.exe' }
+          $built = @(Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe)
+          if ($built.Count -ne 1) { throw "Se esperaba un instalador" }
+          Copy-Item -LiteralPath $built[0].FullName -Destination "$pkg/Monto_${v}_x64-setup.exe" -ErrorAction Stop
           Copy-Item packaging/LEEME.txt $pkg/
           Get-ChildItem $pkg -Filter *.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Out-File -Encoding ascii "$pkg/SHA256SUMS.txt"
           Compress-Archive -Path "$pkg/*" -DestinationPath "$pkg.zip"
