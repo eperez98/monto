@@ -74,7 +74,7 @@ const status = (q: Quote) =>
 
 async function download(q: Quote, receipt = false) {
   const paid = receipt && q.outcome.status === 'paid' ? q.outcome : null;
-  const heading = paid ? tr('Recibo') : tr('Cotización');
+  const heading = paid ? tr('Recibo') : tr('Cotización - Servicios Profesionales');
   const table = (name: string, rows: [string, string][]): ReportTable => ({
     name,
     columns: [
