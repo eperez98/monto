@@ -10,6 +10,8 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
+- El plan mensual abre en el mes actual. Permite consultar otros meses y editar sus gastos y pagos por separado.
+
 ## [1.0.4] - 2026-11-26 · 1.0.2.1a Confianza
 
 - Menú por tareas con accesos directos a Resumen y al Cotizador en Panamá, nuevos iconos y una marca lateral para la sección activa.

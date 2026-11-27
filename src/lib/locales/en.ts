@@ -1,5 +1,10 @@
 /** English translations keyed by the Spanish source string. Check coverage with `npm run i18n:check`. */
 export const EN: Record<string, string> = {
+  "Volver al mes actual": "Back to the current month",
+  "Sin gastos planificados para este mes.": "No planned expenses this month.",
+  "Gastos pendientes": "Unpaid expenses",
+  "Los cambios se guardan solo para el mes seleccionado.": "Changes apply only to the selected month.",
+  "Gastos pagados ({n})": "Paid expenses ({n})",
   "Dinero": "Money",
   "Planificación": "Planning",
   "Movimiento guardado": "Transaction saved",

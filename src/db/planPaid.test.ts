@@ -1,9 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import { freshEngine } from '../test/helpers';
 import { createAccount, getAccount, listTransactions } from './repo/finance';
-import { getPlanPaid, setPlanPaid } from './repo/planning';
+import { getExpensePlan, getPlanPaid, saveExpensePlan, setPlanPaid } from './repo/planning';
 
 describe('plan bills paid this month', () => {
+  it('keeps monthly lists and payments separate while preserving the legacy plan', async () => {
+    const { e, actor } = await freshEngine();
+    const bill = { name: 'Electricidad', amount: 4500 };
+    e.run('INSERT INTO settings (key, value) VALUES (?, ?)', [
+      `expensePlan:${actor.id}`, JSON.stringify({ items: [bill] }),
+    ]);
+    const november = '2026-11';
+    const december = '2026-12';
+    saveExpensePlan(e, actor, [{ ...bill, amount: 5100 }], actor.id, november);
+    setPlanPaid(e, actor, bill, { paid: true, deduct: false, month: november });
+    expect(getExpensePlan(e, actor.id, november)).toEqual([{ ...bill, amount: 5100 }]);
+    expect(getExpensePlan(e, actor.id, december)).toEqual([bill]);
+    expect(getPlanPaid(e, actor.id, december)).toEqual({});
+    saveExpensePlan(e, actor, [], actor.id, december);
+    expect(getExpensePlan(e, actor.id, december)).toEqual([]);
+    expect(getPlanPaid(e, actor.id, november).Electricidad?.paid).toBe(true);
+  });
+
   it('only lowers the balance when the user chooses to subtract the payment', async () => {
     const { e, actor } = await freshEngine();
     const acc = createAccount(e, actor, { name: 'Banco', type: 'savings', currency: 'PAB', initialBalance: 100000, ownerMemberId: actor.id });

@@ -7,6 +7,7 @@ import { listMembers } from '../../db/repo/core';
 import { ExpensePlanner } from './ExpensePlanner';
 import { paymentOrder, planSummary, type PlanItem } from '../../domain/plan';
 import { centsToInput, parseMoney, type Currency } from '../../lib/money';
+import { addMonths, formatMonth, monthKey, today } from '../../lib/dates';
 import { tr } from '../../lib/i18n';
 
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
@@ -24,38 +25,52 @@ export default function Plan() {
   const members = useQuery((e) => listMembers(e));
   const partner = members.find((m) => m.id !== actor.id);
   const couple = profile.mode === 'couple' && !!partner;
+  const [chosenMonth, setChosenMonth] = useState<string>();
+  const currentMonth = monthKey(today());
+  const month = chosenMonth ?? currentMonth;
+  const shiftMonth = (offset: number) => setChosenMonth(monthKey(addMonths(`${month}-01`, offset)));
   const [view, setView] = useState<string>(actor.id);
   return (
     <>
       <PageHeader title={tr('Plan mensual')} subtitle={tr('Tus gastos fijos frente a tu ingreso: cuánto te queda y cuánto puedes ahorrar')}
         actions={couple && <Segmented layoutId="plan-member" value={view} onChange={setView}
           options={[{ value: actor.id, label: tr('Mi plan') }, { value: partner.id, label: tr('Plan de {name}', { name: partner.name.split(' ')[0] }) }, { value: JOINT, label: tr('En conjunto') }]} />} />
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="inline-flex items-center rounded-2xl border border-line bg-surface px-1">
+          <IconButton icon="chevronLeft" label={tr('Mes anterior')} onClick={() => shiftMonth(-1)} />
+          <h2 aria-live="polite" className="min-w-32 px-2 text-center text-sm font-semibold text-ink">{formatMonth(month)}</h2>
+          <IconButton icon="chevronRight" label={tr('Mes siguiente')} onClick={() => shiftMonth(1)} />
+        </div>
+        {month !== currentMonth && <Button size="sm" variant="ghost" onClick={() => setChosenMonth(undefined)}>{tr('Volver al mes actual')}</Button>}
+      </div>
       {view === JOINT && couple
-        ? <JointPlan memberIds={members.map((m) => m.id)} names={Object.fromEntries(members.map((m) => [m.id, m.name.split(' ')[0]]))} currency={profile.primaryCurrency} />
-        : <MemberPlan key={view} memberId={couple ? view : actor.id} currency={profile.primaryCurrency} />}
+        ? <JointPlan month={month} memberIds={members.map((m) => m.id)} names={Object.fromEntries(members.map((m) => [m.id, m.name.split(' ')[0]]))} currency={profile.primaryCurrency} />
+        : <MemberPlan key={`${view}:${month}`} month={month} memberId={couple ? view : actor.id} currency={profile.primaryCurrency} />}
     </>
   );
 }
 
 /** One member's plan: the result on top and one editable tile per bill, in the order to pay them. */
-function MemberPlan({ memberId, currency: cur }: { memberId: string; currency: Currency }) {
+function MemberPlan({ memberId, month, currency: cur }: { memberId: string; month: string; currency: Currency }) {
   const actor = useActor();
   const mutate = useMutate();
   const own = memberId === actor.id;
   const canIncome = useCan('income.manage');
   const canMembers = useCan('member.manage');
   const canEdit = own ? canIncome : canMembers;
-  const saved = useQuery((e) => getExpensePlan(e, memberId), [memberId]);
+  const saved = useQuery((e) => getExpensePlan(e, memberId, month), [memberId, month]);
   const income = useQuery((e) => memberMonthlyIncome(e, memberId), [memberId]);
   const payDay = useQuery((e) => monthlyPayDay(listIncomeSources(e, memberId)), [memberId]);
-  const paid = useQuery((e) => getPlanPaid(e, memberId), [memberId]);
+  const paid = useQuery((e) => getPlanPaid(e, memberId, month), [memberId, month]);
   const [wizard, setWizard] = useState(false);
   const [adding, setAdding] = useState<{ name: string; amount: string } | null>(null);
 
-  const store = (items: PlanItem[], msg?: string) => (canEdit ? mutate((e, a) => saveExpensePlan(e, a, items, memberId), msg) : undefined);
+  const store = (items: PlanItem[], msg?: string) => (canEdit ? mutate((e, a) => saveExpensePlan(e, a, items, memberId, month), msg) : undefined);
   const patch = (name: string, p: Partial<PlanItem>, msg?: string) => store(saved.map((i) => (i.name === name ? { ...i, ...p } : i)), msg);
-  const markPaid = (item: PlanItem, isPaid: boolean, deduct: boolean) => mutate((e, a) => setPlanPaid(e, a, { name: item.name, amount: item.amount, kind: item.kind }, { paid: isPaid, deduct, memberId }),
+  const markPaid = (item: PlanItem, isPaid: boolean, deduct: boolean) => mutate((e, a) => setPlanPaid(e, a, { name: item.name, amount: item.amount, kind: item.kind }, { paid: isPaid, deduct, memberId, month }),
     !isPaid ? tr('Marcado como pendiente') : deduct ? tr('Pago registrado y descontado del saldo') : tr('Marcado como pagado'));
+
+  if (!saved.length && !canEdit) return <p className="text-sm text-muted">{tr('Sin gastos planificados para este mes.')}</p>;
 
   if (!saved.length) {
     return (
@@ -77,40 +92,46 @@ function MemberPlan({ memberId, currency: cur }: { memberId: string; currency: C
     if (store([...saved.filter((i) => i.name !== name), { name, amount: v }], tr('Gasto agregado')) !== undefined) setAdding(null);
   };
 
+  const renderBill = (s: (typeof steps)[number], k: number) => {
+    const st = paid[s.name];
+    return (
+      <li key={s.name} className={clsx('card rounded-[22px] border bg-surface p-4 flex flex-col gap-3', st?.paid ? 'border-emerald/40' : 'border-line/70')}>
+        <div className="flex items-start gap-2.5">
+          <span className={clsx('grid place-items-center size-7 shrink-0 rounded-full text-[12px] font-semibold num', st?.paid ? 'bg-emerald-soft text-emerald' : 'bg-brand-soft text-brand')}>{st?.paid ? '✓' : k + 1}</span>
+          <span className="min-w-0 flex-1">
+            <span className={clsx('block text-[13.5px] font-semibold truncate', st?.paid ? 'text-muted line-through' : 'text-ink')} title={s.name}>{s.name}</span>
+            <span className={clsx('block text-[11.5px]', s.short ? 'text-coral' : 'text-muted')}>{s.short ? tr('No alcanza: faltan') : tr('Quedan')}{' '}<Money cents={Math.abs(s.balanceAfter)} currency={cur} /></span>
+          </span>
+          {canEdit && <IconButton icon="trash" label={tr('Quitar {name}', { name: s.name })} size={30} onClick={() => store(saved.filter((i) => i.name !== s.name), tr('Gasto quitado'))} />}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <AmountField key={s.amount} cents={s.amount} currency={cur} disabled={!canEdit} label={tr('Monto de {name}', { name: s.name })} onCommit={(v) => patch(s.name, { amount: v }, tr('Monto actualizado'))} />
+          <Select aria-label={tr('Vence el día')} value={s.dueDay ?? ''} disabled={!canEdit} onChange={(e) => patch(s.name, { dueDay: e.target.value ? Number(e.target.value) : undefined }, tr('Fecha de pago guardada'))} className="!h-10 !text-[12.5px]">
+            <option value="">{payDay ? tr('Al cobrar') : tr('Sin fecha')}</option>
+            {DAYS.map((d) => <option key={d} value={d}>{tr('Día {d}', { d })}</option>)}
+          </Select>
+        </div>
+        {canEdit && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-2">
+            <label className="inline-flex items-center gap-2 cursor-pointer"><input type="checkbox" className="size-4 accent-brand" checked={!!st?.paid} onChange={(e) => markPaid(s, e.target.checked, false)} />{tr('Pagado')}</label>
+            {st?.paid && <label className="inline-flex items-center gap-2 cursor-pointer"><input type="checkbox" role="switch" className="size-4 accent-brand" checked={!!st.txId} onChange={(e) => markPaid(s, true, e.target.checked)} />{tr('Descontar del saldo actual')}</label>}
+          </div>
+        )}
+      </li>
+    );
+  };
+
   return (
     <div className="space-y-5">
       <PlanResult income={income} expenses={sum.expenses} remaining={sum.remaining} canSave={sum.canSave} rate={sum.savingsRate} currency={cur}
         line={<>{tr('Pagados {n} de {total} · Pendiente', { n: paidCount, total: steps.length })}{' '}<Money cents={pending} currency={cur} className="font-semibold" /></>}
         note={payDay ? tr('Cobras una vez al mes, el día {d}. Paga en este orden:', { d: payDay }) : tr('Ordenados por fecha de vencimiento.')} />
-      <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4" aria-label={tr('Gastos del mes')}>
-        {steps.map((s, k) => {
-          const st = paid[s.name];
-          return (
-            <li key={s.name} className={clsx('card rounded-[22px] border bg-surface p-4 flex flex-col gap-3', st?.paid ? 'border-emerald/40' : 'border-line/70')}>
-              <div className="flex items-start gap-2.5">
-                <span className={clsx('grid place-items-center size-7 shrink-0 rounded-full text-[12px] font-semibold num', st?.paid ? 'bg-emerald-soft text-emerald' : 'bg-brand-soft text-brand')}>{st?.paid ? '✓' : k + 1}</span>
-                <span className="min-w-0 flex-1">
-                  <span className={clsx('block text-[13.5px] font-semibold truncate', st?.paid ? 'text-muted line-through' : 'text-ink')} title={s.name}>{s.name}</span>
-                  <span className={clsx('block text-[11.5px]', s.short ? 'text-coral' : 'text-muted')}>{s.short ? tr('No alcanza: faltan') : tr('Quedan')}{' '}<Money cents={Math.abs(s.balanceAfter)} currency={cur} /></span>
-                </span>
-                {canEdit && <IconButton icon="trash" label={tr('Quitar {name}', { name: s.name })} size={30} onClick={() => store(saved.filter((i) => i.name !== s.name), tr('Gasto quitado'))} />}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <AmountField key={s.amount} cents={s.amount} currency={cur} disabled={!canEdit} label={tr('Monto de {name}', { name: s.name })} onCommit={(v) => patch(s.name, { amount: v }, tr('Monto actualizado'))} />
-                <Select aria-label={tr('Vence el día')} value={s.dueDay ?? ''} disabled={!canEdit} onChange={(e) => patch(s.name, { dueDay: e.target.value ? Number(e.target.value) : undefined }, tr('Fecha de pago guardada'))} className="!h-10 !text-[12.5px]">
-                  <option value="">{payDay ? tr('Al cobrar') : tr('Sin fecha')}</option>
-                  {DAYS.map((d) => <option key={d} value={d}>{tr('Día {d}', { d })}</option>)}
-                </Select>
-              </div>
-              {canEdit && (
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-2">
-                  <label className="inline-flex items-center gap-2 cursor-pointer"><input type="checkbox" className="size-4 accent-brand" checked={!!st?.paid} onChange={(e) => markPaid(s, e.target.checked, false)} />{tr('Pagado')}</label>
-                  {st?.paid && <label className="inline-flex items-center gap-2 cursor-pointer"><input type="checkbox" role="switch" className="size-4 accent-brand" checked={!!st.txId} onChange={(e) => markPaid(s, true, e.target.checked)} />{tr('Descontar del saldo actual')}</label>}
-                </div>
-              )}
-            </li>
-          );
-        })}
+      <div>
+        <h2 className="text-sm font-semibold">{tr('Gastos pendientes')}</h2>
+        {canEdit && <p className="mt-1 text-xs text-muted">{tr('Los cambios se guardan solo para el mes seleccionado.')}</p>}
+      </div>
+      <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4" aria-label={tr('Gastos pendientes')}>
+        {steps.filter((s) => !paid[s.name]?.paid).map(renderBill)}
         {canEdit && (
           <li className="card rounded-[22px] border border-dashed border-line p-4 flex flex-col justify-center gap-2">
             {adding ? (
@@ -128,6 +149,14 @@ function MemberPlan({ memberId, currency: cur }: { memberId: string; currency: C
           </li>
         )}
       </ol>
+      {paidCount > 0 && (
+        <details className="rounded-2xl border border-line bg-surface p-4">
+          <summary className="cursor-pointer text-sm font-semibold">{tr('Gastos pagados ({n})', { n: paidCount })}</summary>
+          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+            {steps.filter((s) => paid[s.name]?.paid).map(renderBill)}
+          </ul>
+        </details>
+      )}
       <Modal open={wizard} onClose={() => setWizard(false)} title={tr('Revisar gastos uno por uno')} icon="savings" width={760}>
         <ExpensePlanner key={String(wizard)} income={income} currency={cur} initial={saved} onFinish={(items) => { store(items, tr('Plan mensual guardado')); setWizard(false); }} />
       </Modal>
@@ -148,8 +177,8 @@ function AmountField({ cents, currency, disabled, label, onCommit }: { cents: nu
 }
 
 /** Both partners' plans added up (read-only); each tile says whose bill it is. */
-function JointPlan({ memberIds, names, currency: cur }: { memberIds: string[]; names: Record<string, string>; currency: Currency }) {
-  const data = useQuery((e) => memberIds.map((id) => ({ id, items: getExpensePlan(e, id), income: memberMonthlyIncome(e, id) })), [memberIds.join()]);
+function JointPlan({ memberIds, names, month, currency: cur }: { month: string; memberIds: string[]; names: Record<string, string>; currency: Currency }) {
+  const data = useQuery((e) => memberIds.map((id) => ({ id, items: getExpensePlan(e, id, month), income: memberMonthlyIncome(e, id) })), [memberIds.join(), month]);
   const income = data.reduce((a, d) => a + d.income, 0);
   const items = data.flatMap((d) => d.items.map((i) => ({ ...i, owner: d.id }))).sort((a, b) => (a.dueDay ?? 0) - (b.dueDay ?? 0));
   const sum = planSummary(income, items);

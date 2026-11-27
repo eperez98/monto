@@ -445,14 +445,23 @@ export type { Scope };
 const planItemsSchema = z.array(z.object({ name: z.string().trim().min(1, tr('Escribe un nombre')).max(60), amount: z.number().int().min(0, tr('Importe no válido')).max(100_000_000_00), dueDay: z.number().int().min(1).max(31).optional(), kind: z.enum(['subscription']).optional() })).max(100);
 
 /** Each member's own plan, stored in settings (no migration needed). */
-export function getExpensePlan(e: Engine, memberId: string): PlanItem[] {
-  return getSetting<{ items: PlanItem[] }>(e, `expensePlan:${memberId}`, { items: [] }).items;
+export function getExpensePlan(e: Engine, memberId: string, month = monthKey(today())): PlanItem[] {
+  const key = `expensePlan:${memberId}`;
+  const base = getSetting<{ items: PlanItem[]; from?: string }>(e, key, { items: [] });
+  const items = base.from && month < base.from ? [] : base.items;
+  return getSetting(e, `${key}:${month}`, { items }).items;
 }
 
-export function saveExpensePlan(e: Engine, actor: Actor, items: PlanItem[], memberId = actor.id) {
+export function saveExpensePlan(e: Engine, actor: Actor, items: PlanItem[], memberId = actor.id, month?: string) {
   // Members manage their own plan; setting up someone else's (e.g. a partner) needs member management rights.
   assertCan(actor.role, memberId === actor.id ? 'income.manage' : 'member.manage');
-  setSetting(e, `expensePlan:${memberId}`, { items: planItemsSchema.parse(items.filter((i) => i.amount > 0)) });
+  const key = `expensePlan:${memberId}`;
+  const validItems = planItemsSchema.parse(items.filter((i) => i.amount > 0));
+  if (month) {
+    setSetting(e, `${key}:${month}`, { items: validItems });
+  } else {
+    setSetting(e, key, { items: validItems, from: monthKey(today()) });
+  }
 }
 
 /** Net monthly income the member expects from their income sources. */
