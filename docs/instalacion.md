@@ -16,7 +16,7 @@ Ejecuta el instalador de la nueva versión sobre la existente. Tus datos (`%APPD
 *Exportar respaldo (.monto)* en el equipo antiguo → *Importar respaldo* en el nuevo.
 
 ## Desarrolladores
-Requisitos: Node.js 22, Rust estable y los [prerrequisitos de Tauri](https://tauri.app/start/prerequisites/) (en Windows: Microsoft C++ Build Tools y WebView2).
+Para compilar necesitas Node.js 26 LTS, Rust estable y los prerrequisitos de Tauri para Windows, incluidos Microsoft C++ Build Tools y WebView2. [Prerrequisitos de Tauri](https://v2.tauri.app/start/prerequisites/)
 
 ```bash
 npm ci

@@ -24,7 +24,7 @@ jobs:
           ref: ${{ env.TAG }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
@@ -42,16 +42,18 @@ jobs:
           $v = (Get-Content package.json | ConvertFrom-Json).version
           $releaseTag = if ($v -eq '1.0.4') { 'v1.0.2.1a' } elseif ($v -eq '1.0.2+3') { 'v1.0.2c' } else { "v$v" }
           if ($releaseTag -ne $env:TAG) { throw "El tag $env:TAG no coincide con la versión v$v de package.json" }
-      # Code signing (removes the SmartScreen warning). Only when the repository has a certificate:
+      # Authenticode signing identifies the publisher. SmartScreen reputation is evaluated separately.
       # WINDOWS_CERTIFICATE = the .pfx in base64, WINDOWS_CERTIFICATE_PASSWORD = its password.
-      # Without them the installer is built unsigned, as before.
       - name: Preparar la firma del instalador
         shell: pwsh
         env:
           CERT: ${{ secrets.WINDOWS_CERTIFICATE }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
-          if (-not $env:CERT) { Write-Host 'Sin certificado: el instalador sale sin firmar.'; '{}' | Out-File -Encoding utf8 signing.json; exit 0 }
+          if (-not $env:CERT) {
+            '{}' | Out-File -Encoding utf8 signing.json
+            exit 0
+          }
           $pfx = Join-Path $env:RUNNER_TEMP 'monto.pfx'
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT))
           $pw = ConvertTo-SecureString $env:CERT_PASSWORD -AsPlainText -Force
@@ -94,12 +96,3 @@ jobs:
           prerelease: false
           make_latest: 'true'
           files: release/*.zip
-      - name: Publicar paquete compatible con el actualizador anterior
-        if: env.TAG == 'v1.0.2.1a'
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          Copy-Item -LiteralPath 'release/Monto_1.0.2.1a_x64.zip' -Destination 'release/Monto_1.0.4_x64.zip'
-          'Compatibility download for earlier Monto versions. See the [Monto 1.0.2.1a release](https://github.com/eperez98/monto/releases/tag/v1.0.2.1a) for release notes.' | Set-Content -Encoding utf8 'release/COMPAT.md'
-          gh release create v1.0.4 'release/Monto_1.0.4_x64.zip' --target (git rev-parse HEAD) --title 'Monto 1.0.2.1a — Update compatibility' --notes-file 'release/COMPAT.md' --latest=false

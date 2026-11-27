@@ -2,6 +2,7 @@
 
 ## What's new
 
+- **Windows build.** The installer was rebuilt with Node.js 26 LTS.
 - **Monthly plans.** Monto opens the current month. Browse past and upcoming months, edit bills and track payments separately for each month.
 - **A clearer sidebar.** Money and Planning groups bring related pages together. An active indicator stays visible in compact mode. New icons identify Transactions, Monthly Plan and Quotes.
 - **Transaction feedback.** Monto confirms the save and briefly highlights the new row.

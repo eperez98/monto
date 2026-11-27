@@ -8,6 +8,9 @@
 3. Nunca adjuntes bases de datos reales, copias `.monto`, capturas con datos personales ni credenciales.
 
 ## Entorno
+
+Usa Node.js 26 LTS con el npm incluido.
+
 ```bash
 npm ci
 npm run dev          # navegador
