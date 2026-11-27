@@ -3,6 +3,10 @@
 import { readFileSync } from 'node:fs';
 const tag = process.argv[2] ?? '';
 const version = tag.replace(/^v/, '');
+if (version === '1.0.2.1a') {
+  console.log(readFileSync(new URL('../docs/release-1.0.2.1a.md', import.meta.url), 'utf8'));
+  process.exit(0);
+}
 const changelog = readFileSync(new URL('../CHANGELOG.md', import.meta.url), 'utf8');
 const re = new RegExp(`^## \\[${version.replace(/\./g, '\\.')}\\][^\\n]*\\n([\\s\\S]*?)(?=^## \\[|^\\[[^\\]]+\\]:|$(?![\\s\\S]))`, 'm');
 const section = changelog.match(re)?.[1]?.trim() ?? '_Consulta CHANGELOG.md para el detalle de cambios._';

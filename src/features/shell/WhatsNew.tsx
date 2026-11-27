@@ -23,7 +23,7 @@ const IMAGES = import.meta.glob('../../assets/whatsnew/*.{jpg,svg}', { eager: tr
 const img = (name: string) => IMAGES[`../../assets/whatsnew/${name}.jpg`] ?? IMAGES[`../../assets/whatsnew/${name}.svg`];
 
 /** Panels shown so far, oldest first. A slide's `v` is the panel that introduced it. */
-const PANELS = ['0.8-glass', '1.0.1', '1.0.2b', '1.0.2.1c', '1.0.2.1a'] as const;
+const PANELS = ['0.8-glass', '1.0.1', '1.0.2b', '1.0.2c', '1.0.2.1c', '1.0.2.1a'] as const;
 type Panel = (typeof PANELS)[number];
 /** Without `v` the slide is always shown (the closing one). */
 interface Slide { tools?: boolean; key: string; icon: string; title: () => string; body: () => string; image?: string; theme?: boolean; v?: Panel; panamaOnly?: boolean }

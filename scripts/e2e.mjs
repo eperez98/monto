@@ -456,7 +456,7 @@ try {
   await page.getByRole('textbox', { name: 'Importe' }).fill('2000');
   await page.getByRole('textbox', { name: 'Salario mensual sin deducciones' }).fill('2300');
   await page.waitForTimeout(900);
-  assert((await page.getByText('Ingreso mensual bruto').locator('..').innerText()).includes('2,300.00'), 'salario mensual sin deducciones (bruto) informativo');
+  await page.getByText('Ingreso mensual bruto').locator('..').getByText(/2,300\.00/).waitFor();
   await click('Continuar');
   await page.getByRole('textbox', { name: 'Vivienda (alquiler o hipoteca)' }).fill('900');
   await click('Siguiente');

@@ -20,7 +20,8 @@ npm run tauri dev    # escritorio (requiere Rust)
   - `feat/<descripcion>` — nuevas funcionalidades
   - `fix/<descripcion>` — correcciones
   - `docs/<descripcion>`, `chore/<descripcion>`, `refactor/<descripcion>`
-- Las versiones se publican creando un tag `vX.Y.Z` sobre `main` (lo hace el responsable del proyecto).
+- Desde **1.0.2b**, todas las actualizaciones se publican en el canal estable. La letra final identifica la revisión. Consérvala en el nombre de la versión, en el instalador y en las notas de publicación.
+- El responsable del proyecto crea el tag sobre `main` con el nombre público de la revisión (por ejemplo, `v1.0.2.1a`) y publica la entrega como estable en GitHub. El paquete con tag numérico permite que las instalaciones anteriores detecten la misma actualización.
 
 ## Mensajes de commit
 Se usa [Conventional Commits](https://www.conventionalcommits.org/es/):

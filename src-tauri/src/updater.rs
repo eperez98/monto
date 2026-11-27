@@ -76,7 +76,12 @@ struct Progress {
 }
 
 fn parse_tag(tag: &str) -> Option<Version> {
-    Version::parse(tag.trim().trim_start_matches(['v', 'V'])).ok()
+    let label = tag.trim().trim_start_matches(['v', 'V']);
+    Version::parse(match label {
+        "1.0.2c" => "1.0.2+3",
+        "1.0.2.1a" => "1.0.4",
+        _ => label,
+    }).ok()
 }
 
 /// Release asset that carries the installer: `Monto_<version>_x64.zip`.
@@ -99,9 +104,9 @@ pub fn pick_update(releases: &[GhRelease], current: &str, include_prerelease: bo
             let inst = r.assets.iter().find(|a| is_package(&a.name))?;
             Some((v, r, inst))
         })
-        .max_by(|a, b| a.0.cmp(&b.0))
+        .max_by(|a, b| a.0.cmp(&b.0).then_with(|| (a.1.tag_name == "v1.0.2.1a").cmp(&(b.1.tag_name == "v1.0.2.1a"))))
         .map(|(v, r, inst)| UpdateInfo {
-            version: v.to_string(),
+            version: r.tag_name.strip_prefix('v').map_or_else(|| v.to_string(), str::to_owned),
             current: current.to_string(),
             name: r.name.clone().unwrap_or_else(|| r.tag_name.clone()),
             notes: r.body.clone().unwrap_or_default(),
@@ -133,7 +138,7 @@ fn extract_installer(zip: &std::path::Path, dir: &std::path::Path) -> Result<std
     std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
     let tar = std::env::var_os("SystemRoot").map(|r| std::path::PathBuf::from(r).join("System32").join("tar.exe")).unwrap_or_else(|| "tar.exe".into());
     let st = std::process::Command::new(tar).arg("-xf").arg(zip).arg("-C").arg(&out).status().map_err(|e| format!("No se pudo descomprimir: {e}"))?;
-    if !st.success() { return Err("No se pudo descomprimir el paquete de actualización".into()); }
+    if !st.success() { return Err("No se pudo descomprimir el paquete de actualizaciÃ³n".into()); }
     let sums = std::fs::read_to_string(out.join("SHA256SUMS.txt")).map_err(|_| "El paquete no incluye SHA256SUMS.txt")?;
     let exe = std::fs::read_dir(&out).map_err(|e| e.to_string())?
         .filter_map(|e| e.ok())
@@ -143,7 +148,7 @@ fn extract_installer(zip: &std::path::Path, dir: &std::path::Path) -> Result<std
     let expected = expected_hash(&sums, &exe).ok_or("El instalador no figura en SHA256SUMS.txt")?;
     let path = out.join(&exe);
     let got = format!("{:x}", Sha256::digest(std::fs::read(&path).map_err(|e| e.to_string())?));
-    if got != expected { return Err("La verificación SHA-256 del instalador falló".into()); }
+    if got != expected { return Err("La verificaciÃ³n SHA-256 del instalador fallÃ³".into()); }
     Ok(path)
 }
 
@@ -160,7 +165,7 @@ pub async fn check_update(app: AppHandle, include_prerelease: bool) -> Result<Op
             .map_err(|e| format!("No se pudo consultar GitHub: {e}"))?
             .into_string()
             .map_err(|e| e.to_string())?;
-        let releases: Vec<GhRelease> = serde_json::from_str(&body).map_err(|e| format!("Respuesta no válida: {e}"))?;
+        let releases: Vec<GhRelease> = serde_json::from_str(&body).map_err(|e| format!("Respuesta no vÃ¡lida: {e}"))?;
         Ok(pick_update(&releases, &current, include_prerelease))
     })
     .await
@@ -170,7 +175,8 @@ pub async fn check_update(app: AppHandle, include_prerelease: bool) -> Result<Op
 /// `info` comes from the WebView, so it is not trusted: only accept the release
 /// zip of this repository for the announced version (no other repo or file).
 pub fn is_official_package(info: &UpdateInfo) -> bool {
-    let Ok(v) = Version::parse(&info.version) else { return false };
+    let v = &info.version;
+    if !matches!(v.as_str(), "1.0.2c" | "1.0.2.1a") && Version::parse(v).is_err() { return false; }
     let name = format!("Monto_{v}_x64.zip");
     info.installer_name == name && info.installer_url == format!("https://github.com/{REPO}/releases/download/v{v}/{name}")
 }
@@ -182,7 +188,7 @@ pub async fn install_update(app: AppHandle, info: UpdateInfo) -> Result<(), Stri
         if !is_official_package(&info) {
             return Err("Origen de descarga no permitido".into());
         }
-        let expected = info.sha256.clone().filter(|h| h.len() == 64).ok_or("GitHub no informó la suma SHA-256 del paquete; no se puede verificar la descarga")?;
+        let expected = info.sha256.clone().filter(|h| h.len() == 64).ok_or("GitHub no informÃ³ la suma SHA-256 del paquete; no se puede verificar la descarga")?;
 
         let resp = agent().get(&info.installer_url).set("User-Agent", UA).call().map_err(|e| format!("Error al descargar: {e}"))?;
         let total = resp.header("Content-Length").and_then(|v| v.parse().ok()).unwrap_or(info.installer_size);
@@ -212,7 +218,7 @@ pub async fn install_update(app: AppHandle, info: UpdateInfo) -> Result<(), Stri
         let got = format!("{:x}", hasher.finalize());
         if got != expected {
             let _ = std::fs::remove_file(&path);
-            return Err("La verificación SHA-256 falló: la descarga está dañada o fue alterada".into());
+            return Err("La verificaciÃ³n SHA-256 fallÃ³: la descarga estÃ¡ daÃ±ada o fue alterada".into());
         }
         extract_installer(&path, &dir)
     })
@@ -236,6 +242,32 @@ mod tests {
             tag_name: tag.into(), name: None, body: Some(format!("notas {tag}")), prerelease: pre, draft: false, published_at: None, html_url: String::new(),
             assets: assets.iter().map(|a| GhAsset { name: a.to_string(), browser_download_url: format!("https://github.com/x/{a}"), size: 1, digest: Some(format!("sha256:{}", "A".repeat(64))) }).collect(),
         }
+    }
+
+    #[test]
+    fn prefers_public_revision_over_the_legacy_alias() {
+        let name = "Monto_1.0.2.1a_x64.zip";
+        let mut public = rel("v1.0.2.1a", false, &[name]);
+        public.assets[0].browser_download_url = format!("https://github.com/{REPO}/releases/download/v1.0.2.1a/{name}");
+        let alias = rel("v1.0.4", false, &["Monto_1.0.4_x64.zip"]);
+        let releases = [public, alias];
+        let update = pick_update(&releases, "1.0.2+3", false).unwrap();
+        assert_eq!(update.version, "1.0.2.1a");
+        assert!(is_official_package(&update));
+        assert!(pick_update(&releases, "1.0.4", false).is_none());
+    }
+
+    #[test]
+    fn revision_c_uses_its_public_tag_and_stays_within_1_0_2() {
+        let name = "Monto_1.0.2c_x64.zip";
+        let mut release = rel("v1.0.2c", false, &[name]);
+        release.assets[0].browser_download_url = format!("https://github.com/{REPO}/releases/download/v1.0.2c/{name}");
+        let releases = [release];
+        let update = pick_update(&releases, "1.0.2", false).unwrap();
+        assert_eq!(update.version, "1.0.2c");
+        assert!(is_official_package(&update));
+        assert!(pick_update(&releases, "1.0.2+3", false).is_none());
+        assert!(pick_update(&releases, "1.0.3", false).is_none());
     }
 
     #[test]

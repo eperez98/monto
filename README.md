@@ -48,36 +48,21 @@ Individual, couple or family profiles with roles, shared expenses, who‑owes‑
 </tr>
 </table>
 
-## Screenshots
+## See Monto in action
 
-<div align="center">
-<img src="assets/screenshots/en/dashboard.png" alt="Dashboard" width="100%" />
-<sub><b>Overview</b> — available balance, income vs. expenses, spending breakdown, next payday and alerts.</sub>
-</div>
+### Monthly planning
 
-<br />
+Open the current month, review upcoming bills and expand the paid section to see what has cleared. Use the arrows to review another month. Each month keeps its own amounts, due dates and payment status.
 
-| | |
-|:---:|:---:|
-| <img src="assets/screenshots/en/plan.png" alt="Monthly plan" /><br /><sub><b>Monthly plan</b> — your expenses one by one, what's left and how much you can save</sub> | <img src="assets/screenshots/en/income.png" alt="Income" /><br /><sub><b>Income & salary</b> — estimated vs. actually received, pay calendar</sub> |
-| <img src="assets/screenshots/en/transactions.png" alt="Transactions" /><br /><sub><b>Transactions</b> — search, filters, receipts, CSV import/export</sub> | <img src="assets/screenshots/en/accounts.png" alt="Accounts" /><br /><sub><b>Accounts & cards</b> — balances by currency and card usage</sub> |
-| <img src="assets/screenshots/en/budgets.png" alt="Budgets" /><br /><sub><b>Budgets</b> — monthly limits with 70 / 90 / 100 % alerts</sub> | <img src="assets/screenshots/en/goals.png" alt="Goals" /><br /><sub><b>Savings goals</b> — progress, pace and contributions</sub> |
-| <img src="assets/screenshots/en/debts.png" alt="Loans and debts" /><br /><sub><b>Loans & debts</b> — installments, interest and amortization</sub> | <img src="assets/screenshots/en/family.png" alt="Family" /><br /><sub><b>Family</b> — shared expenses, roles and permissions</sub> |
-| <img src="assets/screenshots/en/calendar.png" alt="Calendar" /><br /><sub><b>Calendar</b> — paydays, installments, bills and reminders</sub> | <img src="assets/screenshots/en/reports.png" alt="Reports" /><br /><sub><b>Reports</b> — minimal tables for Excel, PDF and Notion</sub> |
+![Monthly plan with month navigation, upcoming expenses and paid bills](assets/screenshots/en/monthly-plan-1021a.png)
 
-<details>
-<summary><b>🌙 Dark mode, guided setup and insights</b></summary>
-<br />
+### Navigation
 
-| | |
-|:---:|:---:|
-| <img src="assets/screenshots/en/dashboard-dark.png" alt="Dark mode" /><br /><sub>Light and dark mode with one click</sub> | <img src="assets/screenshots/en/plan-dark.png" alt="Monthly plan in dark mode" /><br /><sub>Monthly plan in dark mode</sub> |
-| <img src="assets/screenshots/en/onboarding-salary.png" alt="Guided setup: salary" /><br /><sub>Guided setup: take‑home pay with live monthly and annual totals</sub> | <img src="assets/screenshots/en/onboarding-expenses.png" alt="Guided setup: expenses" /><br /><sub>Guided setup: monthly expenses and savings potential</sub> |
-| <img src="assets/screenshots/en/insights.png" alt="Insights" /><br /><sub>Insights based only on your own data</sub> | <img src="assets/screenshots/en/onboarding-welcome.png" alt="Welcome" /><br /><sub>Welcome screen with language and theme switch</sub> |
+Find accounts, transactions and income under **Money**. **Planning** brings together the monthly plan, budgets, savings goals, debts and calendar. Expand the sidebar when you want to see the labels.
 
-</details>
+![Monto dashboard with the expanded sidebar](assets/screenshots/en/navigation-1021a.png)
 
-<sub>Screenshots use fictional demo data. Regenerate them with `node scripts/screenshots.mjs`.</sub>
+The screenshots show fictional demo data.
 
 ## Features
 
@@ -136,8 +121,8 @@ For Panama profiles, **Quote Builder** prices services by unit, hour or day. Eac
 
 ## Download
 
-1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_x.y.z_x64.zip`.
-2. Unzip it and run `Monto_x.y.z_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
+1. Go to **[Releases](https://github.com/eperez98/monto/releases)** and download `Monto_1.0.2.1a_x64.zip`.
+2. Unzip it and run `Monto_1.0.2.1a_x64-setup.exe`. Choose **English** or **Español**. No administrator rights needed.
 3. Windows SmartScreen may warn you because the installer isn't code‑signed yet: **More info → Run anyway**.
 
 The zip also includes `SHA256SUMS.txt` (to verify the installer) and `LEEME.txt`. Updating keeps your data in `%APPDATA%\com.monto.finanzas`. See the [installation guide](docs/instalacion.md).

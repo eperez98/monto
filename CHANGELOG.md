@@ -10,9 +10,9 @@ El formato sigue [Keep a Changelog 1.1.0](https://keepachangelog.com/es-ES/1.1.0
 
 ## [Sin publicar]
 
-- El plan mensual abre en el mes actual. Permite consultar otros meses y editar sus gastos y pagos por separado.
+## [1.0.2.1a] - 2026-11-27 · Confianza
 
-## [1.0.4] - 2026-11-26 · 1.0.2.1a Confianza
+- El plan mensual abre en el mes actual. Permite consultar otros meses y editar sus gastos y pagos por separado.
 
 - Menú por tareas con accesos directos a Resumen y al Cotizador en Panamá, nuevos iconos y una marca lateral para la sección activa.
 - Al registrar un movimiento, se confirma el guardado y se resalta la fila durante tres segundos.
@@ -29,9 +29,15 @@ Se retira la conexión con Gmail y Outlook. La prueba manual de avisos bancarios
 
 Los perfiles de Panamá pueden abrir la calculadora de salario y décimo en Ingresos.
 
-## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
+## [1.0.2c] - 2026-11-26 · Confianza
 
-Calculadora de salario y décimo para Panamá incluida para su activación en 1.0.2.1c.
+Esta edición sustituye a 1.0.2b. El instalador para Windows se llama `Monto_1.0.2c_x64-setup.exe`.
+
+- El Cotizador de Panamá calcula servicios por unidad, hora o día e incluye los datos de contacto del cliente y las condiciones de pago ACH.
+- Las propuestas tienen 15 días de validez. El PDF «Cotización - Servicios Profesionales» incluye espacios para las firmas del cliente y del profesional.
+- Para aprobar una cotización se adjunta la aceptación del cliente. El recibo se emite al confirmar el pago.
+
+## [1.0.2] - 2026-11-22 · 1.0.2b Confianza
 
 Versión de seguridad: recupera tus copias si cambias de equipo, desbloquea Monto con Windows Hello y comprueba cómo lee Monto los correos de tu banco. El instalador estrena imagen.
 
